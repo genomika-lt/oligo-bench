@@ -1,4 +1,4 @@
-rule test_multiqc_config:
+rule run_multiqc:
     input:
         expand(
             "results/minknow/{experiment_id}_{sample_id}_throughput.csv",
