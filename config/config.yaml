@@ -1,0 +1,17 @@
+# config.yaml
+
+# path or URL to experiment sheet (TSV format)
+experiments: config/experiments.tsv
+
+# define directories
+out_dir: results # default value
+
+# define parameters for a specific rule
+#min_length: 50
+
+# path to reference files
+oligo_design: /path/to/oligo/design.fa
+
+# parameters for computational resources
+threads: 4
+memory: 16G

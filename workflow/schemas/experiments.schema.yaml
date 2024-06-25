@@ -1,0 +1,18 @@
+$schema: "http://json-schema.org/draft-06/schema#"
+
+description: an entry in the experiment sheet
+properties:
+    experiment_id:
+        type: string
+        description: experiment identifier as in the output of ONT run
+    sample_id:
+        type: string
+        description: sample identifier as in the output of ONT run
+    run_dir:
+        type: string
+        description: a path to ONT output as /{experiment_id}/{sample_id}/{experiment_date}_{experiment_start_time}_{device_id}_{flow_cell_id}_{protocol_run_id}
+
+required:
+  - experiment_id
+  - sample_id
+  - run_dir
