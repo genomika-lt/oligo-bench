@@ -4,7 +4,7 @@ rule run_multiqc:
             "results/minknow/{experiment_id}_{sample_id}_throughput.csv",
             zip,
             experiment_id=samples["experiment_id"],
-            sample_id=samples["sample_id"]
+            sample_id=samples["sample_id"],
         ),
         config="config/multiqc_config.yaml",
     output:
