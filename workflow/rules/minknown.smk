@@ -1,13 +1,13 @@
 rule throughput:
     input:
-        get_throughput_file
+        get_throughput_file,
     output:
         "results/minknow/{experiment_id}_{sample_id}_throughput.csv",
     log:
-        "logs/mod_throughput_{experiment_id}_{sample_id}.log"
+        "logs/mod_throughput_{experiment_id}_{sample_id}.log",
     params:
         samples=lambda wildcards: wildcards.experiment_id,
-        id="Experiment Name"
+        id="Experiment Name",
     conda:
         "../envs/pandas.yaml"
     script:

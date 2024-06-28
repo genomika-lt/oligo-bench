@@ -36,6 +36,7 @@ def get_throughput_file(wildcards):
             f"No throughput file found for {wildcards.experiment_id}, {wildcards.sample_id}"
         )
 
+
 def get_read_directory(wildcards):
     try:
         run_dir = samples.loc[
@@ -56,4 +57,3 @@ def get_read_directory(wildcards):
             f"Directory {input_dir} does not exist for {wildcards.experiment_id}/{wildcards.sample_id}"
         )
     return input_dir
-

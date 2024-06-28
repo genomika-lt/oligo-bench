@@ -1,14 +1,14 @@
 rule fastqc:
     input:
-        "results/fastqs/{experiment_id}_{sample_id}.fastq.gz"
+        "results/fastqs/{experiment_id}_{sample_id}.fastq.gz",
     output:
         html="results/qc/fastqc/{experiment_id}_{sample_id}.html",
-        zip="results/qc/fastqc/{experiment_id}_{sample_id}_fastqc.zip"
+        zip="results/qc/fastqc/{experiment_id}_{sample_id}_fastqc.zip",
     log:
-        "logs/fastqc_{experiment_id}_{sample_id}.log"
+        "logs/fastqc_{experiment_id}_{sample_id}.log",
     threads: 1
     resources:
-        mem_mb = 1024
+        mem_mb = 1024,
     wrapper:
         "v3.10.0/bio/fastqc"
 

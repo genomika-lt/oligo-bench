@@ -1,6 +1,6 @@
 rule process_fastq:
     input:
-        directory=get_read_directory
+        directory=get_read_directory,
     output:
         "results/fastqs/{experiment_id}_{sample_id}.fastq.gz",
     log:
@@ -8,14 +8,18 @@ rule process_fastq:
     run:
         input_dir = input.directory
         if not config["basecalling"]:
-            shell(f"""
+            shell(
+                f"""
                 cat {input_dir}/*.fastq.gz > {output}
-            """)
+            """
+            )
         else:
-            shell(f"""
+            shell(
+                f"""
                 dorado basecaller sup@v5 \
                     --min-qscore 9 \
                     --no-trim \
                     --emit-fastq \
                     {input_dir} > {output}
-            """)
+            """
+            )
