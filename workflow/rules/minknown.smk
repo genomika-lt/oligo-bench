@@ -1,8 +1,8 @@
-rule mod_throughput:
+rule throughput:
     input:
         get_throughput_file
     output:
-        "results/minknow/{experiment_id}_{sample_id}_throughput.csv"
+        "results/minknow/{experiment_id}_{sample_id}_throughput.csv",
     log:
         "logs/mod_throughput_{experiment_id}_{sample_id}.log"
     params:

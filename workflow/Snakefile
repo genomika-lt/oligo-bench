@@ -5,7 +5,8 @@ configfile: "config/config.yaml"
 
 include: "rules/common.smk"
 include: "rules/minknown.smk"
-include: "rules/multiqc.smk"
+include: "rules/fastqs.smk"
+include: "rules/qc.smk"
 
 rule all:
     input:
@@ -13,6 +14,24 @@ rule all:
             "results/minknow/{experiment_id}_{sample_id}_throughput.csv",
             zip,
             experiment_id=samples["experiment_id"],
-            sample_id=samples["sample_id"]
+            sample_id=samples["sample_id"],
+        ),
+        expand(
+            "results/fastqs/{experiment_id}_{sample_id}.fastq.gz",
+            zip,
+            experiment_id=samples["experiment_id"],
+            sample_id=samples["sample_id"],
+        ),
+        expand(
+            "results/qc/fastqc/{experiment_id}_{sample_id}_fastqc.zip",
+            zip,
+            experiment_id=samples["experiment_id"],
+            sample_id=samples["sample_id"],
+        ),
+        expand(
+            "results/qc/fastqc/{experiment_id}_{sample_id}.html",
+            zip,
+            experiment_id=samples["experiment_id"],
+            sample_id=samples["sample_id"],
         ),
         "results/qc/multiqc.html"
