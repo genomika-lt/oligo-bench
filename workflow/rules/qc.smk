@@ -8,9 +8,10 @@ rule fastqc:
         "logs/fastqc_{experiment_id}_{sample_id}.log",
     threads: 1
     resources:
-        mem_mb = 1024,
+        mem_mb=1024,
     wrapper:
         "v3.10.0/bio/fastqc"
+
 
 rule multiqc:
     input:
