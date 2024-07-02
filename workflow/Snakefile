@@ -3,10 +3,12 @@ configfile: "config/config.yaml"
 
 ##### load rules #####
 
+
 include: "rules/common.smk"
 include: "rules/minknown.smk"
 include: "rules/fastqs.smk"
 include: "rules/qc.smk"
+
 
 rule all:
     input:
@@ -27,7 +29,7 @@ rule all:
             zip,
             experiment_id=samples["experiment_id"],
             sample_id=samples["sample_id"],
-        ),        
+        ),
         expand(
             "results/fastqs/{experiment_id}_{sample_id}.fastq.gz",
             zip,
@@ -46,4 +48,4 @@ rule all:
             experiment_id=samples["experiment_id"],
             sample_id=samples["sample_id"],
         ),
-        "results/qc/multiqc.html"
+        "results/qc/multiqc.html",

@@ -58,7 +58,6 @@ def get_pore_activity_file(wildcards):
         )
 
 
-
 def get_read_directory(wildcards):
     try:
         run_dir = samples.loc[

@@ -32,7 +32,7 @@ rule multiqc:
             zip,
             experiment_id=samples["experiment_id"],
             sample_id=samples["sample_id"],
-        ), 
+        ),
         expand(
             "results/qc/fastqc/{experiment_id}_{sample_id}_fastqc.zip",
             zip,
