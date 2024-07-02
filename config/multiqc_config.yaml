@@ -21,11 +21,43 @@ custom_data:
         plot_type: 'table'
         file_glob: '*_throughput.csv'
         section_name: 'Throughput'
+    ont_pore_activity:
+        parent_id: 'custom_content'
+        parent_name: 'MinKNOW'
+        file_format: 'csv'
+        plot_type: 'linegraph'
+        file_glob: '*_pore.csv'
+        section_name: 'Pore activity'
+        pconfig:
+            id: 'ont_pore_activity'
+            title: 'Active Pores'
+            ylab: 'Number of Active Pores'
+            xlab: 'Experiment Time (minutes)'
+    ont_pore_sequencing:
+        parent_id: 'custom_content'
+        parent_name: 'MinKNOW'
+        file_format: 'csv'
+        plot_type: 'linegraph'
+        file_glob: '*_poreseq.csv'
+        section_name: 'Pore sequencing'
+        pconfig:
+            id: 'ont_pore_sequencing'
+            title: 'Pore Currently Sequencing'
+            ylab: 'Number of Pores Currenly Sequencing'
+            xlab: 'Experiment Time (minutes)'
 
 sp:
     ont_throughput:
         fn: '*_throughput.csv'
+    ont_pore_activity:
+        fn: '*_pore.csv'
+    ont_pore_sequencing:
+        fn: '*_poreseq.csv'
 
 extra_fn_clean_exts:
     - type: 'replace'
       pattern: '_throughput.csv'
+    - type: 'replace'
+      pattern: '_pore.csv'
+    - type: 'replace'
+      pattern: '_poreseq.csv'
