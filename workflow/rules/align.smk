@@ -14,6 +14,7 @@ rule minimap2:
     wrapper:
         "v3.13.3/bio/minimap2/aligner"
 
+
 rule samtools_stats:
     input:
         bam="results/aligned/{experiment_id}_{sample_id}_aln.sorted.bam",
