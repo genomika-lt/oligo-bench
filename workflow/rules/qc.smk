@@ -39,6 +39,12 @@ rule multiqc:
             experiment_id=samples["experiment_id"],
             sample_id=samples["sample_id"],
         ),
+        expand(
+            "results/aligned/{experiment_id}_{sample_id}.stats",
+            zip,
+            experiment_id=samples["experiment_id"],
+            sample_id=samples["sample_id"],
+        ),
         config="config/multiqc_config.yaml",
     output:
         "results/qc/multiqc.html",

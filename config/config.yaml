@@ -10,7 +10,7 @@ out_dir: results # default value
 basecalling: False
 
 # path to reference files
-oligo_design: /path/to/oligo/design.fa
+reference: resources/ref.fa
 
 # parameters for computational resources
 threads: 4
