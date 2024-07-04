@@ -56,6 +56,30 @@ rule all:
             sample_id=samples["sample_id"],
         ),
         expand(
+            "results/aligned/{experiment_id}_{sample_id}_MAPQ.csv",
+            zip,
+            experiment_id=samples["experiment_id"],
+            sample_id=samples["sample_id"]
+        ),
+        expand(
+            "results/aligned/{experiment_id}_{sample_id}_INS.csv",
+            zip,
+            experiment_id=samples["experiment_id"],
+            sample_id=samples["sample_id"]
+            ),
+        expand(
+            "results/aligned/{experiment_id}_{sample_id}_DEL.csv",
+            zip,
+            experiment_id=samples["experiment_id"],
+            sample_id=samples["sample_id"]
+            ),
+        expand(
+            "results/aligned/{experiment_id}_{sample_id}_COV.csv",
+            zip,
+            experiment_id=samples["experiment_id"],
+            sample_id=samples["sample_id"]
+        ),
+        expand(
             "results/qc/fastqc/{experiment_id}_{sample_id}.html",
             zip,
             experiment_id=samples["experiment_id"],

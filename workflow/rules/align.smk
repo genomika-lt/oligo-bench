@@ -26,3 +26,21 @@ rule samtools_stats:
         "logs/samtools_stats_{experiment_id}_{sample_id}.log",
     wrapper:
         "v3.13.3/bio/samtools/stats"
+
+
+rule parse_samtools_stats:
+    input:
+        "results/aligned/{experiment_id}_{sample_id}.stats",
+    output:
+        "results/aligned/{experiment_id}_{sample_id}_MAPQ.csv",
+        "results/aligned/{experiment_id}_{sample_id}_INS.csv",
+        "results/aligned/{experiment_id}_{sample_id}_DEL.csv",
+        "results/aligned/{experiment_id}_{sample_id}_COV.csv",
+    log:
+        "logs/parse_stats_{experiment_id}_{sample_id}.log",
+    params:
+        samples=lambda wildcards: wildcards.experiment_id,
+    conda:
+        "../envs/pandas.yaml"
+    script:
+        "../scripts/parse_samtools_stats.py"
