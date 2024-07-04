@@ -66,13 +66,13 @@ rule all:
             zip,
             experiment_id=samples["experiment_id"],
             sample_id=samples["sample_id"],
-            ),
+        ),
         expand(
             "results/aligned/{experiment_id}_{sample_id}_DEL.csv",
             zip,
             experiment_id=samples["experiment_id"],
             sample_id=samples["sample_id"],
-            ),
+        ),
         expand(
             "results/aligned/{experiment_id}_{sample_id}_COV.csv",
             zip,
