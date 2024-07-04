@@ -30,7 +30,7 @@ custom_data:
         section_name: 'Pore activity'
         pconfig:
             id: 'ont_pore_activity'
-            title: 'Active Pores'
+            title: 'MinKNOW: Active Pores'
             ylab: 'Number of Active Pores'
             xlab: 'Experiment Time (minutes)'
     ont_pore_sequencing:
@@ -42,9 +42,46 @@ custom_data:
         section_name: 'Pore sequencing'
         pconfig:
             id: 'ont_pore_sequencing'
-            title: 'Pore Currently Sequencing'
+            title: 'MinKNOW: Pore Currently Sequencing'
             ylab: 'Number of Pores Currenly Sequencing'
             xlab: 'Experiment Time (minutes)'
+    samtools_stats_mapq:
+        parent_id: 'samtools'
+        parent_name: 'Samtools'
+        file_format: 'csv'
+        plot_type: 'linegraph'
+        file_glob: '*_MAPQ.csv'
+        section_name: 'Mapping quality'
+        pconfig:
+            id: 'samtools_stats_mapq'
+            title: 'Samtools stats: Mapping Quality'
+            ylab: 'Number of Reads'
+            xlab: 'Mapping Quality Score (MAPQ)' 
+            yLog: True
+    samtools_stats_ins:
+        parent_id: 'samtools'
+        parent_name: 'Samtools'
+        file_format: 'csv'
+        plot_type: 'linegraph'
+        file_glob: '*_INS.csv'
+        section_name: 'Insertions'
+        pconfig:
+            id: 'samtools_stats_ins'
+            title: 'Samtools stats: Insertion distribution'
+            ylab: 'Frequency'
+            xlab: 'Insertion Length' 
+    samtools_stats_del:
+        parent_id: 'samtools'
+        parent_name: 'Samtools'
+        file_format: 'csv'
+        plot_type: 'linegraph'
+        file_glob: '*_DEL.csv'
+        section_name: 'Deletions'
+        pconfig:
+            id: 'samtools_stats_del'
+            title: 'Samtools stats: Deletion distribution'
+            ylab: 'Frequency'
+            xlab: 'Deletion Length' 
 
 sp:
     ont_throughput:
@@ -53,11 +90,23 @@ sp:
         fn: '*_pore.csv'
     ont_pore_sequencing:
         fn: '*_poreseq.csv'
+    samtools_stats_mapq:
+        fn: '*_MAPQ.csv'
+    samtools_stats_ins:
+        fn: '*_INS.csv'
+    samtools_stats_del:
+        fn: '*_DEL.csv'
 
 extra_fn_clean_exts:
-    - type: 'replace'
+    - type: 'remove'
       pattern: '_throughput.csv'
-    - type: 'replace'
+    - type: 'remove'
       pattern: '_pore.csv'
-    - type: 'replace'
+    - type: 'remove'
       pattern: '_poreseq.csv'
+    - type: 'remove'
+      pattern: '_MAPQ.csv'
+    - type: 'remove'
+      pattern: '_INS.csv'
+    - type: 'remove'
+      pattern: '_DEL.csv'
