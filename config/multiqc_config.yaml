@@ -9,6 +9,11 @@ report_section_order:
 
 export_plots: true
 
+top_modules:
+  - 'custom_content'
+  - 'samtools'
+  - 'minimap2'
+
 # --------------------------------
 # custom data
 # --------------------------------
@@ -26,7 +31,7 @@ custom_data:
         parent_name: 'MinKNOW'
         file_format: 'csv'
         plot_type: 'linegraph'
-        file_glob: '*_pore.csv'
+        file_glob: '*_pore_act.csv'
         section_name: 'Pore activity'
         pconfig:
             id: 'ont_pore_activity'
@@ -38,75 +43,108 @@ custom_data:
         parent_name: 'MinKNOW'
         file_format: 'csv'
         plot_type: 'linegraph'
-        file_glob: '*_poreseq.csv'
+        file_glob: '*_pore_seq.csv'
         section_name: 'Pore sequencing'
         pconfig:
             id: 'ont_pore_sequencing'
             title: 'MinKNOW: Pore Currently Sequencing'
             ylab: 'Number of Pores Currenly Sequencing'
             xlab: 'Experiment Time (minutes)'
+    ont_pore_ratio:
+        parent_id: 'custom_content'
+        parent_name: 'MinKNOW'
+        file_format: 'csv'
+        plot_type: 'linegraph'
+        file_glob: '*_pore_ratio.csv'
+        section_name: 'Pore ratio'
+        pconfig:
+            id: 'ont_pore_ratio'
+            title: 'MinKNOW: Pore ratio (sequecing / active)'
+            ylab: 'Percentage, %'
+            xlab: 'Experiment Time (minutes)'
     samtools_stats_mapq:
-        parent_id: 'samtools'
-        parent_name: 'Samtools'
+        parent_id: 'minimap2'
+        parent_name: 'Minimap2'
         file_format: 'csv'
         plot_type: 'linegraph'
         file_glob: '*_MAPQ.csv'
         section_name: 'Mapping quality'
         pconfig:
             id: 'samtools_stats_mapq'
-            title: 'Samtools stats: Mapping Quality'
+            title: 'Minimap2: Mapping Quality'
             ylab: 'Number of Reads'
             xlab: 'Mapping Quality Score (MAPQ)' 
             yLog: True
     samtools_stats_ins:
-        parent_id: 'samtools'
-        parent_name: 'Samtools'
+        parent_id: 'minimap2'
+        parent_name: 'Minimap2'
         file_format: 'csv'
         plot_type: 'linegraph'
         file_glob: '*_INS.csv'
         section_name: 'Insertions'
         pconfig:
             id: 'samtools_stats_ins'
-            title: 'Samtools stats: Insertion distribution'
+            title: 'Minimap2: Insertion distribution'
             ylab: 'Frequency'
             xlab: 'Insertion Length' 
     samtools_stats_del:
-        parent_id: 'samtools'
-        parent_name: 'Samtools'
+        parent_id: 'minimap2'
+        parent_name: 'Minimap2'
         file_format: 'csv'
         plot_type: 'linegraph'
         file_glob: '*_DEL.csv'
         section_name: 'Deletions'
         pconfig:
             id: 'samtools_stats_del'
-            title: 'Samtools stats: Deletion distribution'
+            title: 'Minimap2: Deletion distribution'
             ylab: 'Frequency'
-            xlab: 'Deletion Length' 
+            xlab: 'Deletion Length'
+    count_seqs_bam:
+        parent_id: 'minimap2'
+        parent_name: 'Minimap2'
+        file_format: 'csv'
+        plot_type: 'linegraph'
+        file_glob: '*_ref_counts.csv'
+        section_name: 'Counts'
+        pconfig:
+            id: 'count_seqs_bam'
+            title: 'Minimap2: Count distribution of reference sequences'
+            ylab: 'Frequency'
+            xlab: 'Counts' 
+            xmin: 0
 
 sp:
     ont_throughput:
         fn: '*_throughput.csv'
     ont_pore_activity:
-        fn: '*_pore.csv'
+        fn: '*_pore_act.csv'
     ont_pore_sequencing:
-        fn: '*_poreseq.csv'
+        fn: '*_pore_seq.csv'
+    ont_pore_ratio:
+        fn: '*_pore_ratio.csv'
     samtools_stats_mapq:
         fn: '*_MAPQ.csv'
     samtools_stats_ins:
         fn: '*_INS.csv'
     samtools_stats_del:
         fn: '*_DEL.csv'
+    count_seqs_bam:
+        fn: '*_ref_dist.csv'
 
 extra_fn_clean_exts:
     - type: 'remove'
       pattern: '_throughput.csv'
     - type: 'remove'
-      pattern: '_pore.csv'
+      pattern: '_pore_act.csv'
     - type: 'remove'
-      pattern: '_poreseq.csv'
+      pattern: '_pore_seq.csv'
+    - type: 'remove'
+      pattern: '_pore_ratio.csv'
     - type: 'remove'
       pattern: '_MAPQ.csv'
     - type: 'remove'
       pattern: '_INS.csv'
     - type: 'remove'
       pattern: '_DEL.csv'
+    - type: 'remove'
+      pattern: '_ref_dist.csv'

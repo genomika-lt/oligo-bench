@@ -18,29 +18,15 @@ rule pore_activity:
     input:
         get_pore_activity_file,
     output:
-        "results/minknow/{experiment_id}_{sample_id}_pore.csv",
+        "results/minknow/{experiment_id}_{sample_id}_pore_act.csv",
+        "results/minknow/{experiment_id}_{sample_id}_pore_seq.csv",
+        "results/minknow/{experiment_id}_{sample_id}_pore_ratio.csv",
     log:
         "logs/pore_{experiment_id}_{sample_id}.log",
     params:
         samples=lambda wildcards: wildcards.experiment_id,
-        state="pore",
     conda:
         "../envs/pandas.yaml"
     script:
         "../scripts/parse_pore_activity.py"
 
-
-rule pore_sequencing:
-    input:
-        get_pore_activity_file,
-    output:
-        "results/minknow/{experiment_id}_{sample_id}_poreseq.csv",
-    log:
-        "logs/poreseq_{experiment_id}_{sample_id}.log",
-    params:
-        samples=lambda wildcards: wildcards.experiment_id,
-        state="strand",
-    conda:
-        "../envs/pandas.yaml"
-    script:
-        "../scripts/parse_pore_activity.py"

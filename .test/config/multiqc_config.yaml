@@ -9,6 +9,11 @@ report_section_order:
 
 export_plots: true
 
+top_modules:
+  - 'custom_content'
+  - 'samtools'
+  - 'minimap2'
+
 # --------------------------------
 # custom data
 # --------------------------------
@@ -46,40 +51,40 @@ custom_data:
             ylab: 'Number of Pores Currenly Sequencing'
             xlab: 'Experiment Time (minutes)'
     samtools_stats_mapq:
-        parent_id: 'samtools'
-        parent_name: 'Samtools'
+        parent_id: 'minimap2'
+        parent_name: 'Minimap2'
         file_format: 'csv'
         plot_type: 'linegraph'
         file_glob: '*_MAPQ.csv'
         section_name: 'Mapping quality'
         pconfig:
             id: 'samtools_stats_mapq'
-            title: 'Samtools stats: Mapping Quality'
+            title: 'Minimap2: Mapping Quality'
             ylab: 'Number of Reads'
             xlab: 'Mapping Quality Score (MAPQ)' 
             yLog: True
     samtools_stats_ins:
-        parent_id: 'samtools'
-        parent_name: 'Samtools'
+        parent_id: 'minimap2'
+        parent_name: 'Minimap2'
         file_format: 'csv'
         plot_type: 'linegraph'
         file_glob: '*_INS.csv'
         section_name: 'Insertions'
         pconfig:
             id: 'samtools_stats_ins'
-            title: 'Samtools stats: Insertion distribution'
+            title: 'Minimap2: Insertion distribution'
             ylab: 'Frequency'
             xlab: 'Insertion Length' 
     samtools_stats_del:
-        parent_id: 'samtools'
-        parent_name: 'Samtools'
+        parent_id: 'minimap2'
+        parent_name: 'Minimap2'
         file_format: 'csv'
         plot_type: 'linegraph'
         file_glob: '*_DEL.csv'
         section_name: 'Deletions'
         pconfig:
             id: 'samtools_stats_del'
-            title: 'Samtools stats: Deletion distribution'
+            title: 'Minimap2: Deletion distribution'
             ylab: 'Frequency'
             xlab: 'Deletion Length' 
 

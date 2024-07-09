@@ -22,31 +22,13 @@ rule multiqc:
             sample_id=samples["sample_id"],
         ),
         expand(
-            "results/minknow/{experiment_id}_{sample_id}_pore.csv",
-            zip,
-            experiment_id=samples["experiment_id"],
-            sample_id=samples["sample_id"],
-        ),
-        expand(
-            "results/minknow/{experiment_id}_{sample_id}_poreseq.csv",
-            zip,
-            experiment_id=samples["experiment_id"],
-            sample_id=samples["sample_id"],
-        ),
-        expand(
             "results/qc/fastqc/{experiment_id}_{sample_id}_fastqc.zip",
             zip,
             experiment_id=samples["experiment_id"],
             sample_id=samples["sample_id"],
         ),
         expand(
-            "results/aligned/{experiment_id}_{sample_id}.stats",
-            zip,
-            experiment_id=samples["experiment_id"],
-            sample_id=samples["sample_id"],
-        ),
-        expand(
-            "results/aligned/{experiment_id}_{sample_id}_MAPQ.csv",
+            "results/aligned/stats/{experiment_id}_{sample_id}.stats",
             zip,
             experiment_id=samples["experiment_id"],
             sample_id=samples["sample_id"],
