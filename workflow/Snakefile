@@ -104,4 +104,3 @@ rule all:
             sample_id=samples["sample_id"],
         ),
         "results/qc/multiqc.html",
-

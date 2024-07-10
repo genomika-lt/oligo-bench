@@ -56,8 +56,7 @@ rule count_seqs_bam:
         samples=lambda wildcards: wildcards.experiment_id,
     log:
         "logs/count_sequences_{experiment_id}_{sample_id}.log",
-    threads:
-        4
+    threads: 4
     conda:
         "../envs/pysam.yaml"
     script:
@@ -71,10 +70,8 @@ rule count_mism_bam:
         out="results/aligned/stats/{experiment_id}_{sample_id}_nm_counts.csv",
     log:
         "logs/count_mism_{experiment_id}_{sample_id}.log",
-    threads:
-        4
+    threads: 4
     conda:
         "../envs/pysam.yaml"
     script:
         "../scripts/count_mism_bam.py"
-
