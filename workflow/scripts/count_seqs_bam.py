@@ -44,6 +44,7 @@ def count_seqs_bam(bam, ref, samples, out, threads):
     # write output
     freq_df.to_csv(out, header=True)
 
+
 count_seqs_bam(
     bam = snakemake.input[0],
     ref = snakemake.input[1],

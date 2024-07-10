@@ -75,6 +75,17 @@ custom_data:
             ylab: 'Number of Reads'
             xlab: 'Mapping Quality Score (MAPQ)' 
             yLog: True
+    samtools_stats_nm:
+        parent_id: 'minimap2'
+        parent_name: 'Minimap2'
+        file_format: 'csv'
+        plot_type: 'bargraph'
+        file_glob: '*_nm_counts.csv'
+        section_name: 'Mismatches'
+        pconfig:
+            id: 'samtools_stats_nm'
+            title: 'Minimap2: Number of Mismatches (NM)'
+            xlab: 'Number of Reads'
     samtools_stats_ins:
         parent_id: 'minimap2'
         parent_name: 'Minimap2'
@@ -124,6 +135,8 @@ sp:
         fn: '*_pore_ratio.csv'
     samtools_stats_mapq:
         fn: '*_MAPQ.csv'
+    samtools_stats_nm:
+        fn: '*_nm_counts.csv'
     samtools_stats_ins:
         fn: '*_INS.csv'
     samtools_stats_del:
@@ -142,6 +155,8 @@ extra_fn_clean_exts:
       pattern: '_pore_ratio.csv'
     - type: 'remove'
       pattern: '_MAPQ.csv'
+    - type: 'remove'
+      pattern: '_nm_counts.csv'
     - type: 'remove'
       pattern: '_INS.csv'
     - type: 'remove'

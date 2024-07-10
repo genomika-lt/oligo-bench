@@ -7,7 +7,7 @@ rule minimap2:
     log:
         "logs/minimap2_{experiment_id}_{sample_id}.log",
     params:
-        extra="-ax sr -L --MD -t8 -Y -k10 -w5",
+        extra="-ax sr -L --MD -t8 -Y -k10 -w5 -m10",
         sorting="coordinate",
         sort_extra="",
     threads: 4
@@ -62,4 +62,19 @@ rule count_seqs_bam:
         "../envs/pysam.yaml"
     script:
         "../scripts/count_seqs_bam.py"
+
+
+rule count_mism_bam:
+    input:
+        bam="results/aligned/{experiment_id}_{sample_id}_aln.sorted.bam",
+    output:
+        out="results/aligned/stats/{experiment_id}_{sample_id}_nm_counts.csv",
+    log:
+        "logs/count_mism_{experiment_id}_{sample_id}.log",
+    threads:
+        4
+    conda:
+        "../envs/pysam.yaml"
+    script:
+        "../scripts/count_mism_bam.py"
 
