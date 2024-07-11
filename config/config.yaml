@@ -14,4 +14,4 @@ reference: resources/ref.fa
 
 # parameters for computational resources
 threads: 4
-memory: 16G
+memory: 36G
