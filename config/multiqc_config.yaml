@@ -14,6 +14,8 @@ top_modules:
   - 'samtools'
   - 'minimap2'
 
+log_filesize_limit: 2000000000
+
 # --------------------------------
 # custom data
 # --------------------------------
