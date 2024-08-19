@@ -29,4 +29,3 @@ rule pore_activity:
         "../envs/pandas.yaml"
     script:
         "../scripts/parse_pore_activity.py"
-
