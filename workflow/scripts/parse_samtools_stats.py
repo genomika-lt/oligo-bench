@@ -37,8 +37,6 @@ def parse_samtools_stats(input_file, samples, output_file):
                 id_lines.append(values)
             elif line.startswith("COV"):
                 co_lines.append(values)
-            else:
-                raise ValueError("Unexpected line in samtools statistics file")
 
     mq_df = pd.DataFrame(mq_lines, columns=["Type", "MAPQ", samples]).iloc[:, [2]].T
     in_df = pd.DataFrame(id_lines, columns=["Type", "Length", samples, "Num_Del"]).iloc[:, [2]].T
