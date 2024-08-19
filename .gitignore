@@ -1,5 +1,9 @@
+# snakemake
 results/**
 resources/**
 logs/**
-.snakemake
+
 .snakemake/**
+
+# PyCharm
+.idea/
