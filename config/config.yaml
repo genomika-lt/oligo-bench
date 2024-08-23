@@ -7,7 +7,7 @@ experiments: config/experiments.tsv
 out_dir: results # default value
 
 # define parameters for a specific rule
-basecalling: False
+basecall: True
 
 # path to reference files
 reference: resources/ref.fa

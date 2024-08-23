@@ -5,5 +5,8 @@ logs/**
 
 .snakemake/**
 
+# Dorado
+.temp_dorado_model*
+
 # PyCharm
 .idea/
