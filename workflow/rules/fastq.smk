@@ -6,4 +6,4 @@ rule fastq:
     log:
         "logs/fastq_{experiment_id}_{sample_id}.log",
     run:
-        shell("""cp {input}/*.fastq.gz {output}""")
+        shell("""cat {input}/*.fastq.gz > {output}""")
