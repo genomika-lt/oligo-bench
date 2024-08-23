@@ -1,4 +1,3 @@
-
 import os
 import glob
 
@@ -63,34 +62,48 @@ def get_pore_activity_file(wildcards):
 
 
 def get_fastq_directory(wildcards):
-    run_dir = samples.loc[(samples["experiment_id"] == wildcards.experiment_id)
-                          & (samples["sample_id"] == wildcards.sample_id), "run_dir"]
+    run_dir = samples.loc[
+        (samples["experiment_id"] == wildcards.experiment_id)
+        & (samples["sample_id"] == wildcards.sample_id),
+        "run_dir",
+    ]
 
     if len(run_dir.values) < 1:
-        raise KeyError(f"No entry found for experiment_id={wildcards.experiment_id},"
-                       f"sample_id={wildcards.sample_id}")
+        raise KeyError(
+            f"No entry found for experiment_id={wildcards.experiment_id},"
+            f"sample_id={wildcards.sample_id}"
+        )
 
     input_dir = os.path.join(run_dir.values[0], "fastq_pass")
 
     if not os.path.exists(input_dir):
-        raise ValueError(f"Directory {input_dir} does not exist for"
-                         f" {wildcards.experiment_id}/{wildcards.sample_id}")
+        raise ValueError(
+            f"Directory {input_dir} does not exist for"
+            f" {wildcards.experiment_id}/{wildcards.sample_id}"
+        )
 
     return input_dir
 
 
 def get_pod5_directory(wildcards):
-    run_dir = samples.loc[(samples["experiment_id"] == wildcards.experiment_id)
-                          & (samples["sample_id"] == wildcards.sample_id), "run_dir"]
+    run_dir = samples.loc[
+        (samples["experiment_id"] == wildcards.experiment_id)
+        & (samples["sample_id"] == wildcards.sample_id),
+        "run_dir",
+    ]
 
     if len(run_dir.values) < 1:
-        raise KeyError(f"No entry found for experiment_id={wildcards.experiment_id},"
-                       f"sample_id={wildcards.sample_id}")
+        raise KeyError(
+            f"No entry found for experiment_id={wildcards.experiment_id},"
+            f"sample_id={wildcards.sample_id}"
+        )
 
     input_dir = os.path.join(run_dir.values[0], "pod5_pass")
 
     if not os.path.exists(input_dir):
-        raise ValueError(f"Directory {input_dir} does not exist for"
-                         f" {wildcards.experiment_id}/{wildcards.sample_id}")
+        raise ValueError(
+            f"Directory {input_dir} does not exist for"
+            f" {wildcards.experiment_id}/{wildcards.sample_id}"
+        )
 
     return input_dir

@@ -1,6 +1,6 @@
 rule fastq:
     input:
-        get_fastq_directory
+        get_fastq_directory,
     output:
         "results/fastq/{experiment_id}_{sample_id}.fastq.gz",
     log:

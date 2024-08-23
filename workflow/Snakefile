@@ -1,11 +1,17 @@
 configfile: "config/config.yaml"
 
+
 include: "rules/common.smk"
 
-if config['basecall']:
+
+if config["basecall"]:
+
     include: "rules/basecall.smk"
+
 else:
+
     include: "rules/fastq.smk"
+
 
 include: "rules/minknown.smk"
 include: "rules/align.smk"
