@@ -1,7 +1,7 @@
 # config.yaml
 
 # path or URL to experiment sheet (TSV format)
-experiments: config/experiments.tsv
+experiments: config/experiments.csv
 
 # define directories
 out_dir: results # default value
