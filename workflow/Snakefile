@@ -16,6 +16,7 @@ else:
 include: "rules/minknown.smk"
 include: "rules/align.smk"
 include: "rules/qc.smk"
+include: "rules/statistics.smk"
 
 
 rule all:
@@ -75,3 +76,4 @@ rule all:
             sample_id=samples["sample_id"],
         ),
         "results/qc/multiqc.html",
+        "results/report.html"
