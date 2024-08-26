@@ -7,9 +7,9 @@ rule count_total_passed_reads:
             sample_id=samples["sample_id"],
         ),
     output:
-        "results/statistics/total_passed_reads.html"
+        "results/statistics/total_passed_reads.html",
     log:
-        "logs/count_total_passed_reads.log"
+        "logs/count_total_passed_reads.log",
     conda:
         "../envs/plotly.yaml"
     script:
@@ -18,11 +18,11 @@ rule count_total_passed_reads:
 
 rule finalise_report:
     input:
-        "results/statistics/total_passed_reads.html"
+        "results/statistics/total_passed_reads.html",
     output:
-        "results/report.html"
+        "results/report.html",
     log:
-        "logs/finalise_report.log"
+        "logs/finalise_report.log",
     conda:
         "../envs/plotly.yaml"
     script:

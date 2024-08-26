@@ -76,4 +76,4 @@ rule all:
             sample_id=samples["sample_id"],
         ),
         "results/qc/multiqc.html",
-        "results/report.html"
+        "results/report.html",
