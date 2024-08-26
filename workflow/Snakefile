@@ -21,12 +21,6 @@ include: "rules/qc.smk"
 rule all:
     input:
         expand(
-            "results/minknow/{experiment_id}_{sample_id}_throughput.csv",
-            zip,
-            experiment_id=samples["experiment_id"],
-            sample_id=samples["sample_id"],
-        ),
-        expand(
             "results/minknow/{experiment_id}_{sample_id}_pore_act.csv",
             zip,
             experiment_id=samples["experiment_id"],
@@ -40,30 +34,6 @@ rule all:
         ),
         expand(
             "results/minknow/{experiment_id}_{sample_id}_pore_ratio.csv",
-            zip,
-            experiment_id=samples["experiment_id"],
-            sample_id=samples["sample_id"],
-        ),
-        expand(
-            "results/fastq/{experiment_id}_{sample_id}.fastq.gz",
-            zip,
-            experiment_id=samples["experiment_id"],
-            sample_id=samples["sample_id"],
-        ),
-        expand(
-            "results/qc/fastqc/{experiment_id}_{sample_id}_fastqc.zip",
-            zip,
-            experiment_id=samples["experiment_id"],
-            sample_id=samples["sample_id"],
-        ),
-        expand(
-            "results/aligned/{experiment_id}_{sample_id}_aln.sorted.bam",
-            zip,
-            experiment_id=samples["experiment_id"],
-            sample_id=samples["sample_id"],
-        ),
-        expand(
-            "results/aligned/stats/{experiment_id}_{sample_id}.stats",
             zip,
             experiment_id=samples["experiment_id"],
             sample_id=samples["sample_id"],
@@ -88,12 +58,6 @@ rule all:
         ),
         expand(
             "results/aligned/stats/{experiment_id}_{sample_id}_COV.csv",
-            zip,
-            experiment_id=samples["experiment_id"],
-            sample_id=samples["sample_id"],
-        ),
-        expand(
-            "results/qc/fastqc/{experiment_id}_{sample_id}.html",
             zip,
             experiment_id=samples["experiment_id"],
             sample_id=samples["sample_id"],
