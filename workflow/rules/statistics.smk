@@ -10,6 +10,8 @@ rule count_total_passed_reads:
         "results/statistics/total_passed_reads.html"
     log:
         "logs/count_total_passed_reads.log"
+    conda:
+        "../envs/plotly.yaml"
     script:
         "../scripts/statistics/total_passed_reads.py"
 
@@ -21,5 +23,7 @@ rule finalise_report:
         "results/report.html"
     log:
         "logs/finalise_report.log"
+    conda:
+        "../envs/plotly.yaml"
     script:
         "../scripts/statistics/finalise_report.py"
