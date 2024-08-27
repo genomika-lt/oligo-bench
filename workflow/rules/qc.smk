@@ -1,6 +1,6 @@
 rule fastqc:
     input:
-        "results/fastq/{experiment_id}_{sample_id}.fastq.gz",
+        "results/basecalled/{experiment_id}_{sample_id}.bam",
     output:
         html="results/qc/fastqc/{experiment_id}_{sample_id}.html",
         zip="results/qc/fastqc/{experiment_id}_{sample_id}_fastqc.zip",

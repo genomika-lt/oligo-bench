@@ -3,3 +3,4 @@ channels:
   - bioconda
 dependencies:
   - plotly = 5.23.0
+  - pysam = 0.22.1

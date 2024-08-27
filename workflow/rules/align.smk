@@ -1,7 +1,7 @@
 rule minimap2:
     input:
         target=config["reference"],
-        query="results/fastq/{experiment_id}_{sample_id}.fastq.gz",
+        query="results/basecalled/{experiment_id}_{sample_id}.bam",
     output:
         "results/aligned/{experiment_id}_{sample_id}_aln.sorted.bam",
     log:
