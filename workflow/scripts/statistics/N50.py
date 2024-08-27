@@ -36,7 +36,7 @@ def calculate_n50_for_numbers(list_of_lengths):
 def calculate_n50_for_bam_files(bam_files, output_file):
     """
     Calculates N50 for each sample and saves to html table
-    :param str bam_files: Folder with fastq reads
+    :param list[str] bam_files: Folder with fastq reads
     :param str output_file: Output file to save data
     :rtype: None
     """

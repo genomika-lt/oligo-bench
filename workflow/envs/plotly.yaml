@@ -4,3 +4,4 @@ channels:
 dependencies:
   - plotly = 5.23.0
   - pysam = 0.22.1
+  - pandas = 2.2.2

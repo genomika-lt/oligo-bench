@@ -33,11 +33,29 @@ rule calculate_n50:
     script:
         "../scripts/statistics/N50.py"
 
+rule gc_over_time:
+    input:
+        expand(
+            "results/basecalled/{experiment_id}_{sample_id}.bam",
+            zip,
+            experiment_id=samples["experiment_id"],
+            sample_id=samples["sample_id"],
+        ),
+    output:
+        "results/statistics/gc_over_time.html",
+    log:
+        "logs/gc_over_time.log",
+    conda:
+        "../envs/plotly.yaml"
+    script:
+        "../scripts/statistics/gc_over_time.py"
+
 
 rule finalise_report:
     input:
         "results/statistics/total_passed_reads.html",
-        "results/statistics/calculate_n50.html"
+        "results/statistics/calculate_n50.html",
+        "results/statistics/gc_over_time.html"
     output:
         "results/report.html",
     log:

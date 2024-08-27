@@ -20,7 +20,7 @@ logging.basicConfig(filename=snakemake.log[0],
 def count_total_passed_reads(bam_files, output_file):
     """
     Counts total number of reads across samples
-    :param str bam_files: Folder with fastq reads
+    :param list[str] bam_files: Folder with fastq reads
     :param str output_file: Output file to save data
     :rtype: None
     """
