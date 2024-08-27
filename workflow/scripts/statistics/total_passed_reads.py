@@ -1,9 +1,9 @@
 """Counts total number of reads"""
 
 
-import gzip
 import logging
 
+import pysam
 import plotly.graph_objects as go
 
 from snakemake.script import snakemake
@@ -17,10 +17,10 @@ logging.basicConfig(filename=snakemake.log[0],
                     level=logging.INFO)
 
 
-def count_total_passed_reads(fastq_files, output_file):
+def count_total_passed_reads(bam_files, output_file):
     """
     Counts total number of reads across samples
-    :param str fastq_files: Folder with fastq reads
+    :param str bam_files: Folder with fastq reads
     :param str output_file: Output file to save data
     :rtype: None
     """
@@ -29,17 +29,11 @@ def count_total_passed_reads(fastq_files, output_file):
     header = ['Parameter']
     values = ['Total reads']
 
-    for file in fastq_files:
-        with gzip.open(file, 'rt') as f:
-            count = 0
-            for _ in f.readlines():
-                count += 1
+    for file in bam_files:
+        out = pysam.view('-o', 'out.sam', file)
+        count = len(out.split('\n')) - 1
 
-        if count % 4:
-            raise ValueError("Incorrect fastq file")
-        count //= 4
-
-        header.append(file[:-9])
+        header.append(file.split('/')[-1])
         values.append(count)
 
     figure = go.Figure(data=[go.Table(header={'values': header},
@@ -50,7 +44,7 @@ def count_total_passed_reads(fastq_files, output_file):
 
 
 try:
-    count_total_passed_reads(fastq_files=snakemake.input, output_file=snakemake.output[0])
+    count_total_passed_reads(bam_files=snakemake.input, output_file=snakemake.output[0])
 except Exception as e:
     logger.exception(e)
     raise e

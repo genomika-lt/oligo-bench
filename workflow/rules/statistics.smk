@@ -1,7 +1,7 @@
 rule count_total_passed_reads:
     input:
         expand(
-            "results/fastq/{experiment_id}_{sample_id}.fastq.gz",
+            "results/basecalled/{experiment_id}_{sample_id}.bam",
             zip,
             experiment_id=samples["experiment_id"],
             sample_id=samples["sample_id"],
