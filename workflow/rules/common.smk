@@ -40,25 +40,14 @@ def get_throughput_file(wildcards):
         )
 
 
-def get_pore_activity_file(wildcards):
-    try:
-        run_dir = samples.loc[
-            (samples["experiment_id"] == wildcards.experiment_id)
-            & (samples["sample_id"] == wildcards.sample_id),
-            "run_dir",
-        ].values[0]
-    except IndexError:
-        raise KeyError(
-            f"No entry found for experiment_id={wildcards.experiment_id}, sample_id={wildcards.sample_id}"
-        )
-    pore_pattern = os.path.join(run_dir, "pore_activity_*.csv")
-    pore_files = glob.glob(pore_pattern)
-    if pore_files:
-        return pore_files[0]
-    else:
-        raise FileNotFoundError(
-            f"No pore activity file found for {wildcards.experiment_id}, {wildcards.sample_id}"
-        )
+def get_pore_activity_files(wildcards):
+    pore_files = []
+
+    for path in samples.loc[:, 'run_dir']:
+        pore_pattern = os.path.join(path, "pore_activity_*.csv")
+        pore_files.append(glob.glob(pore_pattern)[0])
+
+    return pore_files
 
 
 def get_fastq_directory(wildcards):
