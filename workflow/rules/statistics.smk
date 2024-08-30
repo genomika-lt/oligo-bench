@@ -33,6 +33,7 @@ rule calculate_n50:
     script:
         "../scripts/statistics/N50.py"
 
+
 rule gc_over_time:
     input:
         expand(
@@ -53,7 +54,7 @@ rule gc_over_time:
 
 rule pore_scan:
     input:
-        samples['run_dir']
+        samples["run_dir"],
     output:
         "results/statistics/pore_scan.html",
     log:
@@ -69,7 +70,7 @@ rule finalise_report:
         "results/statistics/total_passed_reads.html",
         "results/statistics/calculate_n50.html",
         "results/statistics/gc_over_time.html",
-        "results/statistics/pore_scan.html"
+        "results/statistics/pore_scan.html",
     output:
         "results/report.html",
     log:

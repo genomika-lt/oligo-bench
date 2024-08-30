@@ -59,7 +59,7 @@ rule all:
         ),
         expand(
             "results/aligned/stats/{experiment_id}_{sample_id}_COV.csv",
-           zip,
+            zip,
             experiment_id=samples["experiment_id"],
             sample_id=samples["sample_id"],
         ),
