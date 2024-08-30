@@ -28,8 +28,8 @@ def parse_pore_activity(input_file, samples, output_files):
 
     df.columns.values[2] = samples
 
-    act_df = df[df.iloc[:, 0] == "pore"].iloc[:, [2]].reset_index(drop=True).T
-    seq_df = df[df.iloc[:, 0] == "strand"].iloc[:, [2]].reset_index(drop=True).T
+    act_df = (df[df.iloc[:, 0] == "pore"].iloc[:, 2] / 126 / 5000).reset_index(drop=True).T
+    seq_df = (df[df.iloc[:, 0] == "strand"].iloc[:, 2] / 126 / 5000).reset_index(drop=True).T
 
     act_df.replace(0, 1, inplace=True)
     seq_df.replace(0, 1, inplace=True)
