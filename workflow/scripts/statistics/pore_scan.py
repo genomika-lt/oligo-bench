@@ -93,7 +93,7 @@ def pore_scan(path_to_samples, output_file):
     figure.update_layout(barmode='stack')
 
     with open(output_file, 'w', encoding='utf-8') as g:
-        g.write(figure.to_html(full_html=False))
+        g.write(figure.to_html(full_html=False, include_plotlyjs='cdn'))
 
 try:
     pore_scan(path_to_samples=snakemake.input, output_file=snakemake.output[0])

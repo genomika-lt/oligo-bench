@@ -61,7 +61,7 @@ def gc_over_time(bam_files, output_file):
 
     figure = px.line(plotting_data, x='Time (Minutes)', y=plotting_data.columns, title='GC/bases during time')
     with open(output_file, 'w', encoding='utf-8') as g:
-        g.write(figure.to_html(full_html=False))
+        g.write(figure.to_html(full_html=False, include_plotlyjs='cdn'))
 
 
 try:

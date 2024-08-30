@@ -58,7 +58,7 @@ def calculate_n50_for_bam_files(bam_files, output_file):
                                       cells={'values': values})])
 
     with open(output_file, 'w', encoding='utf-8') as g:
-        g.write(figure.to_html(full_html=False))
+        g.write(figure.to_html(full_html=False, include_plotlyjs='cdn'))
 
 
 try:

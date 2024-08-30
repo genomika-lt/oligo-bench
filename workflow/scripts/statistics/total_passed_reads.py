@@ -40,7 +40,7 @@ def count_total_passed_reads(bam_files, output_file):
                                       cells={'values': values})])
 
     with open(output_file, 'w', encoding='utf-8') as g:
-        g.write(figure.to_html(full_html=False))
+        g.write(figure.to_html(full_html=False, include_plotlyjs='cdn'))
 
 
 try:

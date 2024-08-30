@@ -52,6 +52,19 @@ rule gc_over_time:
         "../scripts/statistics/gc_over_time.py"
 
 
+rule pore_activity:
+    input:
+        samples["run_dir"],
+    output:
+        "results/statistics/pore_activity.html",
+    log:
+        "logs/pore_activity.log",
+    conda:
+        "../envs/plotly.yaml"
+    script:
+        "../scripts/statistics/pore_activity.py"
+
+
 rule pore_scan:
     input:
         samples["run_dir"],
@@ -68,6 +81,7 @@ rule pore_scan:
 rule finalise_report:
     input:
         "results/statistics/total_passed_reads.html",
+        "results/statistics/pore_activity.html",
         "results/statistics/calculate_n50.html",
         "results/statistics/gc_over_time.html",
         "results/statistics/pore_scan.html",
