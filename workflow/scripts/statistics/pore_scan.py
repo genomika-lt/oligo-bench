@@ -18,7 +18,7 @@ logging.basicConfig(filename=snakemake.log[0],
                     level=logging.INFO)
 
 
-def pore_activity(path_to_samples, output_file):
+def pore_scan(path_to_samples, output_file):
     """
     Plots pore activity based on minknow output csv file
     :param list[str] path_to_samples: List of paths to samples
@@ -96,7 +96,7 @@ def pore_activity(path_to_samples, output_file):
         g.write(figure.to_html(full_html=False))
 
 try:
-    pore_activity(path_to_samples=snakemake.input, output_file=snakemake.output[0])
+    pore_scan(path_to_samples=snakemake.input, output_file=snakemake.output[0])
 except Exception as e:
     logger.exception(e)
     raise e
