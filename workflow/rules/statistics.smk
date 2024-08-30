@@ -53,7 +53,7 @@ rule gc_over_time:
 
 rule pore_activity:
     input:
-        get_pore_activity_files
+        samples['run_dir']
     output:
         "results/statistics/pore_activity.html",
     log:
