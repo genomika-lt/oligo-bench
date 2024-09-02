@@ -44,15 +44,15 @@ def pore_activity(path_to_samples, output_file):
         meta_data = {'rank': {'strand': 1,
                               'adapter': 2,
                               'pore': 3,
-                              'zero': 4},
+                              'no_pore': 4},
                      'color': {'strand': '#00ff00',
                                'adapter': '#ede797',
                                'pore': '#00cc00',
-                               'zero': '#4da9c3'},
+                               'no_pore': '#4da9c3'},
                      'visible': {'strand': True,
                                  'adapter': True,
                                  'pore': True,
-                                 'zero': 'legendonly'}
+                                 'no_pore': 'legendonly'}
                      }
 
         groups = data.groupby('Channel State')
