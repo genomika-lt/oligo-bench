@@ -32,7 +32,7 @@ def gc_over_time(bam_files, output_file):
 
     for file in bam_files:
         out = pysam.view('-o', 'out.sam', file)
-        records = [record.split('\t') for record in  out.split('\n')[:-1]]
+        records = [record.split() for record in  out.split('\n')[:-1]]
         records.sort(key=lambda x: x[17])
 
         # Counting GC% over time

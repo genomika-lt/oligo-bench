@@ -90,8 +90,28 @@ rule reads_over_time:
     script:
         "../scripts/statistics/reads_over_time.py"
 
+
+rule quality_and_length_over_time:
+    input:
+        expand(
+            "results/basecalled/{experiment_id}_{sample_id}.bam",
+            zip,
+            experiment_id=samples["experiment_id"],
+            sample_id=samples["sample_id"],
+        ),
+    output:
+        "results/statistics/quality_and_length_over_time.html",
+    log:
+        "logs/quality_and_length_over_time.log",
+    conda:
+        "../envs/plotly.yaml"
+    script:
+        "../scripts/statistics/quality_and_length_over_time.py"
+
+
 rule finalise_report:
     input:
+        "results/statistics/quality_and_length_over_time.html",
         "results/statistics/total_passed_reads.html",
         "results/statistics/pore_activity.html",
         "results/statistics/calculate_n50.html",
