@@ -46,12 +46,12 @@ def gc_over_time(bam_files, output_file):
             current_read_time = datetime.strptime(record[17], 'st:Z:%Y-%m-%dT%H:%M:%S.%f+00:00')
             read = record[9]
             if current_read_time - first_read_time < timedelta(minutes=minutes_counter):
-                gc_counter += read.count('GC')
+                gc_counter += read.count('G') + read.count('C')
                 total_bases_counter += len(read)
             else:
                 gc_distributions_over_minute.append(gc_counter / total_bases_counter)
                 minutes_counter += 1
-                gc_counter = read.count('GC')
+                gc_counter = read.count('G') + read.count('C')
                 total_bases_counter = len(read)
         gc_distributions_over_minute.append(gc_counter / total_bases_counter)
 

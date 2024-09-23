@@ -2,60 +2,12 @@ configfile: "config/config.yaml"
 
 
 include: "rules/common.smk"
-
-
-if config["basecall"]:
-
-    include: "rules/basecall.smk"
-
-else:
-
-    include: "rules/fastq.smk"
-
-
-include: "rules/minknown.smk"
-include: "rules/align.smk"
-include: "rules/qc.smk"
+include: "rules/basecall.smk"
+include: "rules/filter_basecalled.smk"
+include: "rules/minimap2.smk"
 include: "rules/statistics.smk"
 
 
 rule all:
     input:
-        expand(
-            "results/aligned/stats/{experiment_id}_{sample_id}_MAPQ.csv",
-            zip,
-            experiment_id=samples["experiment_id"],
-            sample_id=samples["sample_id"],
-        ),
-        expand(
-            "results/aligned/stats/{experiment_id}_{sample_id}_INS.csv",
-            zip,
-            experiment_id=samples["experiment_id"],
-            sample_id=samples["sample_id"],
-        ),
-        expand(
-            "results/aligned/stats/{experiment_id}_{sample_id}_DEL.csv",
-            zip,
-            experiment_id=samples["experiment_id"],
-            sample_id=samples["sample_id"],
-        ),
-        expand(
-            "results/aligned/stats/{experiment_id}_{sample_id}_COV.csv",
-            zip,
-            experiment_id=samples["experiment_id"],
-            sample_id=samples["sample_id"],
-        ),
-        expand(
-            "results/aligned/stats/{experiment_id}_{sample_id}_ref_dist.csv",
-            zip,
-            experiment_id=samples["experiment_id"],
-            sample_id=samples["sample_id"],
-        ),
-        expand(
-            "results/aligned/stats/{experiment_id}_{sample_id}_nm_counts.csv",
-            zip,
-            experiment_id=samples["experiment_id"],
-            sample_id=samples["sample_id"],
-        ),
-        "results/qc/multiqc.html",
         "results/report.html",
