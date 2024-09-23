@@ -1,9 +1,8 @@
 rule count_total_passed_reads:
     input:
         expand(
-            "results/basecalled/{experiment_id}_{sample_id}.bam",
+            "results/basecalled/{sample_id}.bam",
             zip,
-            experiment_id=samples["experiment_id"],
             sample_id=samples["sample_id"],
         ),
     output:
@@ -19,9 +18,7 @@ rule count_total_passed_reads:
 rule calculate_n50:
     input:
         expand(
-            "results/basecalled/{experiment_id}_{sample_id}.bam",
-            zip,
-            experiment_id=samples["experiment_id"],
+            "results/basecalled/{sample_id}.bam",
             sample_id=samples["sample_id"],
         ),
     output:
@@ -37,9 +34,7 @@ rule calculate_n50:
 rule gc_over_time:
     input:
         expand(
-            "results/basecalled/{experiment_id}_{sample_id}.bam",
-            zip,
-            experiment_id=samples["experiment_id"],
+            "results/basecalled/{sample_id}.bam",
             sample_id=samples["sample_id"],
         ),
     output:
@@ -54,7 +49,7 @@ rule gc_over_time:
 
 rule pore_activity:
     input:
-        samples["run_dir"],
+        samples["path_to_sample"],
     output:
         "results/statistics/pore_activity.html",
     log:
@@ -67,7 +62,7 @@ rule pore_activity:
 
 rule pore_scan:
     input:
-        samples["run_dir"],
+        samples["path_to_sample"],
     output:
         "results/statistics/pore_scan.html",
     log:
@@ -80,7 +75,7 @@ rule pore_scan:
 
 rule reads_over_time:
     input:
-        samples["run_dir"],
+        samples["path_to_sample"],
     output:
         "results/statistics/reads_over_time.html",
     log:
@@ -94,9 +89,7 @@ rule reads_over_time:
 rule quality_and_length_over_time:
     input:
         expand(
-            "results/basecalled/{experiment_id}_{sample_id}.bam",
-            zip,
-            experiment_id=samples["experiment_id"],
+            "results/basecalled/{sample_id}.bam",
             sample_id=samples["sample_id"],
         ),
     output:
@@ -109,8 +102,34 @@ rule quality_and_length_over_time:
         "../scripts/statistics/quality_and_length_over_time.py"
 
 
+rule summary_table:
+    input:
+        expand(
+            "results/basecalled/{sample_id}.bam",
+            sample_id=samples["sample_id"],
+        ),
+        expand(
+            "results/basecalled/passed_{sample_id}.bam",
+            sample_id=samples["sample_id"],
+        ),
+        expand(
+            "results/aligned/{sample_id}.bam",
+            sample_id=samples["sample_id"],
+        ),
+        samples["path_to_sample"],
+    output:
+        "results/statistics/summary_table.html",
+    log:
+        "logs/summary_table.log",
+    conda:
+        "../envs/plotly.yaml"
+    script:
+        "../scripts/statistics/summary_table.py"
+
+
 rule finalise_report:
     input:
+        "results/statistics/summary_table.html",
         "results/statistics/quality_and_length_over_time.html",
         "results/statistics/total_passed_reads.html",
         "results/statistics/pore_activity.html",

@@ -6,104 +6,20 @@ import pandas as pd
 from snakemake.utils import validate
 
 
-samples = pd.read_csv(
-    config["experiments"],
-    dtype={"experiment_id": str, "sample_id": str, "run_dir": str},
-)
-
-validate(samples, schema="../schemas/experiments.schema.yaml")
-
+samples = pd.read_csv(config["samples"]).convert_dtypes()
+samples.loc[:, 'sample_id'] = [line.split('/')[-2] for line in samples["path_to_sample"]]
 
 wildcard_constraints:
-    sample_id="|".join(samples["sample_id"]),
-    experiment_id="|".join(samples["experiment_id"]),
-
-
-def get_throughput_file(wildcards):
-    try:
-        run_dir = samples.loc[
-            (samples["experiment_id"] == wildcards.experiment_id)
-            & (samples["sample_id"] == wildcards.sample_id),
-            "run_dir",
-        ].values[0]
-    except IndexError:
-        raise KeyError(
-            f"No entry found for experiment_id={wildcards.experiment_id}, sample_id={wildcards.sample_id}"
-        )
-    throughput_pattern = os.path.join(run_dir, "throughput_*.csv")
-    throughput_files = glob.glob(throughput_pattern)
-    if throughput_files:
-        return throughput_files[0]
-    else:
-        raise FileNotFoundError(
-            f"No throughput file found for {wildcards.experiment_id}, {wildcards.sample_id}"
-        )
-
-
-def get_pore_activity_file(wildcards):
-    try:
-        run_dir = samples.loc[
-            (samples["experiment_id"] == wildcards.experiment_id)
-            & (samples["sample_id"] == wildcards.sample_id),
-            "run_dir",
-        ].values[0]
-    except IndexError:
-        raise KeyError(
-            f"No entry found for experiment_id={wildcards.experiment_id}, sample_id={wildcards.sample_id}"
-        )
-    pore_pattern = os.path.join(run_dir, "pore_activity_*.csv")
-    pore_files = glob.glob(pore_pattern)
-    if pore_files:
-        return pore_files[0]
-    else:
-        raise FileNotFoundError(
-            f"No pore activity file found for {wildcards.experiment_id}, {wildcards.sample_id}"
-        )
-
-
-def get_fastq_directory(wildcards):
-    run_dir = samples.loc[
-        (samples["experiment_id"] == wildcards.experiment_id)
-        & (samples["sample_id"] == wildcards.sample_id),
-        "run_dir",
-    ]
-
-    if len(run_dir.values) < 1:
-        raise KeyError(
-            f"No entry found for experiment_id={wildcards.experiment_id},"
-            f"sample_id={wildcards.sample_id}"
-        )
-
-    input_dir = os.path.join(run_dir.values[0], "fastq_pass")
-
-    if not os.path.exists(input_dir):
-        raise ValueError(
-            f"Directory {input_dir} does not exist for"
-            f" {wildcards.experiment_id}/{wildcards.sample_id}"
-        )
-
-    return input_dir
+    sample_id="|".join(samples.loc[:, 'sample_id']),
 
 
 def get_pod5_directory(wildcards):
-    run_dir = samples.loc[
-        (samples["experiment_id"] == wildcards.experiment_id)
-        & (samples["sample_id"] == wildcards.sample_id),
-        "run_dir",
-    ]
+    path_to_sample = samples.loc[samples['sample_id'] == wildcards.sample_id, 'path_to_sample']
+    pod5_directory = os.path.join(path_to_sample.values[0], 'pod5')
 
-    if len(run_dir.values) < 1:
-        raise KeyError(
-            f"No entry found for experiment_id={wildcards.experiment_id},"
-            f"sample_id={wildcards.sample_id}"
-        )
+    return pod5_directory
 
-    input_dir = os.path.join(run_dir.values[0], "pod5_pass")
 
-    if not os.path.exists(input_dir):
-        raise ValueError(
-            f"Directory {input_dir} does not exist for"
-            f" {wildcards.experiment_id}/{wildcards.sample_id}"
-        )
-
-    return input_dir
+def get_reference(wildcards):
+    path_to_reference = samples.loc[samples['sample_id'] == wildcards.sample_id, 'path_to_reference'].values[0]
+    return path_to_reference
