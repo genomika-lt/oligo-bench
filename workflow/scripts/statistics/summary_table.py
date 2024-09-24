@@ -5,12 +5,11 @@ import json
 import os
 import logging
 
-
 from math import log10, floor
 from datetime import datetime
 
+from workflow.scripts.utils.parse import parse_sam_records
 import pysam
-import pandas as pd
 import plotly.graph_objects as go
 
 from snakemake.script import snakemake
@@ -26,37 +25,6 @@ logging.basicConfig(filename=snakemake.log[0],
 
 def round_to_x_significant(number, x):
     return round(number, x - 1 - floor(log10(abs(number))))
-
-def parse_bam_records(records):
-    """
-    Parse bam records.
-    :param list[list[str]] records: Records from BAM file.
-    :return: Parsed records.
-    """
-
-    parsed_records = []
-    for record in records:
-        meta = {}
-        for meta_data in record[11:]:
-            key_index = meta_data.index(':')
-            type_index = meta_data.index(':', key_index + 1)
-            meta_key, meta_type, meta_value = (meta_data[:key_index],
-                                               meta_data[key_index + 1:type_index],
-                                               meta_data[type_index + 1:])
-            if meta_type == 'i':
-                meta[meta_key] = int(meta_value)
-            elif meta_type == 'f':
-                meta[meta_key] = float(meta_value)
-            elif meta_type == 'Z':
-                meta[meta_key] = meta_value
-            else:
-                logger.warning("Unexpected Data Type: %s", meta_type)
-                meta[meta_key] = meta_value
-
-        parsed_record = record[:11] + [meta]
-        parsed_records.append(parsed_record)
-
-    return parsed_records
 
 
 def summary_table(bam_files, output_file):
@@ -83,7 +51,7 @@ def summary_table(bam_files, output_file):
 
         out_passed_reads = pysam.view('-o', 'out.sam', file_passed_reads)
         records_passed_reads = [record.split() for record in out_passed_reads.split('\n')[:-1]]
-        parsed_passed_records = parse_bam_records(records_passed_reads)
+        parsed_passed_records = parse_sam_records(records_passed_reads)
         passed_reads_percentage = len(parsed_passed_records) / total_reads_count
         failed_reads_percentage = 1 - passed_reads_percentage
         passed_bases_count = sum(len(passed_record[9]) for passed_record in parsed_passed_records)
@@ -92,7 +60,7 @@ def summary_table(bam_files, output_file):
 
         out_mapped_reads = pysam.view('-o', 'out.sam', file_mapped_reads)
         records_mapped_reads = [record.split() for record in out_mapped_reads.split('\n')[:-1]]
-        parsed_mapped_records = parse_bam_records(records_mapped_reads)
+        parsed_mapped_records = parse_sam_records(records_mapped_reads)
         mapped_reads_percentage = len(parsed_mapped_records) / len(parsed_passed_records)
         mapped_bases_count = sum(len(mapped_record[9]) for mapped_record in parsed_mapped_records)
         mapped_bases_percentage = mapped_bases_count / passed_bases_count

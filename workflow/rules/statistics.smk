@@ -127,9 +127,26 @@ rule summary_table:
         "../scripts/statistics/summary_table.py"
 
 
+rule read_quality_histogram:
+    input:
+        expand(
+            "results/basecalled/{sample_id}.bam",
+            sample_id=samples["sample_id"],
+        ),
+    output:
+        "results/statistics/read_quality_histogram.html",
+    log:
+        "logs/read_quality_histogram.log",
+    conda:
+        "../envs/plotly.yaml"
+    script:
+        "../scripts/statistics/read_quality_histogram.py"
+
+
 rule finalise_report:
     input:
         "results/statistics/summary_table.html",
+        "results/statistics/read_quality_histogram.html",
         "results/statistics/quality_and_length_over_time.html",
         "results/statistics/total_passed_reads.html",
         "results/statistics/pore_activity.html",
