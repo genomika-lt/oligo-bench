@@ -142,13 +142,29 @@ rule passed_read_length_histogram:
         "../scripts/statistics/passed_read_length_histogram.py"
 
 
+rule read_length_over_time_as_line:
+    input:
+        expand(
+            "results/basecalled/{sample_id}.bam",
+            sample_id=samples["sample_id"],
+        ),
+    output:
+        "results/statistics/read_length_over_time_as_line.html",
+    log:
+        "logs/read_length_over_time_as_line.log",
+    conda:
+        "../envs/plotly.yaml"
+    script:
+        "../scripts/statistics/read_length_over_time_as_line.py"
+
+
 rule finalise_report:
     input:
         "results/statistics/summary_table.html",
         "results/statistics/read_quality_histogram.html",
         "results/statistics/passed_read_length_histogram.html",
+        "results/statistics/read_length_over_time_as_line.html",
         "results/statistics/quality_and_length_over_time.html",
-        "results/statistics/total_passed_reads.html",
         "results/statistics/pore_activity.html",
         "results/statistics/calculate_n50.html",
         "results/statistics/gc_over_time.html",
