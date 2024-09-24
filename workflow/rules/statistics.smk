@@ -1,20 +1,3 @@
-rule count_total_passed_reads:
-    input:
-        expand(
-            "results/basecalled/{sample_id}.bam",
-            zip,
-            sample_id=samples["sample_id"],
-        ),
-    output:
-        "results/statistics/total_passed_reads.html",
-    log:
-        "logs/count_total_passed_reads.log",
-    conda:
-        "../envs/plotly.yaml"
-    script:
-        "../scripts/statistics/total_passed_reads.py"
-
-
 rule calculate_n50:
     input:
         expand(

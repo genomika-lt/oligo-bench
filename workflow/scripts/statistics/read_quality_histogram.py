@@ -34,7 +34,7 @@ def read_quality_histogram(bam_files, output_file):
         parsed_records = parse_sam_records(records)
         data = [record[11]['qs'] for record in parsed_records]
         figure.add_trace(go.Histogram(x=data,
-                                      name=path_to_sample.split('/')[-1].split('.')[0]))
+                                      name=path_to_sample.split('/')[-1][:-4]))
 
     figure.update_layout(title="Read Quality Histogram",
                          xaxis_title="Quality",

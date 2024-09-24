@@ -33,7 +33,7 @@ def passed_read_length_histogram(bam_files, output_file):
         parsed_records = parse_sam_records(records)
         data = [len(record[10]) for record in parsed_records]
         figure.add_trace(go.Histogram(x=data,
-                                      name=path_to_sample.split('/')[-1].split('.')[0]))
+                                      name=path_to_sample.split('/')[-1][7:-4]))
 
     figure.update_layout(title="Passed Read Length Histogram",
                          xaxis_title="Length",
