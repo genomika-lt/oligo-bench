@@ -1,7 +1,6 @@
-"""Plots reads quality histogram"""
+"""Plots passed reads length histogram"""
 
 import logging
-import sys
 
 import pysam
 import plotly.graph_objects as go
@@ -18,7 +17,7 @@ logging.basicConfig(filename=snakemake.log[0],
                     level=logging.INFO)
 
 
-def read_quality_histogram(bam_files, output_file):
+def passed_read_length_histogram(bam_files, output_file):
     """
     Plots number of bases and reads over time as line plot and cumulative output
     :param list[str] bam_files: Folder with fastq reads
@@ -32,12 +31,12 @@ def read_quality_histogram(bam_files, output_file):
         out = pysam.view('-o', 'out.sam', path_to_sample)
         records = [line.split() for line in out.split('\n')[:-1]]
         parsed_records = parse_sam_records(records)
-        data = [record[11]['qs'] for record in parsed_records]
+        data = [len(record[10]) for record in parsed_records]
         figure.add_trace(go.Histogram(x=data,
-                                      name=path_to_sample.split('/')[-1][:-4]))
+                                      name=path_to_sample.split('/')[-1][7:-4]))
 
-    figure.update_layout(title="Read Quality Histogram",
-                         xaxis_title="Quality",
+    figure.update_layout(title="Passed Read Length Histogram",
+                         xaxis_title="Length",
                          yaxis_title="Number Of Reads",
                          legend_title="Samples")
     figure.update_layout(barmode='overlay')
@@ -48,7 +47,7 @@ def read_quality_histogram(bam_files, output_file):
 
 
 try:
-    read_quality_histogram(bam_files=snakemake.input, output_file=snakemake.output[0])
+    passed_read_length_histogram(bam_files=snakemake.input, output_file=snakemake.output[0])
 except Exception as e:
     logger.exception(e)
     raise e

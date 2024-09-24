@@ -1,20 +1,3 @@
-rule count_total_passed_reads:
-    input:
-        expand(
-            "results/basecalled/{sample_id}.bam",
-            zip,
-            sample_id=samples["sample_id"],
-        ),
-    output:
-        "results/statistics/total_passed_reads.html",
-    log:
-        "logs/count_total_passed_reads.log",
-    conda:
-        "../envs/plotly.yaml"
-    script:
-        "../scripts/statistics/total_passed_reads.py"
-
-
 rule calculate_n50:
     input:
         expand(
@@ -143,10 +126,27 @@ rule read_quality_histogram:
         "../scripts/statistics/read_quality_histogram.py"
 
 
+rule passed_read_length_histogram:
+    input:
+        expand(
+            "results/basecalled/passed_{sample_id}.bam",
+            sample_id=samples["sample_id"],
+        ),
+    output:
+        "results/statistics/passed_read_length_histogram.html",
+    log:
+        "logs/passed_read_length_histogram.log",
+    conda:
+        "../envs/plotly.yaml"
+    script:
+        "../scripts/statistics/passed_read_length_histogram.py"
+
+
 rule finalise_report:
     input:
         "results/statistics/summary_table.html",
         "results/statistics/read_quality_histogram.html",
+        "results/statistics/passed_read_length_histogram.html",
         "results/statistics/quality_and_length_over_time.html",
         "results/statistics/total_passed_reads.html",
         "results/statistics/pore_activity.html",
