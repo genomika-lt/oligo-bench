@@ -1,6 +1,6 @@
 """Plots dependency between quality and length of reads"""
 
-import logging
+
 from datetime import datetime
 
 import pysam
@@ -9,14 +9,10 @@ import plotly.express as px
 
 from snakemake.script import snakemake
 
-# logging
-logger = logging.getLogger(__name__)
-logging.basicConfig(filename=snakemake.log[0],
-                    filemode='w',
-                    encoding='utf-8',
-                    level=logging.INFO)
+from workflow.scripts.utils import file_logger
 
 
+@file_logger
 def quality_and_length_over_time(bam_files, output_file):
     """
     Plots number of bases and reads over time as line plot and cumulative output
@@ -70,8 +66,5 @@ def quality_and_length_over_time(bam_files, output_file):
     with open(output_file, 'w', encoding='utf-8') as g:
         g.write(figure.to_html(full_html=False, include_plotlyjs='cdn'))
 
-try:
-    quality_and_length_over_time(bam_files=snakemake.input, output_file=snakemake.output[0])
-except Exception as e:
-    logger.exception(e)
-    raise e
+
+quality_and_length_over_time(bam_files=snakemake.input, output_file=snakemake.output[0])

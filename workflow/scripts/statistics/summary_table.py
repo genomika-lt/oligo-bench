@@ -1,32 +1,22 @@
 """Plots summary table and saves to html"""
 
 
-import json
 import os
-import logging
+import json
 
-from math import log10, floor
 from datetime import datetime
 
-from workflow.scripts.utils.parse import parse_sam_records
+from workflow.scripts.utils import (parse_sam_records,
+                                    file_logger,
+                                    round_to_x_significant)
+
 import pysam
 import plotly.graph_objects as go
 
 from snakemake.script import snakemake
 
 
-# logging
-logger = logging.getLogger(__name__)
-logging.basicConfig(filename=snakemake.log[0],
-                    filemode='w',
-                    encoding='utf-8',
-                    level=logging.INFO)
-
-
-def round_to_x_significant(number, x):
-    return round(number, x - 1 - floor(log10(abs(number))))
-
-
+@file_logger
 def summary_table(bam_files, output_file):
     """
     Plots gc distribution over time in samples and saves to html
@@ -91,8 +81,4 @@ def summary_table(bam_files, output_file):
         g.write(figure.to_html(full_html=False, include_plotlyjs='cdn'))
 
 
-try:
-    summary_table(bam_files=snakemake.input, output_file=snakemake.output[0])
-except Exception as e:
-    logger.exception(e)
-    raise e
+summary_table(bam_files=snakemake.input, output_file=snakemake.output[0])

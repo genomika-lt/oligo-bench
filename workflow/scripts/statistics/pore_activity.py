@@ -6,16 +6,12 @@ import os
 import pandas as pd
 import plotly.graph_objects as go
 
+from workflow.scripts.utils import file_logger
+
 from snakemake.script import snakemake
 
-# logging
-logger = logging.getLogger(__name__)
-logging.basicConfig(filename=snakemake.log[0],
-                    filemode='w',
-                    encoding='utf-8',
-                    level=logging.INFO)
 
-
+@file_logger
 def pore_activity(path_to_samples, output_file):
     """
     Plots pore activity based on minknow output csv file
@@ -72,8 +68,5 @@ def pore_activity(path_to_samples, output_file):
     with open(output_file, 'w', encoding='utf-8') as g:
         g.write(figure.to_html(full_html=False, include_plotlyjs='cdn'))
 
-try:
-    pore_activity(path_to_samples=snakemake.input, output_file=snakemake.output[0])
-except Exception as e:
-    logger.exception(e)
-    raise e
+
+pore_activity(path_to_samples=snakemake.input, output_file=snakemake.output[0])

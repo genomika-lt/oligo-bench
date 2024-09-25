@@ -1,6 +1,5 @@
 """Plots gc distribution over time in samples and saves to html"""
 
-import logging
 
 from datetime import datetime, timedelta
 
@@ -10,15 +9,10 @@ import plotly.express as px
 
 from snakemake.script import snakemake
 
-
-# logging
-logger = logging.getLogger(__name__)
-logging.basicConfig(filename=snakemake.log[0],
-                    filemode='w',
-                    encoding='utf-8',
-                    level=logging.INFO)
+from workflow.scripts.utils import file_logger
 
 
+@file_logger
 def gc_over_time(bam_files, output_file):
     """
     Plots gc distribution over time in samples and saves to html

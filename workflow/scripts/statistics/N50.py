@@ -1,22 +1,15 @@
 """Calculates N50 for each sample and saves to html table"""
 
 
-import logging
-
 import pysam
 import plotly.graph_objects as go
 
 from snakemake.script import snakemake
 
-
-# logging
-logger = logging.getLogger(__name__)
-logging.basicConfig(filename=snakemake.log[0],
-                    filemode='w',
-                    encoding='utf-8',
-                    level=logging.INFO)
+from workflow.scripts.utils import file_logger
 
 
+@file_logger
 def calculate_n50_for_numbers(list_of_lengths):
     """
     Calculates N50 for list of lengths of sequences
