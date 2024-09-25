@@ -58,8 +58,4 @@ def gc_over_time(bam_files, output_file):
         g.write(figure.to_html(full_html=False, include_plotlyjs='cdn'))
 
 
-try:
-    gc_over_time(bam_files=snakemake.input, output_file=snakemake.output[0])
-except Exception as e:
-    logger.exception(e)
-    raise e
+gc_over_time(bam_files=snakemake.input, output_file=snakemake.output[0])
