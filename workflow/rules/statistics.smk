@@ -158,11 +158,28 @@ rule read_length_over_time_as_line:
         "../scripts/statistics/read_length_over_time_as_line.py"
 
 
+rule quality_per_base_position:
+    input:
+        expand(
+            "results/basecalled/passed_{sample_id}.bam",
+            sample_id=samples["sample_id"],
+        ),
+    output:
+        "results/statistics/quality_per_base_position.html",
+    log:
+        "logs/quality_per_base_position.log",
+    conda:
+        "../envs/plotly.yaml"
+    script:
+        "../scripts/statistics/quality_per_base_position.py"
+
+
 rule finalise_report:
     input:
         "results/statistics/summary_table.html",
         "results/statistics/read_quality_histogram.html",
         "results/statistics/passed_read_length_histogram.html",
+        "results/statistics/quality_per_base_position.html",
         "results/statistics/read_length_over_time_as_line.html",
         "results/statistics/quality_and_length_over_time.html",
         "results/statistics/pore_activity.html",

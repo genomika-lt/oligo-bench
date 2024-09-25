@@ -54,14 +54,15 @@ def read_length_over_time_as_line(bam_files, output_file):
                                                         columns=[file.split('/')[-1][:-4]]),
                                            how='outer')
 
-    plotting_data['Time (Minutes)'] = plotting_data.index
-
     figure = px.line(plotting_data,
-                     x='Time (Minutes)',
+                     x=plotting_data.index,
                      y=plotting_data.columns,
-                     title='Read length during time')
+                     title='Read length during time'
+                     )
 
-    figure.update_layout(yaxis_title='Mean Length Of Read')
+    figure.update_layout(xaxis_title='Time (Minutes)',
+                         yaxis_title='Mean Length Of Read',
+                         legend_title='Samples')
 
     with open(output_file, 'w', encoding='utf-8') as g:
         g.write(figure.to_html(full_html=False, include_plotlyjs='cdn'))

@@ -58,3 +58,17 @@ def parse_sam_records(records):
 
 def round_to_x_significant(number, x):
     return round(number, x - 1 - floor(log10(abs(number))))
+
+
+def from_phred_to_char(value: int|list[int]) -> str:
+    if isinstance(value, int):
+        return chr(value + 33)
+
+    return ''.join([chr(i + 33) for i in value])
+
+
+def from_char_to_phred(value: str|list[str]) -> int|list[int]:
+    if len(value) == 1:
+        return ord(value[0]) - 33
+
+    return [ord(i) - 33 for i in value]
