@@ -1,7 +1,28 @@
+"""File collecting most useful functions as utils."""
+
+
 import logging
+from typing import Callable
+from snakemake.script import snakemake
+from math import floor, log10
 
 
-logger = logging.getLogger(__name__)
+def file_logger(func: Callable) -> Callable:
+    logging.basicConfig(filename=snakemake.log[0],
+                        filemode='w',
+                        encoding='utf-8',
+                        level=logging.INFO)
+
+
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            logging.exception(e)
+            raise e
+
+
+    return wrapper
 
 
 def parse_sam_records(records):
@@ -27,10 +48,13 @@ def parse_sam_records(records):
             elif meta_type == 'Z':
                 meta[meta_key] = meta_value
             else:
-                logger.warning("Unexpected Data Type: %s", meta_type)
                 meta[meta_key] = meta_value
 
         parsed_record = record[:11] + [meta]
         parsed_records.append(parsed_record)
 
     return parsed_records
+
+
+def round_to_x_significant(number, x):
+    return round(number, x - 1 - floor(log10(abs(number))))

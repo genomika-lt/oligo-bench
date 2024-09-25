@@ -1,21 +1,16 @@
 """Plots number of bases and reads over time"""
 
 import os
-import logging
 
 import pandas as pd
 import plotly.graph_objects as go
 
 from snakemake.script import snakemake
 
-# logging
-logger = logging.getLogger(__name__)
-logging.basicConfig(filename=snakemake.log[0],
-                    filemode='w',
-                    encoding='utf-8',
-                    level=logging.INFO)
+from workflow.scripts.utils import file_logger
 
 
+@file_logger
 def reads_over_time(path_to_samples, output_file):
     """
     Plots number of reads over time as line plot
@@ -70,8 +65,4 @@ def reads_over_time(path_to_samples, output_file):
         g.write(figure.to_html(full_html=False))
 
 
-try:
-    reads_over_time(path_to_samples=snakemake.input, output_file=snakemake.output[0])
-except Exception as e:
-    logger.exception(e)
-    raise e
+reads_over_time(path_to_samples=snakemake.input, output_file=snakemake.output[0])

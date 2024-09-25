@@ -1,23 +1,15 @@
 """Plots reads quality histogram"""
 
-import logging
-import sys
 
 import pysam
 import plotly.graph_objects as go
 
-from workflow.scripts.utils.parse import parse_sam_records
+from workflow.scripts.utils import parse_sam_records, file_logger
 
 from snakemake.script import snakemake
 
-# logging
-logger = logging.getLogger(__name__)
-logging.basicConfig(filename=snakemake.log[0],
-                    filemode='w',
-                    encoding='utf-8',
-                    level=logging.INFO)
 
-
+@file_logger
 def read_quality_histogram(bam_files, output_file):
     """
     Plots number of bases and reads over time as line plot and cumulative output
@@ -47,8 +39,4 @@ def read_quality_histogram(bam_files, output_file):
         g.write(figure.to_html(full_html=False, include_plotlyjs='cdn'))
 
 
-try:
-    read_quality_histogram(bam_files=snakemake.input, output_file=snakemake.output[0])
-except Exception as e:
-    logger.exception(e)
-    raise e
+read_quality_histogram(bam_files=snakemake.input, output_file=snakemake.output[0])

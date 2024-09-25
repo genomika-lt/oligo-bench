@@ -1,6 +1,5 @@
 """Plots mean reads length over time as line"""
 
-import logging
 
 from datetime import datetime, timedelta
 
@@ -10,16 +9,10 @@ import plotly.express as px
 
 from snakemake.script import snakemake
 
-from workflow.scripts.utils.parse import parse_sam_records
-
-# logging
-logger = logging.getLogger(__name__)
-logging.basicConfig(filename=snakemake.log[0],
-                    filemode='w',
-                    encoding='utf-8',
-                    level=logging.INFO)
+from workflow.scripts.utils import parse_sam_records, file_logger
 
 
+@file_logger
 def read_length_over_time_as_line(bam_files, output_file):
     """
     Plots gc distribution over time in samples and saves to html
@@ -74,8 +67,4 @@ def read_length_over_time_as_line(bam_files, output_file):
         g.write(figure.to_html(full_html=False, include_plotlyjs='cdn'))
 
 
-try:
-    read_length_over_time_as_line(bam_files=snakemake.input, output_file=snakemake.output[0])
-except Exception as e:
-    logger.exception(e)
-    raise e
+read_length_over_time_as_line(bam_files=snakemake.input, output_file=snakemake.output[0])
