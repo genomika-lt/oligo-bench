@@ -1,17 +1,22 @@
-rule calculate_n50:
+rule summary_table:
     input:
         expand(
             "results/basecalled/{sample_id}.bam",
             sample_id=samples["sample_id"],
         ),
+        expand(
+            "results/basecalled/passed_{sample_id}.bam",
+            sample_id=samples["sample_id"],
+        ),
+        samples["path_to_sample"],
     output:
-        "results/statistics/calculate_n50.html",
+        "results/statistics/summary_table.html",
     log:
-        "logs/calculate_n50.log",
+        "logs/summary_table.log",
     conda:
         "../envs/plotly.yaml"
     script:
-        "../scripts/statistics/N50.py"
+        "../scripts/statistics/summary_table.py"
 
 
 rule gc_over_time:
@@ -83,31 +88,6 @@ rule quality_and_length_over_time:
         "../envs/plotly.yaml"
     script:
         "../scripts/statistics/quality_and_length_over_time.py"
-
-
-rule summary_table:
-    input:
-        expand(
-            "results/basecalled/{sample_id}.bam",
-            sample_id=samples["sample_id"],
-        ),
-        expand(
-            "results/basecalled/passed_{sample_id}.bam",
-            sample_id=samples["sample_id"],
-        ),
-        expand(
-            "results/aligned/{sample_id}.bam",
-            sample_id=samples["sample_id"],
-        ),
-        samples["path_to_sample"],
-    output:
-        "results/statistics/summary_table.html",
-    log:
-        "logs/summary_table.log",
-    conda:
-        "../envs/plotly.yaml"
-    script:
-        "../scripts/statistics/summary_table.py"
 
 
 rule read_quality_histogram:
