@@ -1,19 +1,17 @@
-# config.yaml
-
-# path or URL to experiment sheet (CSV format)
+# DEFAULT
+# path to experiment sheet (CSV format)
 samples: config/experiments.csv
 
-# define directories
-output_folder: results # default value
 
+# OUTPUT
+# directory
+output_folder: results
+# Report Name
+report_name: report
+
+
+# BASECALLING
 # define parameters for a specific rule
 basecall: True
 # dorado model 'fast', 'hac' or 'sup'
 dorado_model: sup
-
-# path to reference files
-reference: resources/ref.fa
-
-# parameters for computational resources
-threads: 4
-memory: 36G

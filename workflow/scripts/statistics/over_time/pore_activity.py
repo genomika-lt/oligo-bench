@@ -1,17 +1,16 @@
 """Plots pore activity over pores time for each sample"""
 
-import logging
 import os
 
 import pandas as pd
 import plotly.graph_objects as go
 
-from workflow.scripts.utils import file_logger
+from workflow.scripts.utils import snakemake_file_logger
 
 from snakemake.script import snakemake
 
 
-@file_logger
+@snakemake_file_logger
 def pore_activity(path_to_samples, output_file):
     """
     Plots pore activity based on minknow output csv file

@@ -7,10 +7,10 @@ import plotly.graph_objects as go
 
 from snakemake.script import snakemake
 
-from workflow.scripts.utils import file_logger
+from workflow.scripts.utils import snakemake_file_logger
 
 
-@file_logger
+@snakemake_file_logger
 def reads_over_time(path_to_samples, output_file):
     """
     Plots number of reads over time as line plot

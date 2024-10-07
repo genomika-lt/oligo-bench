@@ -10,10 +10,10 @@ from plotly.subplots import make_subplots
 
 from snakemake.script import snakemake
 
-from workflow.scripts.utils import file_logger
+from workflow.scripts.utils import snakemake_file_logger
 
 
-@file_logger
+@snakemake_file_logger
 def pore_scan(path_to_samples, output_file):
     """
     Plots pore activity based on minknow output csv file
@@ -82,7 +82,7 @@ def pore_scan(path_to_samples, output_file):
                                     name=pore_type,
                                     legendgroup=pore_type,
                                     hovertext=f'{pore_type}',
-                                    showlegend=not scan,
+                                    showlegend=scan == 0,
                                     marker_color='#' + pore_type_color[pore_type].lower()),
                              scan // 4 + 1,
                              scan % 4 + 1)

@@ -3,11 +3,18 @@
 
 import logging
 from typing import Callable
-from snakemake.script import snakemake
 from math import floor, log10
 
+from snakemake.script import snakemake
 
-def file_logger(func: Callable) -> Callable:
+
+def snakemake_file_logger(func):
+    """
+    Decorator for logging snakemake functions into files.
+    :param Callable func: Snakemake script function to wrap.
+    :return: Wrapped function.
+    :rtype: Callable
+    """
     logging.basicConfig(filename=snakemake.log[0],
                         filemode='w',
                         encoding='utf-8',
@@ -57,6 +64,12 @@ def parse_sam_records(records):
 
 
 def round_to_x_significant(number, x):
+    """
+
+    :param number:
+    :param x:
+    :return:
+    """
     return round(number, x - 1 - floor(log10(abs(number))))
 
 

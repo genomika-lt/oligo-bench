@@ -5,7 +5,7 @@ include: "rules/common.smk"
 include: "rules/dorado_basecaller.smk"
 include: "rules/filter_basecalled.smk"
 include: "rules/minimap2.smk"
-include: "rules/statistics.smk"
+include: "rules/statistics/statistics.smk"
 
 
 rule all:

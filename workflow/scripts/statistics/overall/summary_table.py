@@ -7,7 +7,7 @@ import json
 from datetime import datetime
 
 from workflow.scripts.utils import (parse_sam_records,
-                                    file_logger,
+                                    snakemake_file_logger,
                                     round_to_x_significant)
 
 import pysam
@@ -33,7 +33,7 @@ def calculate_n50_for_numbers(list_of_lengths: list[int|float]):
     return 0
 
 
-@file_logger
+@snakemake_file_logger
 def summary_table(bam_files, output_file):
     """
     Plots gc distribution over time in samples and saves to html
@@ -49,7 +49,8 @@ def summary_table(bam_files, output_file):
     body_values = [[], [], [], [], [], [], [], []]
 
     number_of_samples = len(bam_files) // 3
-    files = [(bam_files[i + j * number_of_samples] for j in range(3)) for i in range(number_of_samples)]
+    files = [(bam_files[i + j * number_of_samples] for j in range(3))
+             for i in range(number_of_samples)]
     for file_all_reads, file_passed_reads, path_to_sample in files:
         out_all_reads = pysam.view('-o', 'out.sam', file_all_reads)
         total_reads_count = len(out_all_reads.split('\n')) - 1
@@ -66,12 +67,15 @@ def summary_table(bam_files, output_file):
         n50 = calculate_n50_for_numbers(parsed_reads_lengths)
 
         json_file = [file for file in os.listdir(path_to_sample) if file.endswith('.json')][0]
-        with open(os.path.join(path_to_sample, json_file), 'r') as f:
+        with open(os.path.join(path_to_sample, json_file), 'r', encoding='utf-8') as f:
             json_data = json.load(f)
 
-        experiment_start_time = datetime.strptime(json_data['protocol_run_info']['start_time'][:26],'%Y-%m-%dT%H:%M:%S.%f')
-        experiment_end_time = datetime.strptime(json_data['protocol_run_info']['end_time'][:26],'%Y-%m-%dT%H:%M:%S.%f')
-        experiment_duration_hours = (experiment_end_time - experiment_start_time).total_seconds() / 60 / 60
+        experiment_start_time = datetime.strptime(json_data['protocol_run_info']['start_time'][:26],
+                                                  '%Y-%m-%dT%H:%M:%S.%f')
+        experiment_end_time = datetime.strptime(json_data['protocol_run_info']['end_time'][:26],
+                                                '%Y-%m-%dT%H:%M:%S.%f')
+        experiment_duration_hours = ((experiment_end_time - experiment_start_time).total_seconds()
+                                     / 60 / 60)
 
         body_values[0].append(file_all_reads.split('/')[-1].split('.')[0])
         body_values[1].append(total_reads_count)

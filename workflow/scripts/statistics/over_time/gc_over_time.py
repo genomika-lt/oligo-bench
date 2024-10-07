@@ -9,10 +9,10 @@ import plotly.express as px
 
 from snakemake.script import snakemake
 
-from workflow.scripts.utils import file_logger
+from workflow.scripts.utils import snakemake_file_logger
 
 
-@file_logger
+@snakemake_file_logger
 def gc_over_time(bam_files, output_file):
     """
     Plots gc distribution over time in samples and saves to html

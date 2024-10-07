@@ -3,10 +3,10 @@
 
 from snakemake.script import snakemake
 
-from workflow.scripts.utils import file_logger
+from workflow.scripts.utils import snakemake_file_logger
 
 
-@file_logger
+@snakemake_file_logger
 def finalise_report(reports, output_file):
     """
     Counts total number of reads across samples

@@ -1,17 +1,16 @@
-"""Plots maen base quality for each position"""
+"""Plots mean base quality for each position"""
 
 
 import pysam
 import plotly.express as px
-from docutils.nodes import legend
 from pandas import DataFrame
 
-from workflow.scripts.utils import parse_sam_records, file_logger, from_char_to_phred
+from workflow.scripts.utils import parse_sam_records, snakemake_file_logger, from_char_to_phred
 
 from snakemake.script import snakemake
 
 
-@file_logger
+@snakemake_file_logger
 def quality_per_base_position(bam_files, output_file):
     """
     Plots mean base quality for each position in percents
@@ -33,8 +32,12 @@ def quality_per_base_position(bam_files, output_file):
 
         for record in qualities:
             for percentage in range(100):
-                sample_data[percentage] += sum(record[int(len(record) / 100 * percentage):
-                                                      int(len(record) / 100 * (percentage + 1))])
+                start = int(len(record) / 100 * percentage)
+                end = int(len(record) / 100 * (percentage + 1))
+                if start == end:
+                    continue
+                sample_data[percentage] += sum(record[start:end]) / (end - start)
+
         data_for_plotting[path_to_sample.split('/')[-1][7:-4]] = [i / len(qualities) for i in sample_data]
 
 

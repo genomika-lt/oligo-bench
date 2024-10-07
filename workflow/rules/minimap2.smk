@@ -49,7 +49,7 @@ rule parse_samtools_stats:
 rule count_seqs_bam:
     input:
         bam="results/aligned/{sample_id}.bam",
-        ref=config["reference"],
+        ref=get_reference,
     output:
         out="results/aligned/stats/{sample_id}_ref_dist.csv",
     params:

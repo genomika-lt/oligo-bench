@@ -7,5 +7,7 @@ rule dorado_basecaller:
         "logs/basecall_{sample_id}.log",
     params:
         model=config['dorado_model']
+    resources:
+        gpu=1
     shell:
         "dorado basecaller {params.model} --no-trim {input} > {output}"
