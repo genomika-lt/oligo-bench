@@ -8,7 +8,7 @@ from snakemake.utils import validate
 
 samples = pd.read_csv(config["samples"]).convert_dtypes()
 
-char = '/' # workaround for snakemake linter false positive
+char = "/"  # workaround for snakemake linter false positive
 
 samples.loc[:, "sample_id"] = [
     line.split(char)[-2] for line in samples["path_to_sample"]
