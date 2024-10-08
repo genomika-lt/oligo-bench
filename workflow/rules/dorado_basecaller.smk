@@ -9,5 +9,7 @@ rule dorado_basecaller:
         model=config['dorado_model']
     resources:
         gpu=1
+    container:
+        "docker://ontresearch/dorado:latest"
     shell:
         "dorado basecaller {params.model} --no-trim {input} > {output}"
