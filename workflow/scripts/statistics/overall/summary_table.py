@@ -6,17 +6,34 @@ import json
 
 from datetime import datetime
 
-from workflow.scripts.utils import (parse_sam_records,
-                                    snakemake_file_logger,
-                                    round_to_x_significant)
-
 import pysam
 import plotly.graph_objects as go
 
 from snakemake.script import snakemake
 
+from workflow.scripts.utils import (parse_sam_records,
+                                    snakemake_file_logger,
+                                    round_to_x_significant)
 
-def calculate_n50_for_numbers(list_of_lengths: list[int|float]):
+def experiment_duration_from_json(path_to_json: str) -> int:
+    """
+    Retrieves duration of experiment from MinKnow json file.
+    :param path_to_json: json summary output file.
+    :return: Duration of experiment in seconds.
+    """
+
+    with open(path_to_json, 'r', encoding='utf-8') as f:
+        json_data = json.load(f)
+
+    experiment_start_time = datetime.strptime(json_data['protocol_run_info']['start_time'][:26],
+                                              '%Y-%m-%dT%H:%M:%S.%f')
+    experiment_end_time = datetime.strptime(json_data['protocol_run_info']['end_time'][:26],
+                                            '%Y-%m-%dT%H:%M:%S.%f')
+    return int((experiment_end_time - experiment_start_time).total_seconds())
+
+
+
+def calculate_n50_for_numbers(list_of_lengths: list[int|float]) -> int:
     """
     Calculates N50 for list of lengths of sequences
     :param list[int] list_of_lengths: list with all lengths of sequences
@@ -33,6 +50,7 @@ def calculate_n50_for_numbers(list_of_lengths: list[int|float]):
     return 0
 
 
+# pylint: disable=too-many-locals
 @snakemake_file_logger
 def summary_table(bam_files, output_file):
     """
@@ -66,17 +84,10 @@ def summary_table(bam_files, output_file):
         parsed_reads_lengths = [len(read[10]) for read in parsed_passed_records]
         n50 = calculate_n50_for_numbers(parsed_reads_lengths)
 
-        json_file = [file for file in os.listdir(path_to_sample) if file.endswith('.json')][0]
-        with open(os.path.join(path_to_sample, json_file), 'r', encoding='utf-8') as f:
-            json_data = json.load(f)
-
-        experiment_start_time = datetime.strptime(json_data['protocol_run_info']['start_time'][:26],
-                                                  '%Y-%m-%dT%H:%M:%S.%f')
-        experiment_end_time = datetime.strptime(json_data['protocol_run_info']['end_time'][:26],
-                                                '%Y-%m-%dT%H:%M:%S.%f')
-        experiment_duration_hours = ((experiment_end_time - experiment_start_time).total_seconds()
-                                     / 60 / 60)
-
+        path_to_json_file = os.path.join(path_to_sample,
+                                         [file for file in os.listdir(path_to_sample)
+                                          if file.endswith('.json')][0])
+        experiment_duration_hours = experiment_duration_from_json(path_to_json_file) / 60 / 60
         body_values[0].append(file_all_reads.split('/')[-1].split('.')[0])
         body_values[1].append(total_reads_count)
         body_values[2].append(round_to_x_significant(passed_reads_percentage, 3))

@@ -5,9 +5,10 @@ import os
 import pandas as pd
 import plotly.graph_objects as go
 
+from snakemake.script import snakemake
+
 from workflow.scripts.utils import snakemake_file_logger
 
-from snakemake.script import snakemake
 
 
 @snakemake_file_logger
@@ -59,7 +60,8 @@ def pore_activity(path_to_samples, output_file):
                                         legendgrouptitle={'text': group},
                                         legendrank=meta_data['rank'].get(str(group), 1000),
                                         visible=meta_data['visible'].get(str(group), 'legendonly'),
-                                        marker={'color': meta_data['color'].get(str(group), '#000000')}))
+                                        marker={'color': meta_data['color'].get(str(group),
+                                                                                '#000000')}))
 
 
     figure.update_layout(legend_groupclick='toggleitem')

@@ -4,9 +4,10 @@
 import pysam
 import plotly.graph_objects as go
 
+from snakemake.script import snakemake
+
 from workflow.scripts.utils import parse_sam_records, snakemake_file_logger
 
-from snakemake.script import snakemake
 
 
 @snakemake_file_logger
@@ -18,6 +19,7 @@ def passed_read_length_histogram(bam_files, output_file):
     :rtype: None
     """
 
+    # pylint: disable=duplicate-code
     figure = go.Figure()
 
     for path_to_sample in bam_files:

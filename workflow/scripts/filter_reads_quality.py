@@ -17,8 +17,9 @@ def filter_basecalled(bam_file, output_file):
     :rtype: None
     """
 
-
+    # pylint: disable=no-member
     data = pysam.AlignmentFile(bam_file, 'rb', check_sq=False)
+    # pylint: disable=no-member
     filtered = pysam.AlignmentFile(output_file, "wb", template=data, check_sq=False)
     for read in data:
         for tag in read.tags:

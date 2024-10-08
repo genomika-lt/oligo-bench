@@ -33,7 +33,8 @@ def quality_and_length_over_time(bam_files, output_file):
 
         parsed_records.sort(key=lambda x: x[11]['st'])
 
-        first_read_time = datetime.strptime(parsed_records[0][-1]['st'], '%Y-%m-%dT%H:%M:%S.%f+00:00')
+        first_read_time = datetime.strptime(parsed_records[0][-1]['st'],
+                                            '%Y-%m-%dT%H:%M:%S.%f+00:00')
 
         length_quality_time_data = {'Quality': [],
                                     'Length': [],
@@ -43,11 +44,14 @@ def quality_and_length_over_time(bam_files, output_file):
         for record in parsed_records:
             length_quality_time_data['Quality'].append(record[-1]['qs'])
             length_quality_time_data['Length'].append(len(record[9]))
-            current_read_time = datetime.strptime(record[-1]['st'],'%Y-%m-%dT%H:%M:%S.%f+00:00')
-            length_quality_time_data['Time'].append((current_read_time - first_read_time).seconds // 60)
+            current_read_time = datetime.strptime(record[-1]['st'],
+                                                  '%Y-%m-%dT%H:%M:%S.%f+00:00')
+            length_quality_time_data['Time'].append((current_read_time - first_read_time).seconds
+                                                    // 60)
             length_quality_time_data['Sample'].append(filename)
 
-        plotting_data = pd.concat([plotting_data, pd.DataFrame(length_quality_time_data).convert_dtypes()])
+        plotting_data = pd.concat([plotting_data,
+                                   pd.DataFrame(length_quality_time_data).convert_dtypes()])
 
     figure = px.density_contour(plotting_data,
                                 x='Length',

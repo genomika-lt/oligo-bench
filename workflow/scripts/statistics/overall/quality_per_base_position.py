@@ -3,13 +3,16 @@
 
 import pysam
 import plotly.express as px
-from pandas import DataFrame
 
-from workflow.scripts.utils import parse_sam_records, snakemake_file_logger, from_char_to_phred
+from pandas import DataFrame
 
 from snakemake.script import snakemake
 
+from workflow.scripts.utils import parse_sam_records, snakemake_file_logger, from_char_to_phred
 
+
+
+# pylint: disable=too-many-locals
 @snakemake_file_logger
 def quality_per_base_position(bam_files, output_file):
     """
@@ -28,7 +31,7 @@ def quality_per_base_position(bam_files, output_file):
         parsed_records = parse_sam_records(records)
 
         qualities = [from_char_to_phred(record[10]) for record in parsed_records]
-        sample_data = [0 for i in range(100)]
+        sample_data = [0 for _ in range(100)]
 
         for record in qualities:
             for percentage in range(100):
@@ -38,7 +41,8 @@ def quality_per_base_position(bam_files, output_file):
                     continue
                 sample_data[percentage] += sum(record[start:end]) / (end - start)
 
-        data_for_plotting[path_to_sample.split('/')[-1][7:-4]] = [i / len(qualities) for i in sample_data]
+        data_for_plotting[path_to_sample.split('/')[-1][7:-4]] = [i / len(qualities)
+                                                                  for i in sample_data]
 
 
     df = DataFrame(data_for_plotting)

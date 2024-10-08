@@ -10,6 +10,7 @@ from snakemake.script import snakemake
 from workflow.scripts.utils import snakemake_file_logger
 
 
+# pylint: disable=too-many-locals
 @snakemake_file_logger
 def reads_over_time(path_to_samples, output_file):
     """
@@ -18,7 +19,6 @@ def reads_over_time(path_to_samples, output_file):
     :param str output_file: Output file to save data
     :rtype: None
     """
-
 
     throughput_files = []
     for path_to_sample in path_to_samples:
@@ -39,10 +39,12 @@ def reads_over_time(path_to_samples, output_file):
 
         windows_size = y_data.shape[0] // 20
         x_data_averaged = x_data
-        y_data_averaged = (y_data.
-                           rolling(window=windows_size, min_periods=windows_size, center=True).mean().
-                           rolling(window=windows_size, min_periods=windows_size, center=True).mean().
-                           rolling(window=windows_size, min_periods=windows_size, center=True).mean())
+        y_data_averaged = y_data
+
+        for _ in range(3):
+            y_data_averaged = y_data_averaged.rolling(window=windows_size,
+                                                      min_periods=windows_size,
+                                                      center=True).mean()
 
         figure.add_trace(go.Scatter(x=x_data,
                                     y=y_data,

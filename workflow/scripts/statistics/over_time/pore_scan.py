@@ -13,6 +13,7 @@ from snakemake.script import snakemake
 from workflow.scripts.utils import snakemake_file_logger
 
 
+# pylint: disable=too-many-locals
 @snakemake_file_logger
 def pore_scan(path_to_samples, output_file):
     """
@@ -30,11 +31,11 @@ def pore_scan(path_to_samples, output_file):
 
     samples_scans = []
     for report in json_reports:
-        with open(report, 'r') as f:
+        with open(report, 'r', encoding='utf-8') as f:
             json_data = json.loads(f.read())
 
-        sample_pore_scans: list[dict] = json_data['acquisitions'][1]['acquisition_run_info']['bream_info'][
-            'mux_scan_results']
+        sample_pore_scans: list[dict] = json_data['acquisitions'][1]['acquisition_run_info'][
+            'bream_info']['mux_scan_results']
         samples_scans.append(sample_pore_scans)
 
     max_number_of_scans = 0
@@ -60,32 +61,45 @@ def pore_scan(path_to_samples, output_file):
             max_number_columns = possible_value
             break
 
-    actual_number_of_columns = max_number_columns if len(pore_scans) >= max_number_columns else len(pore_scans)
+    actual_number_of_columns = len(pore_scans)
+    if len(pore_scans) >= max_number_columns:
+        actual_number_of_columns = max_number_columns
+
     actual_number_of_rows = math.ceil(len(pore_scans) / max_number_columns)
 
-    pore_types_metadata = json_data['acquisitions'][1]['acquisition_run_info']['bream_info']['mux_scan_metadata'][
-        'category_groups']
-    pore_type_color = {pore_type['name']: pore_type['style']['colour'] for pore_type in pore_types_metadata}
+    pore_types_metadata = json_data['acquisitions'][1]['acquisition_run_info']['bream_info'][
+        'mux_scan_metadata']['category_groups']
+    pore_type_color = {pore_type['name']: pore_type['style']['colour']
+                       for pore_type in pore_types_metadata}
     pore_type_color['multiple'] = 'ff000f'
     pore_type_color['other'] = '000000'
 
-    pore_types_ordered = ['single_pore', 'reserved_pore', 'unavailable', 'saturated', 'zero', 'multiple', 'other']
+    pore_types_ordered = ['single_pore',
+                          'reserved_pore',
+                          'unavailable',
+                          'saturated',
+                          'zero',
+                          'multiple',
+                          'other']
 
     if len(pore_types.union(pore_types_ordered)) != len(pore_types_ordered):
         raise ValueError('Pore types between current version of QC and minknow do not match')
 
-    figure = make_subplots(rows=actual_number_of_rows, cols=actual_number_of_columns, shared_yaxes=True)
-    for scan in range(len(pore_scans)):
+    figure = make_subplots(rows=actual_number_of_rows,
+                           cols=actual_number_of_columns,
+                           shared_yaxes=True)
+
+    for scan_index, scan_value in enumerate(pore_scans):
         for pore_type in pore_types_ordered:
-            figure.add_trace(go.Bar(x=list(pore_scans[scan][pore_type].keys()),
-                                    y=list(pore_scans[scan][pore_type].values()),
+            figure.add_trace(go.Bar(x=list(scan_value[pore_type].keys()),
+                                    y=list(scan_value[pore_type].values()),
                                     name=pore_type,
                                     legendgroup=pore_type,
                                     hovertext=f'{pore_type}',
-                                    showlegend=scan == 0,
+                                    showlegend=scan_index == 0,
                                     marker_color='#' + pore_type_color[pore_type].lower()),
-                             scan // 4 + 1,
-                             scan % 4 + 1)
+                             scan_index // 4 + 1,
+                             scan_index % 4 + 1)
     figure.update_layout(barmode='stack')
 
     with open(output_file, 'w', encoding='utf-8') as g:

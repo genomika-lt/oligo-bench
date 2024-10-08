@@ -27,7 +27,7 @@ def read_quality_histogram(bam_files, output_file):
         data = [record[11]['qs'] for record in parsed_records]
         figure.add_trace(go.Histogram(x=data,
                                       name=path_to_sample.split('/')[-1][:-4]))
-
+    # pylint: disable=duplicate-code
     figure.update_layout(title="Read Quality Histogram",
                          xaxis_title="Quality",
                          yaxis_title="Number Of Reads",

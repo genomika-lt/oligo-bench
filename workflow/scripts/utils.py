@@ -2,7 +2,6 @@
 
 
 import logging
-from typing import Callable
 from math import floor, log10
 
 from snakemake.script import snakemake
@@ -65,15 +64,22 @@ def parse_sam_records(records):
 
 def round_to_x_significant(number, x):
     """
-
-    :param number:
-    :param x:
-    :return:
+    Rounds number to x significant digits.
+    :param number: Number to round.
+    :param x: number of digits.
+    :return: Rounded number.
     """
+
     return round(number, x - 1 - floor(log10(abs(number))))
 
 
 def from_phred_to_char(value: int|list[int]) -> str:
+    """
+    Converts integer value to character or list of integers to list of characters.
+    :param value: Phred value or list of phred values.
+    :return: Character of list of characters.
+    """
+
     if isinstance(value, int):
         return chr(value + 33)
 
@@ -81,6 +87,12 @@ def from_phred_to_char(value: int|list[int]) -> str:
 
 
 def from_char_to_phred(value: str|list[str]) -> int|list[int]:
+    """
+    Converts character to phred value or list of characters to list of values.
+    :param value: Character of list of characters.
+    :return: Phred value or list of phred values.
+    """
+
     if len(value) == 1:
         return ord(value[0]) - 33
 

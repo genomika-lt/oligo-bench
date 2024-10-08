@@ -12,6 +12,7 @@ from snakemake.script import snakemake
 from workflow.scripts.utils import snakemake_file_logger
 
 
+# pylint: disable=too-many-locals
 @snakemake_file_logger
 def gc_over_time(bam_files, output_file):
     """
@@ -20,7 +21,6 @@ def gc_over_time(bam_files, output_file):
     :param str output_file: Output file to save data
     :rtype: None
     """
-
 
     plotting_data = pd.DataFrame()
 
@@ -49,11 +49,17 @@ def gc_over_time(bam_files, output_file):
                 total_bases_counter = len(read)
         gc_distributions_over_minute.append(gc_counter / total_bases_counter)
 
-        plotting_data = plotting_data.join(pd.DataFrame(gc_distributions_over_minute, columns=[file.split('/')[-1]]), how='outer')
+        plotting_data = plotting_data.join(pd.DataFrame(gc_distributions_over_minute,
+                                                        columns=[file.split('/')[-1]]),
+                                           how='outer')
 
     plotting_data['Time (Minutes)'] = plotting_data.index
 
-    figure = px.line(plotting_data, x='Time (Minutes)', y=plotting_data.columns, title='GC/bases during time')
+    figure = px.line(plotting_data,
+                     x='Time (Minutes)',
+                     y=plotting_data.columns,
+                     title='GC/bases during time')
+
     with open(output_file, 'w', encoding='utf-8') as g:
         g.write(figure.to_html(full_html=False, include_plotlyjs='cdn'))
 

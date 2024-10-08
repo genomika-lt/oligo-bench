@@ -12,6 +12,7 @@ from snakemake.script import snakemake
 from workflow.scripts.utils import parse_sam_records, snakemake_file_logger
 
 
+# pylint: disable=too-many-locals
 @snakemake_file_logger
 def read_length_over_time_as_line(bam_files, output_file):
     """
@@ -34,7 +35,8 @@ def read_length_over_time_as_line(bam_files, output_file):
         minutes_counter = 1
         bases_counter = 0
         number_of_reads_counter = 0
-        first_read_time = datetime.strptime(parsed_records[0][11]['st'], '%Y-%m-%dT%H:%M:%S.%f+00:00')
+        first_read_time = datetime.strptime(parsed_records[0][11]['st'],
+                                            '%Y-%m-%dT%H:%M:%S.%f+00:00')
 
         for record in parsed_records:
             current_read_time = datetime.strptime(record[11]['st'], '%Y-%m-%dT%H:%M:%S.%f+00:00')
