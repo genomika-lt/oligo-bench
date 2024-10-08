@@ -6,9 +6,9 @@ rule dorado_basecaller:
     log:
         "logs/basecall_{sample_id}.log",
     params:
-        model=config['dorado_model']
+        model=config["dorado_model"],
     resources:
-        gpu=1
+        gpu=1,
     container:
         "docker://ontresearch/dorado:latest"
     shell:

@@ -83,5 +83,3 @@ rule read_length_over_time_as_line:
         "../../envs/plotly.yaml"
     script:
         "../../scripts/statistics/over_time/read_length_over_time_as_line.py"
-
-
