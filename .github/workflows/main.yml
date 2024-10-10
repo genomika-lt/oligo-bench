@@ -44,8 +44,6 @@ jobs:
     - name: Test workflow
       uses: snakemake/snakemake-github-action@v1.22.0
       with:
-        env:
-          PYTHONPATH="./"
         directory: .test
         snakefile: workflow/Snakefile
         args: "--configfile .test/config/config.yaml --use-conda --show-failed-logs --cores 3 --conda-cleanup-pkgs cache --all-temp"
@@ -53,8 +51,6 @@ jobs:
     - name: Test report
       uses: snakemake/snakemake-github-action@v1.22.0
       with:
-        env:
-          PYTHONPATH="./"
         directory: .test
         snakefile: workflow/Snakefile
         args: "--configfile .test/config/config.yaml --report report.zip"
