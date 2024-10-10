@@ -5,7 +5,8 @@ import pysam
 
 from snakemake.script import snakemake
 
-from workflow.scripts.utils import snakemake_file_logger
+# pylint: disable=import-error
+from scripts.utils import snakemake_file_logger
 
 
 @snakemake_file_logger

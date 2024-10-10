@@ -8,7 +8,8 @@ from pandas import DataFrame
 
 from snakemake.script import snakemake
 
-from workflow.scripts.utils import parse_sam_records, snakemake_file_logger, from_char_to_phred
+# pylint: disable=import-error
+from scripts.utils import parse_sam_records, snakemake_file_logger, from_char_to_phred
 
 
 

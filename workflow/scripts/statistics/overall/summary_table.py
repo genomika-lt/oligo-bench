@@ -11,9 +11,10 @@ import plotly.graph_objects as go
 
 from snakemake.script import snakemake
 
-from workflow.scripts.utils import (parse_sam_records,
-                                    snakemake_file_logger,
-                                    round_to_x_significant)
+# pylint: disable=import-error
+from scripts.utils import (parse_sam_records,
+                           snakemake_file_logger,
+                           round_to_x_significant)
 
 def experiment_duration_from_json(path_to_json: str) -> int:
     """

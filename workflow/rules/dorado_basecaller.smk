@@ -8,7 +8,7 @@ rule dorado_basecaller:
     params:
         model=config["dorado_model"],
     resources:
-        gpu=1,
+        gpus=1,
     container:
         "docker://ontresearch/dorado:latest"
     shell:

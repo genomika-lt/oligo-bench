@@ -10,11 +10,6 @@ A Snakemake-based tool for quality control of synthetic oligonucleotide sequenci
 
 Snakemake is required to run this workflow. Installation of Snakemake can be found <a href='https://snakemake.readthedocs.io/en/stable/getting_started/installation.html'>here</a>
 
-**It's important to run this command while being in activated conda environment**
-```bash
-export PYTHONPATH="${PYTHONPATH}:/home/path/to/project/"
-```
-
 # Usage
 
 ```bash

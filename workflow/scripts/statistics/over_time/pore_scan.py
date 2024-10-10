@@ -10,7 +10,8 @@ from plotly.subplots import make_subplots
 
 from snakemake.script import snakemake
 
-from workflow.scripts.utils import snakemake_file_logger
+# pylint: disable=import-error
+from scripts.utils import snakemake_file_logger
 
 
 # pylint: disable=too-many-locals

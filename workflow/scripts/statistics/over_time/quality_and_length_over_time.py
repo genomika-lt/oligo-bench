@@ -9,7 +9,8 @@ import plotly.express as px
 
 from snakemake.script import snakemake
 
-from workflow.scripts.utils import snakemake_file_logger, parse_sam_records
+# pylint: disable=import-error
+from scripts.utils import snakemake_file_logger, parse_sam_records
 
 
 @snakemake_file_logger

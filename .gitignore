@@ -1,6 +1,5 @@
 # snakemake
 results/**
-resources/**
 logs/**
 
 .snakemake/**
