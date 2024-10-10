@@ -9,9 +9,9 @@ rule gc_over_time:
     log:
         "logs/gc_over_time.log",
     conda:
-        "../../envs/plotly.yaml"
+        "../envs/plotly.yaml"
     script:
-        "../../scripts/statistics/over_time/gc_over_time.py"
+        "../scripts/statistics/over_time/gc_over_time.py"
 
 
 rule pore_activity:
@@ -22,9 +22,9 @@ rule pore_activity:
     log:
         "logs/pore_activity.log",
     conda:
-        "../../envs/plotly.yaml"
+        "../envs/plotly.yaml"
     script:
-        "../../scripts/statistics/over_time/pore_activity.py"
+        "../scripts/statistics/over_time/pore_activity.py"
 
 
 rule pore_scan:
@@ -35,9 +35,9 @@ rule pore_scan:
     log:
         "logs/pore_scan.log",
     conda:
-        "../../envs/plotly.yaml"
+        "../envs/plotly.yaml"
     script:
-        "../../scripts/statistics/over_time/pore_scan.py"
+        "../scripts/statistics/over_time/pore_scan.py"
 
 
 rule reads_over_time:
@@ -48,9 +48,9 @@ rule reads_over_time:
     log:
         "logs/reads_over_time.log",
     conda:
-        "../../envs/plotly.yaml"
+        "../envs/plotly.yaml"
     script:
-        "../../scripts/statistics/over_time/reads_over_time.py"
+        "../scripts/statistics/over_time/reads_over_time.py"
 
 
 rule quality_and_length_over_time:
@@ -64,9 +64,9 @@ rule quality_and_length_over_time:
     log:
         "logs/quality_and_length_over_time.log",
     conda:
-        "../../envs/plotly.yaml"
+        "../envs/plotly.yaml"
     script:
-        "../../scripts/statistics/over_time/quality_and_length_over_time.py"
+        "../scripts/statistics/over_time/quality_and_length_over_time.py"
 
 
 rule read_length_over_time_as_line:
@@ -80,6 +80,6 @@ rule read_length_over_time_as_line:
     log:
         "logs/read_length_over_time_as_line.log",
     conda:
-        "../../envs/plotly.yaml"
+        "../envs/plotly.yaml"
     script:
-        "../../scripts/statistics/over_time/read_length_over_time_as_line.py"
+        "../scripts/statistics/over_time/read_length_over_time_as_line.py"

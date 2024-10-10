@@ -19,6 +19,6 @@ rule finalise_report:
     log:
         "logs/finalise_report.log",
     conda:
-        "../../envs/plotly.yaml"
+        "../envs/plotly.yaml"
     script:
-        "../../scripts/finalise_report.py"
+        "../scripts/finalise_report.py"

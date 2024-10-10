@@ -14,9 +14,9 @@ rule summary_table:
     log:
         "logs/summary_table.log",
     conda:
-        "../../envs/plotly.yaml"
+        "../envs/plotly.yaml"
     script:
-        "../../scripts/statistics/overall/summary_table.py"
+        "../scripts/statistics/overall/summary_table.py"
 
 
 rule read_quality_histogram:
@@ -30,9 +30,9 @@ rule read_quality_histogram:
     log:
         "logs/read_quality_histogram.log",
     conda:
-        "../../envs/plotly.yaml"
+        "../envs/plotly.yaml"
     script:
-        "../../scripts/statistics/overall/read_quality_histogram.py"
+        "../scripts/statistics/overall/read_quality_histogram.py"
 
 
 rule passed_read_length_histogram:
@@ -46,9 +46,9 @@ rule passed_read_length_histogram:
     log:
         "logs/passed_read_length_histogram.log",
     conda:
-        "../../envs/plotly.yaml"
+        "../envs/plotly.yaml"
     script:
-        "../../scripts/statistics/overall/passed_read_length_histogram.py"
+        "../scripts/statistics/overall/passed_read_length_histogram.py"
 
 
 rule quality_per_base_position:
@@ -62,6 +62,6 @@ rule quality_per_base_position:
     log:
         "logs/quality_per_base_position.log",
     conda:
-        "../../envs/plotly.yaml"
+        "../envs/plotly.yaml"
     script:
-        "../../scripts/statistics/overall/quality_per_base_position.py"
+        "../scripts/statistics/overall/quality_per_base_position.py"
