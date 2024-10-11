@@ -27,7 +27,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Lint workflow
-      uses: actions/checkout@b6bd319468ad9a049d37058554ebcd52eca38c92
+      uses: ezherman/snakemake-github-action@snakemake-8.20.5
       with:
         directory: .test
         snakefile: workflow/Snakefile
@@ -38,14 +38,14 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Test workflow
-      uses: actions/checkout@b6bd319468ad9a049d37058554ebcd52eca38c92
+      uses: ezherman/snakemake-github-action@snakemake-8.20.5
       with:
         directory: .test
         snakefile: workflow/Snakefile
         args: "--configfile .test/config/config.yaml --use-conda --show-failed-logs --cores 3 --conda-cleanup-pkgs cache --all-temp"
 
     - name: Test report
-      uses: actions/checkout@b6bd319468ad9a049d37058554ebcd52eca38c92
+      uses: ezherman/snakemake-github-action@snakemake-8.20.5
       with:
         directory: .test
         snakefile: workflow/Snakefile
