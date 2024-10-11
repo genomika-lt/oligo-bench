@@ -18,7 +18,7 @@ logging.basicConfig(filename=snakemake.log[0],
 
 def add_id_to_csv(input_file, column_id, samples, output_file):
     """
-    Adds id to csv file
+    Adds id to csv file.
     :param str input_file: Input file to modify
     :param column_id: id of column
     :param samples: value to insert
