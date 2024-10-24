@@ -60,8 +60,7 @@ class YamlForm(QWidget):
         layout.addWidget(self.dorado_model_combobox)
 
         # SECTION: Experiments (Table Widget)
-        layout.addWidget(QLabel("Experiments (path_to_sample, path_to_reference):"))
-
+        layout.addWidget(QLabel("Experiments"))
         self.experiments_table = QTableWidget(self)
         self.experiments_table.setColumnCount(2)  # path_to_sample, path_to_reference
         self.experiments_table.setHorizontalHeaderLabels(["Path to Sample", "Path to Reference"])
@@ -146,7 +145,6 @@ class YamlForm(QWidget):
             pattern = re.compile(
                 r'(test_experiment_\d+[\\/]+test_sample_\d+[\\/]+20\d{2}(0[1-9]|'
                 r'1[0-2])(0[1-9]|[12]\d|3[01])_\d{4}_MN\d{5}_ATQ\d+_\w+)$'
-
             )
 
             self.experiments_table.setRowCount(0)
@@ -201,6 +199,16 @@ class YamlForm(QWidget):
             basecall = self.basecall_checkbox.isChecked()
             dorado_model = self.dorado_model_combobox.currentText()
 
+            if not samples:
+                self.show_error("Path to experiment sheet cannot be empty.")
+                return
+            if not output_folder:
+                self.show_error("Output directory cannot be empty.")
+                return
+            if not report_name:
+                self.show_error("Report name cannot be empty.")
+                return
+
             yaml_content = (
                 "# DEFAULT\n"
                 "# path to experiment sheet (CSV format)\n"
@@ -222,7 +230,7 @@ class YamlForm(QWidget):
                                                        "YAML Files (*.yaml);;All Files (*)",
                                                        options=options)
             if file_path:
-                with open(file_path, 'w',encoding='utf-8') as file:
+                with open(file_path, 'w', encoding='utf-8') as file:
                     file.write(yaml_content)
         except (OSError, IOError) as e:
             self.show_error(f"Error writing YAML file: {str(e)}")
@@ -235,6 +243,20 @@ class YamlForm(QWidget):
         :return: None
         """
         try:
+            if self.experiments_table.rowCount() == 0:
+                self.show_error("No experiments to save.")
+                return
+
+            output_folder = self.output_folder.text()
+            report_name = self.report_name.text()
+
+            if not output_folder:
+                self.show_error("Output directory cannot be empty.")
+                return
+            if not report_name:
+                self.show_error("Report name cannot be empty.")
+                return
+
             experiments_data = []
             for row in range(self.experiments_table.rowCount()):
                 path_to_sample = self.experiments_table.item(row, 0)
@@ -250,7 +272,7 @@ class YamlForm(QWidget):
                                                        "CSV Files (*.csv);;All Files (*)",
                                                        options=options)
             if file_path:
-                with open(file_path, 'w', newline='',encoding='utf-8') as file:
+                with open(file_path, 'w', newline='', encoding='utf-8') as file:
                     writer = csv.writer(file)
                     writer.writerow(["path_to_sample", "path_to_reference"])
                     writer.writerows(experiments_data)
