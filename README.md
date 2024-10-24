@@ -9,7 +9,7 @@ A Snakemake-based tool for quality control of synthetic oligonucleotide sequenci
 
 Snakemake is required to run this workflow. Installation of Snakemake can be found [here](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html). 
 
-In addition to Snakemake, this project includes a PyQt5 graphical user interface (GUI) application for generating YAML and CSV files needed for analyses. To run the GUI application, open the `config_gui.exe` file.
+In addition to Snakemake, this project includes a PyQt5 graphical user interface (GUI) application for generating YAML and CSV files needed for analyses. 
 
 Ensure you have Python installed. You can download it from the [official Python website](https://www.python.org/downloads/) and remember to check "Add Python to PATH" during installation.
 
@@ -19,3 +19,5 @@ To run the Snakemake workflow, use the following command:
 
 ```bash
 snakemake --cores 1 --use-conda
+```
+To run the GUI application, open the `config_gui.bin` file in config folder.
