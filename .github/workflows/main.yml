@@ -4,7 +4,7 @@ on:
   push:
 
 permissions:
-  contents: read
+  contents: write
   issues: write
   pull-requests: write
   actions: read
@@ -59,7 +59,8 @@ jobs:
         run: |
           python -m nuitka --standalone --onefile --output-dir=dist --enable-plugin=pyqt6 config/config_gui.py
           chmod +x dist/config_gui.bin
-          mv dist/config_gui.bin ./  # Move the compiled file to the root directory
+          mv dist/config_gui.bin ./ 
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
