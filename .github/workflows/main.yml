@@ -59,7 +59,11 @@ jobs:
         run: |
           python -m nuitka --standalone --onefile --output-dir=dist --enable-plugin=pyqt6 config/config_gui.py
           chmod +x dist/config_gui.bin
-          mv dist/config_gui.bin ./
+          mv dist/config_gui.bin ./  # Move the compiled file to the root directory
+
+  CreateRelease:
+    runs-on: ubuntu-latest
+    steps:
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -72,7 +76,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
+        uses: marketplace/actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./config_gui.bin
