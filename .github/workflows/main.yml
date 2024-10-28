@@ -51,7 +51,7 @@ jobs:
           pip install nuitka PyQt6
       - name: Build with Nuitka
         run: |
-          nuitka3 --standalone --onefile --output-dir=dist --enable-plugin=pyqt6 config/config_gui.py
+          python -m --standalone --onefile --output-dir=dist --enable-plugin=pyqt6 config/config_gui.py
           chmod +x dist/config_gui.bin
           mv dist/config_gui.bin ./
       - name: Upload compiled binary
