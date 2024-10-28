@@ -2,6 +2,14 @@ name: Build and Release
 
 on:
   push:
+    tags:
+      - 'v1.0'
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  actions: read
 
 jobs:
   Formatting:
@@ -53,13 +61,13 @@ jobs:
         run: |
           python -m nuitka --standalone --onefile --output-dir=dist --enable-plugin=pyqt6 config/config_gui.py
           chmod +x dist/config_gui.bin
-          mv dist/config_gui.bin ./  # Move the compiled file to the root directory
+          mv dist/config_gui.bin ./
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          tag_name: 'v1.0.0'
+          release_name: 'Release v1.0.0'
           draft: false
           prerelease: false
         env:
