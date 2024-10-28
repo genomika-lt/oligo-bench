@@ -54,29 +54,25 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip  # Upgrade pip to the latest version
-          pip install nuitka PyQt6
+          pip install nuitka PyQt6  # Install Nuitka and PyQt6
       - name: Build with Nuitka
         run: |
           python -m nuitka --standalone --onefile --output-dir=dist --enable-plugin=pyqt6 config/config_gui.py
           chmod +x dist/config_gui.bin
           mv dist/config_gui.bin ./  # Move the compiled file to the root directory
-
-  CreateRelease:
-    runs-on: ubuntu-latest
-    steps:
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         with:
-          tag_name: 'v1.0.0'
-          release_name: 'Release v1.0.0'
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Release Asset
-        uses: marketplace/actions/upload-release-asset@v1
+        uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./config_gui.bin
