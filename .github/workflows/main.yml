@@ -1,8 +1,7 @@
 name: Tests
 
 on:
-  push
-
+  push:
 
 jobs:
   Formatting:
@@ -11,8 +10,8 @@ jobs:
       - name: Checkout with submodules
         uses: actions/checkout@v4
         with:
-            submodules: recursive
-            fetch-depth: 0
+          submodules: recursive
+          fetch-depth: 0
       - name: Formatting
         uses: github/super-linter@v5
         env:
@@ -25,10 +24,36 @@ jobs:
   Linting:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Lint workflow
-      uses: ezherman/snakemake-github-action@snakemake-8.20.5
-      with:
-        directory: .test
-        snakefile: workflow/Snakefile
-        args: "--configfile .test/config/config.yaml --lint"
+      - uses: actions/checkout@v4
+      - name: Lint workflow
+        uses: ezherman/snakemake-github-action@snakemake-8.20.5
+        with:
+          directory: .test
+          snakefile: workflow/Snakefile
+          args: "--configfile .test/config/config.yaml --lint"
+
+  Build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        run: |
+          pip3 install nuitka PyQt6
+      - name: Build with Nuitka
+        run: |
+          nuitka3 --standalone --onefile --output-dir=dist --enable-plugin=pyqt6 config/config_gui.py
+          chmod +x dist/config_gui.bin
+          mv dist/config_gui.bin ./
+      - name: Upload compiled binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: compiled_binary
+          path: ./config_gui.bin

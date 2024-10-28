@@ -61,6 +61,12 @@ class YamlForm(QWidget):
         self.dorado_model_combobox.addItems(["fast", "hac", "sup"])
         layout.addWidget(self.dorado_model_combobox)
 
+        upper_table_buttons_layout = QHBoxLayout()
+        save_yaml_button = QPushButton("Save YAML", self)
+        save_yaml_button.clicked.connect(self.save_yaml)
+        upper_table_buttons_layout.addWidget(save_yaml_button)
+        layout.addLayout(upper_table_buttons_layout)
+
         # SECTION: Experiments (Table Widget)
         layout.addWidget(QLabel("Experiments"))
         self.experiments_table = QTableWidget(self)
@@ -68,21 +74,31 @@ class YamlForm(QWidget):
         self.experiments_table.setHorizontalHeaderLabels(["Path to Sample", "Path to Reference"])
         self.experiments_table.horizontalHeader().setStretchLastSection(True)
         self.experiments_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.experiments_table.setEditTriggers(QAbstractItemView.EditTrigger.DoubleClicked)
+        self.experiments_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)  # Disable default editing
         layout.addWidget(self.experiments_table)
 
-        # Buttons below the table
         table_buttons_layout = QHBoxLayout()
+
+        # Buttons below the table
         select_directory_button = QPushButton("Select Directory to Scan", self)
         select_directory_button.clicked.connect(self.select_scan_directory)
-        save_yaml_button = QPushButton("Save YAML", self)
-        save_yaml_button.clicked.connect(self.save_yaml)
+        table_buttons_layout.addWidget(select_directory_button)
+
         save_csv_button = QPushButton("Save Experiments CSV", self)
         save_csv_button.clicked.connect(self.save_experiments_csv)
-        table_buttons_layout.addWidget(select_directory_button)
-        table_buttons_layout.addWidget(save_yaml_button)
         table_buttons_layout.addWidget(save_csv_button)
+
         layout.addLayout(table_buttons_layout)
+
+        # Buttons for adding and deleting rows
+        add_row_button = QPushButton("Add Row", self)
+        add_row_button.clicked.connect(self.add_row)
+        delete_row_button = QPushButton("Delete Row", self)
+        delete_row_button.clicked.connect(self.delete_row)
+        table_buttons_layout.addWidget(add_row_button)
+        table_buttons_layout.addWidget(delete_row_button)
+
+        self.experiments_table.cellDoubleClicked.connect(self.open_file_dialog)
 
         self.setLayout(layout)
         self.setWindowTitle('YAML and CSV File Generator')
@@ -337,6 +353,54 @@ class YamlForm(QWidget):
         :return: None
         """
         QMessageBox.critical(self, "Error", message)
+
+    def add_row(self):
+        """
+        Adds a new row to the experiments table with file selection buttons.
+        :return: None
+        """
+        row_position = self.experiments_table.rowCount()
+        self.experiments_table.insertRow(row_position)
+
+    def delete_row(self):
+        """
+        Deletes the selected row from the experiments table.
+        :return: None
+        """
+        selected_row = self.experiments_table.currentRow()
+        if selected_row >= 0:
+            self.experiments_table.removeRow(selected_row)
+        else:
+            self.show_error("Please select a row to delete.")
+
+    def create_row_widget(self):
+        """
+        Creates a custom widget for each row with file path input and button.
+        :return: QWidget containing path input and button
+        """
+        row_widget = QWidget()
+        layout = QHBoxLayout()
+        path_input = QLineEdit(self)
+        layout.addWidget(path_input)
+        row_widget.setLayout(layout)
+        return row_widget
+
+    def open_file_dialog(self, row, column):
+        """
+        Opens a file dialog to select a file or directory and updates the specified cell.
+        :param row: The row index of the cell that was double-clicked
+        :param column: The column index of the cell that was double-clicked
+        :return: None
+        """
+        if column == 0:
+            folder_path = QFileDialog.getExistingDirectory(self, "Select Sample Folder", "")
+            if folder_path:
+                self.experiments_table.setItem(row, column, QTableWidgetItem(folder_path))
+        elif column == 1:
+            fa_file_path, _ = QFileDialog.getOpenFileName(self, "Select Reference File", "",
+                                                          "FA Files (*.fa);;All Files (*)")
+            if fa_file_path:
+                self.experiments_table.setItem(row, column, QTableWidgetItem(fa_file_path))
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
