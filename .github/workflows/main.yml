@@ -1,7 +1,7 @@
-name: Build and Release
+name: Tests
 
 on:
-  push:
+  push
 
 permissions:
   contents: write
@@ -9,8 +9,6 @@ permissions:
 jobs:
   Formatting:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout with submodules
         uses: actions/checkout@v4
@@ -22,14 +20,14 @@ jobs:
         env:
           VALIDATE_ALL_CODEBASE: true
           DEFAULT_BRANCH: main
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_SNAKEMAKE_SNAKEFMT: true
           VALIDATE_PYTHON_PYLINT: true
 
   Linting:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
       - name: Lint workflow
         uses: ezherman/snakemake-github-action@snakemake-8.20.5
         with:
@@ -37,45 +35,37 @@ jobs:
           snakefile: workflow/Snakefile
           args: "--configfile .test/config/config.yaml --lint"
 
-  Build:
+  BuildAndCommitExecutable:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout with submodules
         uses: actions/checkout@v4
         with:
           submodules: recursive
           fetch-depth: 0
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
+
       - name: Install dependencies
         run: |
           pip install --upgrade pip
           pip install nuitka PyQt6
-      - name: Build with Nuitka
+
+      - name: Build executable with Nuitka
         run: |
           python -m nuitka --standalone --onefile --output-dir=dist --enable-plugin=pyqt6 config/config_gui.py
           chmod +x dist/config_gui.bin
-          mv dist/config_gui.bin ./
+          mv dist/config_gui.bin ./  # Move the compiled file to the root directory
 
-      - name: Conditional Create Release
-        id: create_release
-        if: github.ref_type == 'tag'
-        uses: actions/create-release@v1
-        with:
-          tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref_name }}
-          draft: false
-          prerelease: false
-
-      - name: Conditional Upload Release Asset
-        if: steps.create_release.outputs.upload_url
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./config_gui.bin
-          asset_name: config_gui.bin
-          asset_content_type: application/octet-stream
+      - name: Commit executable to repo
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add config_gui.bin
+          git commit -m "Add executable file"
+          git push origin ${{ github.ref }}
