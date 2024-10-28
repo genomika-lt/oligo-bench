@@ -1,12 +1,14 @@
-import sys
 import csv
 import os
 import re
-from PyQt5.QtWidgets import (
+import sys
+
+from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
     QComboBox, QPushButton, QFileDialog, QCheckBox, QTableWidget,
     QTableWidgetItem, QHeaderView, QAbstractItemView, QMessageBox
 )
+
 
 class YamlForm(QWidget):
     def __init__(self):
@@ -65,8 +67,8 @@ class YamlForm(QWidget):
         self.experiments_table.setColumnCount(2)  # path_to_sample, path_to_reference
         self.experiments_table.setHorizontalHeaderLabels(["Path to Sample", "Path to Reference"])
         self.experiments_table.horizontalHeader().setStretchLastSection(True)
-        self.experiments_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.experiments_table.setEditTriggers(QAbstractItemView.DoubleClicked)
+        self.experiments_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.experiments_table.setEditTriggers(QAbstractItemView.EditTrigger.DoubleClicked)
         layout.addWidget(self.experiments_table)
 
         # Buttons below the table
@@ -91,10 +93,8 @@ class YamlForm(QWidget):
         :return: None
         """
         try:
-            options = QFileDialog.Options()
             file_path, _ = QFileDialog.getOpenFileName(self, "Select Experiment Sheet", "",
-                                                       "CSV Files (*.csv);;All Files (*)",
-                                                       options=options)
+                                                       "CSV Files (*.csv);;All Files (*)")
             if file_path:
                 self.samples_path.setText(file_path)
         except (OSError, IOError) as e:
@@ -104,12 +104,14 @@ class YamlForm(QWidget):
 
     def select_output_directory(self):
         """
-        Allows the user to select a directory for output files.
+        Allows the user to select a directory for output files, including hidden folders.
         :return: None
         """
         try:
-            options = QFileDialog.Options()
-            folder_path = QFileDialog.getExistingDirectory(self, "Select Output Directory", options=options)
+            options = QFileDialog.Option.DontUseNativeDialog | QFileDialog.Option.ShowDirsOnly
+            folder_path = QFileDialog.getExistingDirectory(self,
+                                                           "Select Output Directory",
+                                                           options=options)
             if folder_path:
                 self.output_folder.setText(folder_path)
         except (OSError, IOError) as e:
@@ -119,12 +121,14 @@ class YamlForm(QWidget):
 
     def select_scan_directory(self):
         """
-        Allows the user to select a directory to scan for experiment files.
+        Allows the user to select a directory to scan for experiment files, including hidden folders.
         :return: None
         """
         try:
-            options = QFileDialog.Options()
-            directory = QFileDialog.getExistingDirectory(self, "Select Directory to Scan", options=options)
+            options = QFileDialog.Option.DontUseNativeDialog | QFileDialog.Option.ShowDirsOnly
+            directory = QFileDialog.getExistingDirectory(self,
+                                                         "Select Directory to Scan",
+                                                         "", options=options)
             if directory:
                 self.selected_directory = directory
                 self.scan_experiment_files()
@@ -136,6 +140,7 @@ class YamlForm(QWidget):
     def scan_experiment_files(self):
         """
         Scans the selected directory for experiment files matching a specific pattern.
+        Shows an error if no matching folders are found.
         :return: None
         """
         try:
@@ -146,9 +151,8 @@ class YamlForm(QWidget):
                 r'(test_experiment_\d+[\\/]+test_sample_\d+[\\/]+20\d{2}(0[1-9]|'
                 r'1[0-2])(0[1-9]|[12]\d|3[01])_\d{4}_MN\d{5}_ATQ\d+_\w+)$'
             )
-
             self.experiments_table.setRowCount(0)
-
+            matches_found = False
             for root, dirs, files in os.walk(self.selected_directory):
                 for dir_name in dirs:
                     full_path = os.path.join(root, dir_name)
@@ -159,8 +163,14 @@ class YamlForm(QWidget):
                         self.experiments_table.insertRow(row_position)
                         self.experiments_table.setItem(row_position, 0, QTableWidgetItem(sample_path))
                         self.experiments_table.setItem(row_position, 1, QTableWidgetItem(""))
+                        matches_found = True
+
+            if not matches_found:
+                self.show_error("No matching experiment folders found in the selected directory.")
+                return
 
             self.select_reference_file()
+
         except ValueError as e:
             self.show_error(f"Scan error: {str(e)}")
         except (OSError, IOError) as e:
@@ -170,20 +180,52 @@ class YamlForm(QWidget):
 
     def select_reference_file(self):
         """
-        Allows the user to select a reference file for the experiments.
+        Scans the selected directory for a reference file matching the pattern.
+        If no valid .fa file is found, prompts the user to manually select it.
         :return: None
         """
         try:
-            options = QFileDialog.Options()
-            file_path, _ = QFileDialog.getOpenFileName(self, "Select Reference File", "",
-                                                       "FA Files (*.fa);;All Files (*)",
-                                                       options=options)
-            if file_path:
-                self.reference_file = file_path
+            if not self.selected_directory:
+                raise ValueError("No directory selected for scanning.")
+
+            fa_pattern = re.compile(r"(test[/\\]resources[/\\]ref\.fa)$")
+            found_fa_path = None
+
+            for root, dirs, files in os.walk(self.selected_directory):
+                for file in files:
+                    if fa_pattern.search(os.path.join(root, file)):
+                        potential_fa_path = os.path.join(root, file)
+                        if os.path.getsize(potential_fa_path) > 0:
+                            found_fa_path = potential_fa_path
+                            break
+                if found_fa_path:
+                    break
+
+            if found_fa_path:
+                self.reference_file = found_fa_path
                 for row in range(self.experiments_table.rowCount()):
-                    self.experiments_table.item(row, 1).setText(self.reference_file)
+                    self.experiments_table.setItem(row, 1, QTableWidgetItem(self.reference_file))
+                QMessageBox.information(self, "Reference File Found",
+                                        f"Reference file automatically found at {self.reference_file}.")
+
+            else:
+                QMessageBox.warning(self, "Reference File Not Found",
+                                    "No valid reference file found in 'test/resources/'. "
+                                    "Please select a .fa file manually.")
+                file_path, _ = QFileDialog.getOpenFileName(self, "Select Reference File", "",
+                                                           "FA Files (*.fa);;All Files (*)")
+                if file_path:
+                    if os.path.getsize(file_path) == 0:
+                        self.show_error("The selected .fa file is empty. Please select a valid file.")
+                        return
+                    self.reference_file = file_path
+                    for row in range(self.experiments_table.rowCount()):
+                        self.experiments_table.setItem(row, 1, QTableWidgetItem(self.reference_file))
+
+        except ValueError as e:
+            self.show_error(f"Selection error: {str(e)}")
         except (OSError, IOError) as e:
-            self.show_error(f"File selection error: {str(e)}")
+            self.show_error(f"File system error during selection: {str(e)}")
         except Exception as e:
             self.show_error(f"Unexpected error: {str(e)}")
 
@@ -225,13 +267,20 @@ class YamlForm(QWidget):
                 f"dorado_model: {dorado_model}\n"
             )
 
-            options = QFileDialog.Options()
             file_path, _ = QFileDialog.getSaveFileName(self, "Save YAML File", "",
-                                                       "YAML Files (*.yaml);;All Files (*)",
-                                                       options=options)
-            if file_path:
-                with open(file_path, 'w', encoding='utf-8') as file:
-                    file.write(yaml_content)
+                                                       "YAML Files (*.yaml);;All Files (*)")
+            if not file_path:
+                self.show_error("No file path specified. YAML file not saved.")
+                return
+
+            if not file_path.endswith('.yaml'):
+                file_path += '.yaml'
+
+            with open(file_path, 'w', encoding='utf-8') as file:
+                file.write(yaml_content)
+
+            QMessageBox.information(self, "Success", "YAML file saved successfully.")
+
         except (OSError, IOError) as e:
             self.show_error(f"Error writing YAML file: {str(e)}")
         except Exception as e:
@@ -248,13 +297,9 @@ class YamlForm(QWidget):
                 return
 
             output_folder = self.output_folder.text()
-            report_name = self.report_name.text()
 
             if not output_folder:
                 self.show_error("Output directory cannot be empty.")
-                return
-            if not report_name:
-                self.show_error("Report name cannot be empty.")
                 return
 
             experiments_data = []
@@ -267,15 +312,19 @@ class YamlForm(QWidget):
                         path_to_reference.text()
                     ])
 
-            options = QFileDialog.Options()
             file_path, _ = QFileDialog.getSaveFileName(self, "Save Experiments CSV", "",
-                                                       "CSV Files (*.csv);;All Files (*)",
-                                                       options=options)
+                                                       "CSV Files (*.csv);;All Files (*)")
             if file_path:
+                if not file_path.endswith('.csv'):
+                    file_path += '.csv'
+
                 with open(file_path, 'w', newline='', encoding='utf-8') as file:
                     writer = csv.writer(file)
                     writer.writerow(["path_to_sample", "path_to_reference"])
                     writer.writerows(experiments_data)
+
+                QMessageBox.information(self, "Success", "Experiments CSV file saved successfully.")
+
         except (OSError, IOError) as e:
             self.show_error(f"Error writing CSV file: {str(e)}")
         except Exception as e:
@@ -293,4 +342,4 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = YamlForm()
     ex.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
