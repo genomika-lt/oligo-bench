@@ -24,7 +24,8 @@ jobs:
   Linting:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: Lint workflow
         uses: ezherman/snakemake-github-action@snakemake-8.20.5
         with:
@@ -43,17 +44,18 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.10'  # Ensure the correct version of Python is specified
       - name: Install dependencies
         run: |
-          pip3 install nuitka PyQt6
+          pip install --upgrade pip  # Upgrade pip to the latest version
+          pip install nuitka PyQt6
       - name: Build with Nuitka
         run: |
           nuitka3 --standalone --onefile --output-dir=dist --enable-plugin=pyqt6 config/config_gui.py
           chmod +x dist/config_gui.bin
           mv dist/config_gui.bin ./
       - name: Upload compiled binary
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3  # Updated to v3
         with:
           name: compiled_binary
           path: ./config_gui.bin
