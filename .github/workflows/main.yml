@@ -1,7 +1,9 @@
-name: Tests
+name: Build and Release
 
 on:
   push:
+    tags:
+      - 'v*'
 
 jobs:
   Formatting:
@@ -44,7 +46,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'  # Ensure the correct version of Python is specified
+          python-version: '3.10'
       - name: Install dependencies
         run: |
           pip install --upgrade pip  # Upgrade pip to the latest version
@@ -53,9 +55,22 @@ jobs:
         run: |
           python -m nuitka --standalone --onefile --output-dir=dist --enable-plugin=pyqt6 config/config_gui.py
           chmod +x dist/config_gui.bin
-          mv dist/config_gui.bin ./
-      - name: Upload compiled binary
-        uses: actions/upload-artifact@v3  # Updated to v3
+          mv dist/config_gui.bin ./  # Move the compiled file to the root directory
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
         with:
-          name: compiled_binary
-          path: ./config_gui.bin
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./config_gui.bin
+          asset_name: config_gui.bin
+          asset_content_type: application/octet-stream
