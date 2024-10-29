@@ -3,13 +3,6 @@
 samples: config/experiments.csv
 
 
-# OUTPUT
-# directory
-output_folder: results
-# Report Name
-report_name: report
-
-
 # BASECALLING
 # define parameters for a specific rule
 basecall: True
