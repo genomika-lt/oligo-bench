@@ -12,7 +12,7 @@ rule finalise_report:
         "results/statistics/quality_and_length_over_time.html",
         "results/statistics/pore_activity.html",
         "results/statistics/gc_over_time.html",
-        "results/statistics/pore_scan.html",
+        # "results/statistics/pore_scan.html",
         "results/statistics/reads_over_time.html",
     output:
         "results/report.html",
