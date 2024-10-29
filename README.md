@@ -13,9 +13,9 @@ Snakemake is required to run this workflow. Installation of Snakemake can be fou
 In addition to Snakemake, this project includes a PyQt6 graphical user interface (GUI) application for generating YAML and CSV files needed for analyses. 
 
 Ensure you have Python installed. You can download it from the [official Python website](https://www.python.org/downloads/) and remember to check "Add Python to PATH" during installation.
-PyQt6 can be installed via pip:
+All dependencies can be installed via pip:
 ```bash
-pip3 install PyQt6
+pip install -r requirements.txt
 ```
 
 ## Usage
