@@ -29,6 +29,6 @@ jobs:
     - name: Lint workflow
       uses: ezherman/snakemake-github-action@snakemake-8.20.5
       with:
-        directory: .test
+        directory: test
         snakefile: workflow/Snakefile
-        args: "--configfile .test/config/config.yaml --lint"
+        args: "--configfile test/config/config.yaml --lint"
