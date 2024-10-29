@@ -2,7 +2,8 @@ name: Tests
 
 on:
   push:
-
+    tags:
+      - "v1.0"
 
 permissions:
   contents: write
