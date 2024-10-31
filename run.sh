@@ -1,2 +1,2 @@
 #!/bin/bash
-snakemake --cores 4 --use-conda --resources gpus=1
+snakemake --use-conda --resources gpus=1
