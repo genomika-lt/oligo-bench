@@ -1,9 +1,6 @@
 import os
-import glob
 
 import pandas as pd
-
-from snakemake.utils import validate
 
 
 samples = pd.read_csv(config["samples"]).convert_dtypes()
