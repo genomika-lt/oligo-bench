@@ -17,7 +17,8 @@ def extract_primers(forward_primer: str, reverse_primer: str, output_file):
     :rtype: None
     """
     complemented_dictionary = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A'}
-    reverse_primer_complemented = ''.join([complemented_dictionary[i] for i in reverse_primer][::-1])
+    reverse_primer_complemented = ''.join([complemented_dictionary[i]
+                                           for i in reverse_primer][::-1])
 
     with open(output_file, "w", encoding='utf-8') as g:
         g.write(">Forward5\n")
