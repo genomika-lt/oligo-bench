@@ -37,13 +37,14 @@ def get_reference(wildcards):
 
 def get_forward_primer(wildcards):
     forward_primer = samples.loc[
-        samples['sample_id'] == wildcards.sample_id, 'forward_primer'
+        samples["sample_id"] == wildcards.sample_id, "forward_primer"
     ].values[0]
     return forward_primer
 
+
 def get_reverse_primer(wildcards):
     reverse_primer = samples.loc[
-        samples['sample_id'] == wildcards.sample_id, 'reverse_primer'
+        samples["sample_id"] == wildcards.sample_id, "reverse_primer"
     ].values[0]
 
     return reverse_primer
