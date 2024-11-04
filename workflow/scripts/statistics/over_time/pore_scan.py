@@ -47,7 +47,7 @@ def pore_scan(path_to_samples, output_file):
     for sample in samples_scans:
         pore_types.update(set(sample[0]['counts'].keys()))
 
-    sample_names = ['_'.join(path.split('/')[-4:-2]) for path in path_to_samples]
+    sample_names = [path.split('/')[-2] for path in path_to_samples]
 
     pore_scans = [{pore: {sample_names[sample]: (samples_scans[sample][scan]['counts'][pore]
                                             if len(samples_scans[sample]) > scan else 0)
@@ -85,7 +85,6 @@ def pore_scan(path_to_samples, output_file):
 
     if len(pore_types.union(pore_types_ordered)) != len(pore_types_ordered):
         raise ValueError('Pore types between current version of QC and minknow do not match')
-
     figure = make_subplots(rows=actual_number_of_rows,
                            cols=actual_number_of_columns,
                            shared_yaxes=True)
@@ -99,8 +98,9 @@ def pore_scan(path_to_samples, output_file):
                                     hovertext=f'{pore_type}',
                                     showlegend=scan_index == 0,
                                     marker_color='#' + pore_type_color[pore_type].lower()),
-                             scan_index // 4 + 1,
-                             scan_index % 4 + 1)
+                             row=scan_index // actual_number_of_columns + 1,
+                             col=scan_index % actual_number_of_columns + 1)
+
     figure.update_layout(barmode='stack')
 
     with open(output_file, 'w', encoding='utf-8') as g:
