@@ -21,18 +21,16 @@ rule summary_table:
 
 rule mapping_table:
     input:
-        expand(
-            "results/mapping/{sample_id}.sam",
-            sample_id=samples["sample_id"]
-        )
+        expand("results/mapping/{sample_id}.sam", sample_id=samples["sample_id"]),
     output:
-        "results/statistics/mapping_table.html"
+        "results/statistics/mapping_table.html",
     log:
-        "logs/mapping_table.log"
+        "logs/mapping_table.log",
     conda:
         "../../envs/pysam.yaml"
     script:
         "../../scripts/statistics/overall/mapping_table.py"
+
 
 rule read_quality_histogram:
     input:

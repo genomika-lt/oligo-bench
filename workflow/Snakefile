@@ -7,12 +7,9 @@ include: "rules/filter_basecalled.smk"
 include: "rules/aligners/last.smk"
 include: "rules/aligners/minimap2.smk"
 include: "rules/statistics/statistics.smk"
+include: "rules/converters.smk"
 
 
 rule all:
     input:
         "results/report.html",
-        expand(
-            "results/mapping/primers_{sample_id}.fa",
-            sample_id=samples["sample_id"],
-        )
