@@ -1,4 +1,4 @@
-name: Tests and Release
+name: Tests
 
 on:
   push:
@@ -68,11 +68,12 @@ jobs:
           git fetch --tags --prune
           echo "Latest Tag: $(git describe --tags --abbrev=0)"
           echo "Commits since the latest tag:"
-          git log $(git describe --tags --abbrev=0)..HEAD --pretty=format:'* %s' | tee CHANGELOG.md
+          git log $(git describe --tags --abbrev=0)..HEAD --pretty=format:'* %s' > CHANGELOG.md
           echo "Changelog generated:"
           cat CHANGELOG.md
+          changelog_content=$(cat CHANGELOG.md)
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          cat CHANGELOG.md >> $GITHUB_OUTPUT
+          echo "${changelog_content}" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release and Upload Executable
