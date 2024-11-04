@@ -1,3 +1,5 @@
-path_to_sample,path_to_reference
-test/ont-test-data/test_experiment_1/test_sample_1/20240605_1150_MN39294_ATQ416_17ea28e3,test/resources/ref.fa
-test/ont-test-data/test_experiment_2/test_sample_2/20240615_1140_MN39294_ATQ418_17ea30e3,test/resources/ref.fa
+path_to_sample,path_to_reference,forward_primer,reverse_primer
+.test/ont-test-data/BUTTERCUP_11/20240305_1603_MN39294_AQX803_2157fa9f,.test/resources/buttercup_11_reference.fa,CTACAACGCAGATTACAACCTCAGTG,GGTAACGCTGGCAAGGATGG
+.test/ont-test-data/PHLOX_1/20240129_1448_MN39294_ARI562_606caa21,.test/resources/phlox_1_reference.fa,CTACAACGCAGATTACAACCTCAGTG,GGTAACGCTGGCAAGGATGG
+/home/admin/data/data/BEGONIA/20240527_BEGONIA_PAW18339/BEGONIA_2/20240527_0826_P2S-01917-A_PAW18339_355a263d,resources/ref.fa,TCGTCGGCAGCGTCAGATGTGTATAAGAGACAG,GTCTCGTGGGCTCGGAGATGTGTATAAGAGACAG
+/home/admin/data/data/BEGONIA/20240610_BEGONIA_PAW16259/BEGONIA_4/20240610_1441_P2S-01917-B_PAW16259_e95932cf,resources/ref.fa,TCGTCGGCAGCGTCAGATGTGTATAAGAGACAG,GTCTCGTGGGCTCGGAGATGTGTATAAGAGACAG

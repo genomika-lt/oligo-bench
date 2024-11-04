@@ -19,6 +19,19 @@ rule summary_table:
         "../../scripts/statistics/overall/summary_table.py"
 
 
+rule mapping_table:
+    input:
+        expand("results/mapping/{sample_id}.sam", sample_id=samples["sample_id"]),
+    output:
+        "results/statistics/mapping_table.html",
+    log:
+        "logs/mapping_table.log",
+    conda:
+        "../../envs/pysam.yaml"
+    script:
+        "../../scripts/statistics/overall/mapping_table.py"
+
+
 rule read_quality_histogram:
     input:
         expand(

@@ -68,7 +68,7 @@ def summary_table(bam_files, output_file):
     body_values = [[], [], [], [], [], [], [], []]
 
     number_of_samples = len(bam_files) // 3
-    files = [(bam_files[i + j * number_of_samples] for j in range(3))
+    files = [[bam_files[i + j * number_of_samples] for j in range(3)]
              for i in range(number_of_samples)]
     for file_all_reads, file_passed_reads, path_to_sample in files:
         out_all_reads = pysam.view('-o', 'out.sam', file_all_reads)
