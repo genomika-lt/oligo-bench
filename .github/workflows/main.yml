@@ -1,7 +1,8 @@
-name: Tests
+name: CI/CD Workflow
 
 on:
   push:
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -15,7 +16,8 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
-      - name: Formatting
+
+      - name: Super Linter for Code Formatting
         uses: github/super-linter@v5
         env:
           VALIDATE_ALL_CODEBASE: true
@@ -27,8 +29,10 @@ jobs:
   Linting:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Lint workflow
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Lint on Snakemake Workflow
         uses: ezherman/snakemake-github-action@snakemake-8.20.5
         with:
           directory: test
@@ -37,6 +41,11 @@ jobs:
 
   Build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: [3.8, 3.9, 3.10]
+
     steps:
       - name: Checkout with submodules
         uses: actions/checkout@v4
@@ -44,10 +53,18 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
+      - name: Cache Python packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
         run: |
@@ -58,6 +75,20 @@ jobs:
         run: |
           python -m nuitka --standalone --onefile --output-dir=dist --enable-plugin=pyqt6 config/config_gui.py
           chmod +x dist/config_gui.bin
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: config_gui.bin
+          path: dist/config_gui.bin
+
+  Release:
+    needs: Build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Create GitHub Release
         id: create_release
