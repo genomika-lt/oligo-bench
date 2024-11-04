@@ -55,12 +55,13 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install nuitka PyQt6
+          pip install pyinstaller PyQt6
 
       - name: Build executable with Nuitka
         run: |
-          python -m nuitka --standalone --onefile --static-libpython=yes --output-dir=dist --enable-plugin=pyqt6 config/config_gui.py
-          chmod +x dist/config_gui.bin
+          pyinstaller --onefile --add-data "styles/styles.qss:styles" --hidden-import PyQt6 config/config_gui.py
+          chmod +x dist/config_gui
+          mv dist/config_gui .
 
       - name: Generate Changelog
         id: generate_changelog
@@ -83,6 +84,6 @@ jobs:
             ${{ steps.generate_changelog.outputs.changelog }}
           draft: false
           prerelease: false
-          files: dist/config_gui.bin
+          files: config_gui
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
