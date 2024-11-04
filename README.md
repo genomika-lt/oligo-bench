@@ -4,7 +4,7 @@
 [![GitHub actions status](https://github.com/jsimonas/oligo-bench/workflows/Tests/badge.svg)](https://github.com/jsimonas/oligo-bench/actions?query=branch%3Amain+workflow%3ATests)
 [![PyQt6](https://img.shields.io/badge/PyQt6-%3E%3D6.0-brightgreen.svg)](https://pypi.org/project/PyQt6/)
 
-A Snakemake-based tool for quality control of synthetic oligonucleotide sequencing data produced by ONT sequencers.
+A Snakemake-based tool for quality control of synthetic oligonucleotide sequencing data produced by ONT sequencers, developed for Ubuntu.
 
 ## Installation
 
@@ -20,13 +20,18 @@ pip install -r requirements.txt
 
 ## Usage
 
-### Running the Snakemake Workflow
-To run the Snakemake workflow, use the following command:
+After installation and activation of conda environment run
+```bash
+pip install -r requirements.txt
+```
 
+## Usage
+Run this
 ```bash
 snakemake --cores 1 --use-conda
 ```
+
 ### Launching the GUI Application
 The GUI application, implemented in PyQt6, provides an interface for creating YAML and CSV files.
 
-To run the GUI application navigate to the folder `config` containing `config_gui.bin` and execute it.
+To run the GUI application execute `config_gui`.
