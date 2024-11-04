@@ -1,4 +1,4 @@
-name: Tests
+name: Tests and Release
 
 on:
   push:
@@ -67,10 +67,13 @@ jobs:
         run: |
           git fetch --tags --prune
           echo "Latest Tag: $(git describe --tags --abbrev=0)"
-          git log $(git describe --tags --abbrev=0)..HEAD --pretty=format:'* %s' > CHANGELOG.md
+          echo "Commits since the latest tag:"
+          git log $(git describe --tags --abbrev=0)..HEAD --pretty=format:'* %s' | tee CHANGELOG.md
           echo "Changelog generated:"
           cat CHANGELOG.md
-          echo "::set-output name=changelog::$(cat CHANGELOG.md)"
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          cat CHANGELOG.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release and Upload Executable
         uses: softprops/action-gh-release@v1
