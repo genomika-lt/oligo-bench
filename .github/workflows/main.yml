@@ -34,9 +34,9 @@ jobs:
       - name: Lint workflow
         uses: ezherman/snakemake-github-action@snakemake-8.20.5
         with:
-          directory: test
+          directory: .test
           snakefile: workflow/Snakefile
-          args: "--configfile test/config/config.yaml --lint"
+          args: "--configfile .test/config/config.yaml --lint"
 
   Build:
     runs-on: ubuntu-latest
@@ -59,18 +59,19 @@ jobs:
 
       - name: Build executable with Nuitka
         run: |
-          python -m nuitka --standalone --onefile --output-dir=dist --enable-plugin=pyqt6 config/config_gui.py
+          python -m nuitka --standalone --onefile --static-libpython=yes --output-dir=dist --enable-plugin=pyqt6 config/config_gui.py
           chmod +x dist/config_gui.bin
 
       - name: Generate Changelog
         id: generate_changelog
         run: |
-          git fetch --prune
+          git fetch --tags --prune
+          echo "Latest Tag: $(git describe --tags --abbrev=0)"
           git log $(git describe --tags --abbrev=0)..HEAD --pretty=format:'* %s' > CHANGELOG.md
           echo "Changelog generated:"
           cat CHANGELOG.md
           echo "::set-output name=changelog::$(cat CHANGELOG.md)"
-          
+
       - name: Create GitHub Release and Upload Executable
         uses: softprops/action-gh-release@v1
         with:
