@@ -57,7 +57,7 @@ jobs:
           pip install --upgrade pip
           pip install pyinstaller PyQt6
 
-      - name: Build executable with Nuitka
+      - name: Build executable with Pyinstaller
         run: |
           pyinstaller --onefile --add-data "styles/styles.qss:styles" --hidden-import PyQt6 config/config_gui.py
           chmod +x dist/config_gui
