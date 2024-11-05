@@ -38,7 +38,7 @@ jobs:
           snakefile: workflow/Snakefile
           args: "--configfile test/config/config.yaml --lint"
 
-  Build:
+ Build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout with submodules
@@ -63,6 +63,10 @@ jobs:
           chmod +x dist/config_gui
           mv dist/config_gui .
 
+      - name: Zip the executable
+        run: |
+          zip config_gui.zip config_gui
+
       - name: Generate Changelog
         id: generate_changelog
         run: |
@@ -84,6 +88,7 @@ jobs:
             ${{ steps.generate_changelog.outputs.changelog }}
           draft: false
           prerelease: false
-          files: config_gui
+          files: |
+            config_gui.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
