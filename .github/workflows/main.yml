@@ -38,7 +38,7 @@ jobs:
           snakefile: workflow/Snakefile
           args: "--configfile test/config/config.yaml --lint"
 
- Build:
+  Build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout with submodules
