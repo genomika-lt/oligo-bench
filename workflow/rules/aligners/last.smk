@@ -25,8 +25,6 @@ rule last:
         database="results/mapping/{sample_id}",
         train="results/mapping/{sample_id}.train",
     threads: 4
-    conda:
-        "../../envs/pysam.yaml"
     shell:
         """
         lastdb -P {threads} {params.database} {input.reference_file} && \
