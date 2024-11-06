@@ -6,7 +6,9 @@ import plotly.graph_objects as go
 from snakemake.script import snakemake
 
 # pylint: disable=import-error
-from scripts.utils import parse_sam_records, snakemake_file_logger
+from scripts.utils import (parse_sam_records,
+                           snakemake_file_logger,
+                           integer_to_human_readable)
 
 
 @snakemake_file_logger
@@ -54,10 +56,12 @@ def mapping_table(sam_files, output_file):
                 group_of_reads = [read.split()]
 
         body_values[0].append(file.split('/')[-1].split('.')[0])
-        body_values[1].append(counter)
+        body_values[1].append(integer_to_human_readable(counter))
 
     figure = go.Figure(data=[go.Table(header={'values': header_values},
                                       cells={'values': body_values})])
+
+    figure.update_layout(height=100, margin={'l': 5, 'r': 5, 't': 5, 'b': 5})
 
 
     with open(output_file, 'w', encoding='utf-8') as g:
