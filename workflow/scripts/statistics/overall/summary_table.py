@@ -14,7 +14,8 @@ from snakemake.script import snakemake
 # pylint: disable=import-error
 from scripts.utils import (parse_sam_records,
                            snakemake_file_logger,
-                           round_to_x_significant)
+                           round_to_x_significant,
+                           integer_to_human_readable)
 
 def experiment_duration_from_json(path_to_json: str) -> int:
     """
@@ -63,8 +64,8 @@ def summary_table(bam_files, output_file):
 
 
     header_values = ['Sample ID',
-                     'Total Reads, #', 'Passed Reads, %', 'Failed Reads, %',
-                     'Passed Bases, #', 'N50', 'Passed Reads GC content, %', 'Experiment Time, h']
+                     'Total Reads', 'Passed Reads', 'Failed Reads',
+                     'Passed Bases', 'N50', 'Passed Reads GC content', 'Experiment Time, h']
     body_values = [[], [], [], [], [], [], [], []]
 
     number_of_samples = len(bam_files) // 3
@@ -89,17 +90,31 @@ def summary_table(bam_files, output_file):
                                          [file for file in os.listdir(path_to_sample)
                                           if file.endswith('.json')][0])
         experiment_duration_hours = experiment_duration_from_json(path_to_json_file) / 60 / 60
+
+
+        passed_reads_percentage = f"{round_to_x_significant(passed_reads_percentage, 4) * 100:.2f}%"
+        failed_reads_percentage = f"{round_to_x_significant(failed_reads_percentage, 4) * 100:.2f}%"
+        passed_gc_percentage = f"{round_to_x_significant(passed_gc_percentage, 4) * 100:.2f}%"
+        experiment_duration_hours = f"{round_to_x_significant(experiment_duration_hours, 3):.1f}H"
+
+        total_reads_count = integer_to_human_readable(total_reads_count)
+        passed_bases_count = integer_to_human_readable(passed_bases_count,
+                                                       alphabet=('b', 'Kb', 'Mb', 'Gb', 'Tb'))
+        n50 = integer_to_human_readable(n50)
+
         body_values[0].append(file_all_reads.split('/')[-1].split('.')[0])
         body_values[1].append(total_reads_count)
-        body_values[2].append(round_to_x_significant(passed_reads_percentage, 3))
-        body_values[3].append(round_to_x_significant(failed_reads_percentage, 3))
+        body_values[2].append(passed_reads_percentage)
+        body_values[3].append(failed_reads_percentage)
         body_values[4].append(passed_bases_count)
         body_values[5].append(n50)
-        body_values[6].append(round_to_x_significant(passed_gc_percentage, 3))
-        body_values[7].append(round_to_x_significant(experiment_duration_hours, 3))
+        body_values[6].append(passed_gc_percentage)
+        body_values[7].append(experiment_duration_hours)
 
     figure = go.Figure(data=[go.Table(header={'values': header_values},
                                       cells={'values': body_values})])
+
+    figure.update_layout(height=100, margin={'r': 5, 'l': 5, 't': 5, 'b': 5})
 
     with open(output_file, 'w', encoding='utf-8') as g:
         g.write(figure.to_html(full_html=False, include_plotlyjs='cdn'))
