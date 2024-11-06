@@ -37,8 +37,8 @@ class YamlForm(QWidget):
         self.elapsed_time = None
         self.unsaved_changes = None
         self.timer = None
-        if getattr(sys, 'frozen', False):
-            self.project_root = os.path.dirname(sys.executable)
+        if getattr(sys, 'frozen', False) or "__compiled__" in globals():
+            self.project_root = os.path.abspath(os.path.join(os.getcwd()))
         else:
             self.project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
         self.initUI()
