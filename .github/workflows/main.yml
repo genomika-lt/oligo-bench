@@ -1,8 +1,10 @@
 name: Tests
 
 on:
-  push
+  push:
 
+permissions:
+  contents: write
 
 jobs:
   Formatting:
@@ -11,8 +13,9 @@ jobs:
       - name: Checkout with submodules
         uses: actions/checkout@v4
         with:
-            submodules: recursive
-            fetch-depth: 0
+          submodules: recursive
+          fetch-depth: 0
+
       - name: Formatting
         uses: github/super-linter@v5
         env:
@@ -25,10 +28,67 @@ jobs:
   Linting:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Lint workflow
-      uses: ezherman/snakemake-github-action@snakemake-8.20.5
-      with:
-        directory: test
-        snakefile: workflow/Snakefile
-        args: "--configfile test/config/config.yaml --lint"
+      - name: Checkout with submodules
+        uses: actions/checkout@v4
+
+      - name: Lint workflow
+        uses: ezherman/snakemake-github-action@snakemake-8.20.5
+        with:
+          directory: test
+          snakefile: workflow/Snakefile
+          args: "--configfile test/config/config.yaml --lint"
+
+  Build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install pyinstaller PyQt6
+
+      - name: Build executable with Pyinstaller
+        run: |
+          pyinstaller --onefile --add-data "styles/styles.qss:styles" --hidden-import PyQt6 config/config_gui.py
+          chmod +x dist/config_gui
+          mv dist/config_gui .
+
+      - name: Zip the executable
+        run: |
+          zip config_gui.zip config_gui
+
+      - name: Generate Changelog
+        id: generate_changelog
+        run: |
+          git fetch --tags --prune
+          git log $(git describe --tags --abbrev=0)..HEAD --pretty=format:'* %s' > CHANGELOG.md
+          changelog_content=$(cat CHANGELOG.md)
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "${changelog_content}" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release and Upload Executable
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}-${{ github.run_number }}
+          name: "Release ${{ github.ref_name }}-${{ github.run_number }}"
+          body: |
+            Automated release for version ${{ github.ref_name }}-${{ github.run_number }}.
+            Changes in this release include:
+            ${{ steps.generate_changelog.outputs.changelog }}
+          draft: false
+          prerelease: false
+          files: |
+            config_gui.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
