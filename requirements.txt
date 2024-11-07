@@ -3,5 +3,5 @@ pylint~=3.3.1
 snakefmt~=0.10.2
 pysam~=0.22.1
 plotly~=5.24.1
-PyQt6~=6.7.1
-PyQt6_sip~=13.8.0
+PyYAML~=6.0.2
+PySide6~=6.8.0.2
