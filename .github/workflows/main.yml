@@ -55,11 +55,11 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install nuitka PySide6
+          pip install nuitka PyQt6
 
       - name: Build executable with Pyinstaller
         run: |
-          nuitka --standalone --onefile --enable-plugin=pyside6 --include-data-files="styles/styles.qss=styles/styles.qss" --output-filename=config_gui config/config_gui.py
+          nuitka --standalone --onefile --enable-plugin=pyqt6 --include-data-files="styles/styles.qss=styles/styles.qss" --output-filename=config_gui config/config_gui.py
           chmod +x config_gui
 
       - name: Zip the executable

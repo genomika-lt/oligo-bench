@@ -11,8 +11,8 @@ import csv
 import os
 import sys
 import yaml
-from PySide6.QtCore import Qt,QTimer # pylint: disable=E0611
-from PySide6.QtWidgets import (QApplication, QWidget, QVBoxLayout,
+from PyQt6.QtCore import Qt,QTimer # pylint: disable=E0611
+from PyQt6.QtWidgets import (QApplication, QWidget, QVBoxLayout,
                              QHBoxLayout, QLabel,QComboBox, QPushButton,
                              QCheckBox, QTableWidget, QTableWidgetItem,
                              QHeaderView, QAbstractItemView, QMessageBox,
