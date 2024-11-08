@@ -66,7 +66,7 @@ def parse_sam_records(records):
 
     return parsed_records
 
-
+# pylint: disable=no-member
 def parse_bam_file(path_to_file: str) -> pysam.AlignedSegment:
     """
     Generator that parses bam file and yields read by read.
@@ -76,8 +76,7 @@ def parse_bam_file(path_to_file: str) -> pysam.AlignedSegment:
 
 
     reads: pysam.AlignmentFile = pysam.AlignmentFile(path_to_file, 'rb', check_sq=False)
-    for read in reads:
-        yield read
+    yield from reads
 
 
 def round_to_x_significant(number: int|float, x: int):

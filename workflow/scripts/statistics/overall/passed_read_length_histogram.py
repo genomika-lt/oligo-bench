@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 from snakemake.script import snakemake
 
 # pylint: disable=import-error
-from scripts.utils import parse_sam_records, snakemake_file_logger, parse_bam_file
+from scripts.utils import snakemake_file_logger, parse_bam_file
 
 
 
