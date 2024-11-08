@@ -1,13 +1,12 @@
 """Plots reads quality histogram"""
 
 
-import pysam
 import plotly.graph_objects as go
 
 from snakemake.script import snakemake
 
 # pylint: disable=import-error
-from scripts.utils import parse_sam_records, snakemake_file_logger
+from scripts.utils import parse_bam_file, snakemake_file_logger, from_char_to_phred
 
 
 @snakemake_file_logger
@@ -22,19 +21,34 @@ def read_quality_histogram(bam_files, output_file):
     figure = go.Figure()
 
     for path_to_sample in bam_files:
-        out = pysam.view('-o', 'out.sam', path_to_sample)
-        records = [line.split() for line in out.split('\n')[:-1]]
-        parsed_records = parse_sam_records(records)
-        data = [record[11]['qs'] for record in parsed_records]
-        figure.add_trace(go.Histogram(x=data,
-                                      name=path_to_sample.split('/')[-1][:-4]))
-    # pylint: disable=duplicate-code
-    figure.update_layout(title="Read Quality Histogram",
-                         xaxis_title="Quality",
+        data = {}
+        number_of_reads = 0
+        for read in parse_bam_file(path_to_sample):
+            quality_string = read.qual
+            mean_quality = sum(from_char_to_phred(quality_string)) // len(quality_string)
+
+            if mean_quality not in data:
+                data[mean_quality] = 1
+            else:
+                data[mean_quality] += 1
+
+            number_of_reads += 1
+
+        x = list(data.keys())
+        x.sort()
+
+        y = [data[key] for key in x]
+        y_max = max(y)
+        y_normalized = [i / y_max for i in y]
+
+        figure.add_trace(go.Scatter(y=y_normalized,
+                                    x=x,
+                                    name=path_to_sample.split('/')[-1][:-4]))
+
+    figure.update_layout(title="All Reads Mean Quality",
+                         xaxis_title="Mean Quality",
                          yaxis_title="Number Of Reads",
                          legend_title="Samples")
-    figure.update_layout(barmode='overlay')
-    figure.update_traces(opacity=0.5)
 
     with open(output_file, 'w', encoding='utf-8') as g:
         g.write(figure.to_html(full_html=False, include_plotlyjs='cdn'))
