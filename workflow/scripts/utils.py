@@ -5,6 +5,7 @@ import logging
 from collections.abc import Iterable
 from math import floor, log10
 
+import pysam
 from snakemake.script import snakemake
 
 
@@ -64,6 +65,19 @@ def parse_sam_records(records):
         parsed_records.append(parsed_record)
 
     return parsed_records
+
+
+def parse_bam_file(path_to_file: str) -> pysam.AlignedSegment:
+    """
+    Generator that parses bam file and yields read by read.
+    :param path_to_file: Path to BAM file.
+    :return: Yields read from BAM file.
+    """
+
+
+    reads: pysam.AlignmentFile = pysam.AlignmentFile(path_to_file, 'rb', check_sq=False)
+    for read in reads:
+        yield read
 
 
 def round_to_x_significant(number: int|float, x: int):
