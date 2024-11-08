@@ -103,6 +103,9 @@ def pore_scan(path_to_samples, output_file):
 
     figure.update_layout(barmode='stack')
 
+    figure.update_layout(title="Pore Scan results",
+                         legend_title="Pore types")
+
     with open(output_file, 'w', encoding='utf-8') as g:
         g.write(figure.to_html(full_html=False, include_plotlyjs='cdn'))
 
