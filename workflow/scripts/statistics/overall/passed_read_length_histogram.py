@@ -47,8 +47,6 @@ def passed_read_length_histogram(bam_files, output_file):
                          xaxis_title="Length",
                          yaxis_title="Number Of Reads",
                          legend_title="Samples")
-    figure.update_layout(barmode='overlay')
-    figure.update_traces(opacity=0.65)
 
     with open(output_file, 'w', encoding='utf-8') as g:
         g.write(figure.to_html(full_html=False, include_plotlyjs='cdn'))
