@@ -1,0 +1,10 @@
+# DEFAULT
+# path to experiment sheet (CSV format)
+samples: config/experiments.csv
+
+
+# BASECALLING
+# define parameters for a specific rule
+basecall: True
+# dorado model 'fast', 'hac' or 'sup'
+dorado_model: sup
