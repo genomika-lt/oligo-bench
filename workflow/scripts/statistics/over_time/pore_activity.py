@@ -1,6 +1,7 @@
 """Plots pore activity over pores time for each sample"""
 
 import os
+import json
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -21,51 +22,40 @@ def pore_activity(path_to_samples, output_file):
     :rtype: None
     """
 
-    pore_activity_files = []
+    files = []
     for path in path_to_samples:
+        csv_file = ''
+        json_file = ''
         for file in os.listdir(path):
             if file.startswith("pore_activity"):
-                pore_activity_files.append(os.path.join(path, file))
+                csv_file = os.path.join(path, file)
+            if file.endswith(".json"):
+                json_file = os.path.join(path, file)
+        files.append((csv_file, json_file))
 
     figure = go.Figure()
-    counter = 0
-    for file in pore_activity_files:
-        counter += 1
-        filename = '_'.join(file.split('/')[-4:-2])
 
-        data = pd.read_csv(file, dtype={'Channel State': 'str',
+    for csv_file, json_file in files:
+        sample_name = csv_file.split('/')[-3]
+
+        with open(json_file, 'r') as f:
+            sample_rate = json.load(f)['acquisitions'][0]['acquisition_run_info']['config_summary']['sample_rate']
+
+        data = pd.read_csv(csv_file, dtype={'Channel State': 'str',
                                           'Experiment Time (minutes)': 'int',
                                           'State Time (samples)': 'float'})
-        data.loc[:, 'activity'] = data.iloc[:, 2] / 126 / 5000
 
-        meta_data = {'rank': {'strand': 1,
-                              'adapter': 2,
-                              'pore': 3,
-                              'no_pore': 4},
-                     'color': {'strand': '#00ff00',
-                               'adapter': '#ede797',
-                               'pore': '#00cc00',
-                               'no_pore': '#4da9c3'},
-                     'visible': {'strand': True,
-                                 'adapter': True,
-                                 'pore': True,
-                                 'no_pore': 'legendonly'}
-                     }
+        data.loc[:, 'activity'] = data.loc[:, 'State Time (samples)'] / sample_rate / 60
 
         groups = data.groupby('Channel State')
-        for group in groups.groups:
-            figure.add_trace(go.Scatter(x=groups.get_group(group)['Experiment Time (minutes)'],
-                                        y=groups.get_group(group)['activity'],
-                                        name=filename,
-                                        legendgroup=group,
-                                        legendgrouptitle={'text': group},
-                                        legendrank=meta_data['rank'].get(str(group), 1000),
-                                        visible=meta_data['visible'].get(str(group), 'legendonly'),
-                                        marker={'color': meta_data['color'].get(str(group),
-                                                                                '#000000')}))
+        figure.add_trace(go.Scatter(x=groups.get_group('strand')['Experiment Time (minutes)'],
+                                    y=groups.get_group('strand')['activity'],
+                                    name=sample_name))
 
-
-    figure.update_layout(legend_groupclick='toggleitem')
+    figure.update_layout(xaxis_title='Time in minutes',
+                         yaxis_title='Number of pores',
+                         title='Sequencing Pores Activity',
+                         legend_title='Samples')
 
     with open(output_file, 'w', encoding='utf-8') as g:
         g.write(figure.to_html(full_html=False, include_plotlyjs='cdn'))
