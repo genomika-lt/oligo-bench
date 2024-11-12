@@ -2,8 +2,9 @@
 
 
 import logging
-from collections.abc import Iterable
+from typing import Literal
 from math import floor, log10
+from collections.abc import Iterable
 
 import pysam
 from snakemake.script import snakemake
@@ -74,9 +75,54 @@ def parse_bam_file(path_to_file: str) -> pysam.AlignedSegment:
     :return: Yields read from BAM file.
     """
 
+    logging.warning("Usage of deprecated method parse_bam_file,"
+                    " import and use parse_sam_bam instead")
 
     reads: pysam.AlignmentFile = pysam.AlignmentFile(path_to_file, 'rb', check_sq=False)
     yield from reads
+
+
+def parse_sam_bam_file(path_to_file: str) -> Iterable[pysam.AlignedRead]:
+    """
+    Generator that parses sam file and yields read by read.
+    :param path_to_file: Path to SAM file.
+    :return: Yields read from SAM file.
+    """
+
+    read_mode: Literal['r', 'rb', None] = None
+    if path_to_file.endswith('.bam'):
+        read_mode = 'rb'
+    elif path_to_file.endswith('.sam'):
+        read_mode = 'r'
+    else:
+        file_type = path_to_file.split('.')[-1]
+        raise ValueError(f'Unrecognized file type: {file_type}, only SAM/BAM files are possible.')
+
+    reads: pysam.AlignmentFile = pysam.AlignmentFile(path_to_file, read_mode, check_sq=False)
+    yield from reads
+
+
+def group_sam_bam_file(path_to_file: str) -> list[str]:
+    """
+    Generator that parses SAM or BAM file and yields group of reads with common id.
+    :param path_to_file:
+    :return:
+    """
+
+    group_of_reads = []
+    for read in parse_sam_bam_file(path_to_file):
+        if len(group_of_reads) == 0:
+            group_of_reads.append(read)
+            continue
+
+        group_id = group_of_reads[0].query_name
+        if read.query_name == group_id:
+            group_of_reads.append(read)
+        else:
+            yield group_of_reads
+            group_of_reads = [read]
+
+    yield group_of_reads
 
 
 def round_to_x_significant(number: int|float, x: int):

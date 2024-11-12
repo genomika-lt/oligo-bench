@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 from snakemake.script import snakemake
 
 # pylint: disable=import-error
-from scripts.utils import snakemake_file_logger, parse_bam_file
+from scripts.utils import snakemake_file_logger, parse_sam_bam_file
 
 
 
@@ -24,11 +24,11 @@ def passed_read_length_histogram(bam_files, output_file):
     for path_to_sample in bam_files:
         data = {}
         number_of_reads = 0
-        for read in parse_bam_file(path_to_sample):
-            if len(read.qual) not in data:
-                data[len(read.qual)] = 1
+        for read in parse_sam_bam_file(path_to_sample):
+            if len(read.query_sequence) not in data:
+                data[len(read.query_sequence)] = 1
             else:
-                data[len(read.qual)] += 1
+                data[len(read.query_sequence)] += 1
             number_of_reads += 1
 
         x = list(data.keys())
