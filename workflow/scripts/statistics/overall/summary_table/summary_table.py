@@ -15,7 +15,7 @@ from scripts.utils import (parse_sam_records,
                            round_to_x_significant,
                            integer_to_human_readable)
 
-def ration_to_percentage_string(ration: float, digits_after_point=2) -> str:
+def ratio_to_percentage_string(ration: float, digits_after_point=2) -> str:
     return f'{100 * round_to_x_significant(ration, 2 + digits_after_point):.{digits_after_point}f}%'
 
 # pylint: disable=too-many-locals
@@ -37,6 +37,7 @@ def summary_table(csv_files, output_file):
     timestamps = pd.read_csv(csv_files['timestamps'])
 
     bases_alphabet = ('b', 'Kb', 'Mb', 'Gb', 'Tb', 'Pb')
+
     passed_reads_ratio = (passed_reads_number.loc[:, 'Passed Reads']
                           / total_reads_number.loc[:, 'Total Reads'])
     gc_content_ratio = (gc_passed_bases_number.loc[:, 'GC Bases']
@@ -54,10 +55,10 @@ def summary_table(csv_files, output_file):
                    total_reads_number.loc[:, 'Total Reads'].apply(integer_to_human_readable),
                    total_bases_number.loc[:, 'Total Bases'].apply(integer_to_human_readable,
                                                                   args=(bases_alphabet,)),
-                   passed_reads_ratio.apply(ration_to_percentage_string, args=(2,)),
+                   passed_reads_ratio.apply(ratio_to_percentage_string, args=(2,)),
                    passed_bases_number.loc[:, 'Passed Bases'].apply(integer_to_human_readable,
                                                                     args=(bases_alphabet,)),
-                   gc_content_ratio.apply(ration_to_percentage_string, args=(2,)),
+                   gc_content_ratio.apply(ratio_to_percentage_string, args=(2,)),
                    timestamps.loc[:, 'Duration'].apply(lambda x:
                                                         f'{round_to_x_significant(x / 3600, 3)}H')]
 
