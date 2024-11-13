@@ -7,6 +7,7 @@ from math import floor, log10
 from collections.abc import Iterable
 
 import pysam
+# pylint: disable=no-name-in-module
 from pysam import AlignedRead
 from snakemake.script import snakemake
 

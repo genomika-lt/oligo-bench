@@ -8,8 +8,7 @@ from pandas import DataFrame
 from snakemake.script import snakemake
 
 # pylint: disable=import-error
-from scripts.utils import (parse_sam_bam_file,
-                           snakemake_file_logger)
+from scripts.utils import snakemake_file_logger
 
 
 # pylint: disable=too-many-locals
@@ -29,7 +28,8 @@ def experiment_timestamps(path_to_samples, output_file):
             'Duration': []}
 
     for path in path_to_samples:
-        path_to_json = [os.path.join(path, filename) for filename in os.listdir(path) if filename.endswith('.json')][0]
+        path_to_json = [os.path.join(path, filename) for filename in os.listdir(path)
+                        if filename.endswith('.json')][0]
 
         with open(path_to_json, 'r', encoding='utf-8') as f:
             json_data = json.load(f)

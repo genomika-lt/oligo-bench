@@ -22,6 +22,7 @@ def count_passed_bases_number(sam_bam_files, output_file):
     data = {'Sample': [],
             'Passed Bases': []}
 
+    # pylint: disable=R0801
     for file in sam_bam_files:
         bases_counter = 0
         for read in parse_sam_bam_file(file):

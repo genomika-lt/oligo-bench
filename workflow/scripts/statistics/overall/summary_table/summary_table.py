@@ -1,22 +1,24 @@
 """Plots summary table for samples from precalculated csv files and saves to html. """
 
 
-import os
-
-import pysam
 import pandas as pd
 import plotly.graph_objects as go
 
 from snakemake.script import snakemake
 
 # pylint: disable=import-error
-from scripts.utils import (parse_sam_records,
-                           snakemake_file_logger,
+from scripts.utils import (snakemake_file_logger,
                            round_to_x_significant,
                            integer_to_human_readable)
 
-def ratio_to_percentage_string(ration: float, digits_after_point=2) -> str:
-    return f'{100 * round_to_x_significant(ration, 2 + digits_after_point):.{digits_after_point}f}%'
+def ratio_to_percentage_string(ratio: float, digits_after_point=2) -> str:
+    """
+    Converts ratio to percantage string.
+    :param ratio: ratio to convert.
+    :param digits_after_point: number of digits after the point.
+    :return: String with percentage and % at the end.
+    """
+    return f'{100 * round_to_x_significant(ratio, 2 + digits_after_point):.{digits_after_point}f}%'
 
 # pylint: disable=too-many-locals
 @snakemake_file_logger

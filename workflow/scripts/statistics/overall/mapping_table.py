@@ -29,10 +29,14 @@ def mapping_table(sam_files, output_file):
         for group in group_sam_bam_file(file):
             if len(group) == 2:
                 read1, read2 = group
-                if read1.reference_name != read2.reference_name and read1.is_forward == read2.is_forward:
-                    if (read1.get_tag('NM') <= allowed_primer_errors
-                            and read2.get_tag('NM') <= allowed_primer_errors):
-                        counter += 1
+
+                condition1 = read1.reference_name != read2.reference_name
+                condition2 = read1.is_forward == read2.is_forward
+                condition3 = (read1.get_tag('NM') <= allowed_primer_errors
+                              and read2.get_tag('NM') <= allowed_primer_errors)
+
+                if condition1 and condition2 and condition3:
+                    counter += 1
 
         body_values[0].append(file.split('/')[-1].split('.')[0])
         body_values[1].append(integer_to_human_readable(counter))

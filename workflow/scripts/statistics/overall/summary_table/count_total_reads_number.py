@@ -22,6 +22,7 @@ def count_total_reads_number(sam_bam_files, output_file):
     data = {'Sample': [],
             'Total Reads': []}
 
+    # pylint: disable=R0801
     for file in sam_bam_files:
         reads_counter = 0
         for _ in parse_sam_bam_file(file):
