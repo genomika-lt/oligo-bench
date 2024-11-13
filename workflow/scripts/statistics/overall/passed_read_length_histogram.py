@@ -8,7 +8,6 @@ from snakemake.script import snakemake
 from scripts.utils import snakemake_file_logger, parse_sam_bam_file
 
 
-
 @snakemake_file_logger
 def passed_read_length_histogram(bam_files, output_file):
     """

@@ -8,3 +8,9 @@ samples: config/experiments.csv
 basecall: True
 # dorado model 'fast', 'hac' or 'sup'
 dorado_model: sup
+# minimum mean quality for read
+minimum_quality: 10
+
+# MAPPING
+# allowed errors in primers
+allowed_primer_errors: 5

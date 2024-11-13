@@ -7,6 +7,7 @@ from math import floor, log10
 from collections.abc import Iterable
 
 import pysam
+from pysam import AlignedRead
 from snakemake.script import snakemake
 
 
@@ -82,7 +83,7 @@ def parse_bam_file(path_to_file: str) -> pysam.AlignedSegment:
     yield from reads
 
 
-def parse_sam_bam_file(path_to_file: str) -> Iterable[pysam.AlignedRead]:
+def parse_sam_bam_file(path_to_file: str) -> Iterable[AlignedRead]:
     """
     Generator that parses sam file and yields read by read.
     :param path_to_file: Path to SAM file.
@@ -102,7 +103,7 @@ def parse_sam_bam_file(path_to_file: str) -> Iterable[pysam.AlignedRead]:
     yield from reads
 
 
-def group_sam_bam_file(path_to_file: str) -> list[str]:
+def group_sam_bam_file(path_to_file: str) -> Iterable[list[AlignedRead]]:
     """
     Generator that parses SAM or BAM file and yields group of reads with common id.
     :param path_to_file:
@@ -125,7 +126,7 @@ def group_sam_bam_file(path_to_file: str) -> list[str]:
     yield group_of_reads
 
 
-def round_to_x_significant(number: int|float, x: int):
+def round_to_x_significant(number: int|float, x: int = 2):
     """
     Rounds number to x significant digits.
     :param number: Number to round.

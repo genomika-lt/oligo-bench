@@ -1,14 +1,100 @@
-rule summary_table:
+rule count_total_reads_number:
     input:
         expand(
             "results/basecalled/{sample_id}.bam",
             sample_id=samples["sample_id"],
-        ),
+        )
+    output:
+        'results/statistics/total/count_total_reads_number.csv',
+    log:
+        "logs/statistics/overall/count_total_reads_number.log"
+    conda:
+        "../../envs/pysam.yaml"
+    script:
+        "../../scripts/statistics/overall/summary_table/count_total_reads_number.py"
+
+rule count_total_bases_number:
+    input:
+        expand(
+            "results/basecalled/{sample_id}.bam",
+            sample_id=samples["sample_id"],
+        )
+    output:
+        'results/statistics/total/count_total_bases_number.csv',
+    log:
+        "logs/statistics/overall/count_total_bases_number.log"
+    conda:
+        "../../envs/pysam.yaml"
+    script:
+        "../../scripts/statistics/overall/summary_table/count_total_bases_number.py"
+
+rule count_passed_reads_number:
+    input:
         expand(
             "results/basecalled/passed_{sample_id}.bam",
             sample_id=samples["sample_id"],
-        ),
-        samples["path_to_sample"],
+        )
+    output:
+        'results/statistics/total/count_passed_reads_number.csv',
+    log:
+        "logs/statistics/overall/count_passed_reads_number.log"
+    conda:
+        "../../envs/pysam.yaml"
+    script:
+        "../../scripts/statistics/overall/summary_table/count_passed_reads_number.py"
+
+
+rule count_passed_bases_number:
+    input:
+        expand(
+            "results/basecalled/passed_{sample_id}.bam",
+            sample_id=samples["sample_id"],
+        )
+    output:
+        'results/statistics/total/count_passed_bases_number.csv',
+    log:
+        "logs/statistics/overall/count_passed_bases_number.log"
+    conda:
+        "../../envs/pysam.yaml"
+    script:
+        "../../scripts/statistics/overall/summary_table/count_passed_bases_number.py"
+
+rule count_gc_passed_bases_number:
+    input:
+        expand(
+            "results/basecalled/passed_{sample_id}.bam",
+            sample_id=samples["sample_id"],
+        )
+    output:
+        'results/statistics/total/count_gc_passed_bases_number.csv',
+    log:
+        "logs/statistics/overall/count_gc_passed_bases_number.log"
+    conda:
+        "../../envs/pysam.yaml"
+    script:
+        "../../scripts/statistics/overall/summary_table/count_gc_passed_bases_number.py"
+
+rule experiment_timestamps:
+    input:
+        samples["path_to_sample"]
+    output:
+        'results/statistics/total/experiment_timestamps.csv',
+    log:
+        "logs/statistics/overall/experiment_timestamps.log"
+    conda:
+        "../../envs/pysam.yaml"
+    script:
+        "../../scripts/statistics/overall/summary_table/experiment_timestamps.py"
+
+
+rule summary_table:
+    input:
+        total_reads='results/statistics/total/count_total_reads_number.csv',
+        total_bases='results/statistics/total/count_total_bases_number.csv',
+        passed_reads='results/statistics/total/count_passed_reads_number.csv',
+        passed_bases='results/statistics/total/count_passed_bases_number.csv',
+        gc_passed_bases='results/statistics/total/count_gc_passed_bases_number.csv',
+        timestamps='results/statistics/total/experiment_timestamps.csv',
     output:
         "results/statistics/summary_table.html",
     log:
@@ -16,7 +102,7 @@ rule summary_table:
     conda:
         "../../envs/plotly.yaml"
     script:
-        "../../scripts/statistics/overall/summary_table.py"
+        "../../scripts/statistics/overall/summary_table/summary_table.py"
 
 
 rule mapping_table:
