@@ -1,10 +1,32 @@
-# DEFAULT
-# path to experiment sheet (CSV format)
 samples: config/experiments.csv
-
-
 # BASECALLING
 # define parameters for a specific rule
 basecall: True
 # dorado model 'fast', 'hac' or 'sup'
 dorado_model: sup
+
+
+
+basecalling:
+  basecall:
+    label: Enable basecall
+    type: checkbox
+    value: false
+  dorado_model:
+    label: Dorado model
+    options:
+    - fast
+    - hac
+    - sup
+    type: combobox
+    value: fast
+
+experiments:
+- column: Path to Sample
+  type: folder
+- column: Path to Reference
+  type: fa
+- column: forward_primer
+  type: plaintxt
+- column: reverse_primer
+  type: plaintxt
