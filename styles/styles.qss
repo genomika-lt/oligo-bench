@@ -11,12 +11,37 @@ QLabel {
     font-weight: bold;
     padding: 5px;
 }
-#leftWidget {
-    background-color: #1F2421;
+#log_window{
+   background-color: #201c24;
+   border: 1px solid #201c24;
 }
-/* Buttons */
+#left_widget{
+    background-color: #302c34;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 0px;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 0px;
+}
+#basecall_checkbox{
+
+    border-radius: 8px
+}
+#basecall_checkbox_name_label{
+    background-color: #302c34;
+    color:#b4b2af;
+}
+#basecall_checkbox_layout{
+    background-color: #302c34;
+}
+#dorado_model_combobox_name_label{
+    background-color: #302c34;
+    color:#b4b2af;
+}
+#dorado_model_combobox_layout{
+    background-color: #302c34;
+}
 QPushButton {
-    background-color: #4CAF50; /* Normal state */
+    background-color: #49A078; /* Normal state */
     color: white;
     border: none;
     border-radius: 8px;
@@ -25,16 +50,18 @@ QPushButton {
 }
 
 QPushButton:hover {
-    background-color: #45A049; /* Hover state */
+    background-color: #3a8060; /* Slightly darker shade for hover state */
 }
 
 QPushButton:pressed {
-    background-color: #3E8E41; /* Pressed state */
+    background-color: #6db393; /* Even darker shade for pressed state */
 }
+
 
 /* Checkbox */
 QCheckBox {
     padding: 4px;
+    background-color:white;
 }
 
 QCheckBox::indicator {
@@ -44,11 +71,10 @@ QCheckBox::indicator {
 
 /* ComboBox */
 QComboBox {
-    padding: 4px;
     border: 1px solid #cccccc;
     border-radius: 4px;
     background-color: white;
-    selection-background-color: #4CAF50;
+    selection-background-color: #49A078;
 }
 
 QComboBox:hover {
@@ -66,40 +92,65 @@ QTextEdit {
 /* TableWidget */
 QTableWidget {
     background-color: #ffffff;
-    border: 1px solid #cccccc;
+    border: 1px solid #f8f4f4;
     border-radius: 5px;
     gridline-color: #e0e0e0;
 }
 
 QHeaderView::section {
-    background-color: #d4d4d4;
-    color: #333333;
-    padding: 4px;
-    border: 1px solid #c1c1c1;
+    background-color: #49A078;
+    color: #1F2421;
+    padding: 3px;
     font-weight: bold;
 }
 
 QTableWidget QTableCornerButton::section {
-    background-color: #d4d4d4;
+    background-color: #49A078;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 0px;
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+}
+
+/* Adding cell borders with the desired color */
+QTableWidget::item {
+    border: none
+}
+
+QTableWidget::item:selected {
+    background-color: #49A078;  /* Optional: Change the background when selected */
 }
 
 /* ScrollBar */
 QScrollBar:vertical {
     border: none;
-    background: #e0e0e0;
+    background: white;
     width: 10px;
-    margin: 20px 0 20px 0;
-    border-radius: 4px;
 }
 
 QScrollBar::handle:vertical {
-    background-color: #4CAF50;
+    background-color: #3a8060;
     min-height: 20px;
-    border-radius: 4px;
 }
 
 QScrollBar::add-line:vertical,
 QScrollBar::sub-line:vertical {
+    background: none;
+}
+
+QScrollBar:horizontal {
+    border: none;
+    background: white;
+    height: 10px;
+}
+
+QScrollBar::handle:horizontal {
+    background-color: #3a8060;
+    min-width: 20px;
+}
+
+QScrollBar::add-line:horizontal,
+QScrollBar::sub-line:horizontal {
     background: none;
 }
 
@@ -110,19 +161,20 @@ QMessageBox {
 
 QMessageBox QLabel {
     color: #333333;
+    background-color: white;
     font-size: 10pt;
 }
 
 QMessageBox QPushButton {
-    background-color: #4CAF50;
+    background-color: #49A078;
     color: white;
     padding: 6px 12px;
     border-radius: 5px;
 }
 
 QSplitter::handle {
-    background-color: #d3d3d3;  /* Initial color of the handle */
+    background-color: #49A078;  /* Initial color of the handle */
 }
 QSplitter::handle:hover {
-    background-color: #808080;  /* Color when hovered */
+    background-color: #3a8060;  /* Color when hovered */
 }

@@ -82,12 +82,10 @@ class YamlForm(QWidget):
         super().__init__()
 
         self.worker = None
-        self.dorado_model_combobox = None
-        self.basecall_checkbox = None
         if getattr(sys, 'frozen', False):
             self.project_root = os.path.dirname(sys.executable)
         else:
-            self.project_root = os.path.abspath(os.path.join(os.path.dirname(__file__)))
+            self.project_root = os.path.abspath(os.path.join(os.path.dirname(__file__),".."))
 
         self.yaml_path = os.path.join(self.project_root, "config", "config.yaml")
         self.csv_path = os.path.join(self.project_root, "config", "experiments.csv")
@@ -99,12 +97,13 @@ class YamlForm(QWidget):
         self.stop_requested = False
         self.log_window = None
 
+
         self.columns_config = []
         self.yaml_config = {}
         self.experiments_table = None
 
         self.left_widget = QWidget()
-        self.left_widget.setObjectName("leftWidget")
+        self.left_widget.setObjectName("left_widget")
         self.left_layout = QVBoxLayout(self.left_widget)
 
         self.unsaved_changes = None
@@ -152,6 +151,7 @@ class YamlForm(QWidget):
 
         # SECTION: Log Window
         self.log_window = QTextEdit(self)
+        self.log_window.setObjectName("log_window")
         self.log_window.setReadOnly(True)
         self.left_layout.addWidget(self.log_window)
 
@@ -217,7 +217,7 @@ class YamlForm(QWidget):
 
             self.log_window.clear()
             self.run_stop_button.setText("Stop")
-            self.run_stop_button.setStyleSheet("background-color: red; color: white;")
+            self.run_stop_button.setStyleSheet("background-color: #9b3438; color: white;")
             self.unset_unsaved_changes()
             self.running = True
             self.stop_requested = False
@@ -244,13 +244,13 @@ class YamlForm(QWidget):
         """
         Handles the output from the worker thread and updates the log window.
         """
-        self.log_window.append(f"<font color='green'><pre>{output}</pre></font>")
+        self.log_window.append(f"<font color='#b4b2af'><pre>{output}</pre></font>")
 
     def handle_error(self, error_output):
         """
         Handles the error output from the worker thread and updates the log window.
         """
-        self.log_window.append(f"<font color='red'><pre>Error: {error_output}</pre></font>")
+        self.log_window.append(f"<font color='#9b3438'><pre>Error: {error_output}</pre></font>")
 
     def handle_stop(self):
         """
@@ -258,10 +258,10 @@ class YamlForm(QWidget):
         """
         self.stop_requested = True
         self.run_stop_button.setText("Stopping...")
-        self.run_stop_button.setStyleSheet("background-color: yellow; color: black;")  # Indicate stopping state
+        self.run_stop_button.setStyleSheet("background-color: yellow; color: black;")
         if self.worker:
             self.worker.stop_requested = True
-        self.log_window.append("<font color='red'>Execution was stopped.</font>")
+        self.log_window.append("<font color='#9b3438'>Execution was stopped.</font>")
         self.run_stop_button.setText("Run")
         self.run_stop_button.setStyleSheet("")
 
@@ -274,7 +274,7 @@ class YamlForm(QWidget):
         self.running = False
         self.run_stop_button.setText("Run")
         self.run_stop_button.setStyleSheet("")
-        self.log_window.append("Run finished.")
+        self.log_window.append("<font color='yellow'>Run finished.</font>")
 
     def handle_cell_double_click(self, row, column):
         """
@@ -663,6 +663,8 @@ class YamlForm(QWidget):
                         widget_layout = QHBoxLayout(temp_widget)
                         widget_layout.addWidget(name_label)
                         widget_layout.addWidget(widget)
+                        temp_widget.setObjectName(f"{object_name}_layout")
+                        name_label.setObjectName(f"{object_name}_name_label")
                         if widget_type == 'path':
                             widget_layout.addWidget(widget_button)
                         self.left_layout.addWidget(temp_widget)
