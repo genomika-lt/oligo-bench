@@ -141,12 +141,13 @@ QScrollBar::sub-line:vertical {
 QScrollBar:horizontal {
     border: none;
     background: white;
-    height: 10px;
+    height: 15px;
+    margin: 0px 0px 0px 20px;
 }
 
 QScrollBar::handle:horizontal {
     background-color: #3a8060;
-    min-width: 20px;
+    border-radius: 5px;
 }
 
 QScrollBar::add-line:horizontal,

@@ -346,24 +346,23 @@ class YamlForm(QWidget):
         :return: None
         """
         try:
-            if os.path.exists(csv_path):
-                with open(csv_path, 'r', newline='', encoding='utf-8') as file:
-                    reader = csv.reader(file)
-                    next(reader, None)
-                    for row in reader:
-                        if row:
-                            row_position = self.experiments_table.rowCount()
-                            self.experiments_table.insertRow(row_position)
-                            for col_index, col_config in enumerate(self.columns_config):
-                                if col_index < len(row):
-                                    cell_value = row[col_index]
-                                    self.experiments_table.setItem(row_position, col_index,
-                                                                   QTableWidgetItem(cell_value))
-                                else:
-                                    self.experiments_table.setItem(row_position, col_index,
-                                                                   QTableWidgetItem(""))
+            if not os.path.exists(csv_path):
+                self.show_error("CSV path does not exist.")
+                return
+            with open(csv_path, 'r', newline='', encoding='utf-8') as file:
+                reader = csv.reader(file)
+                next(reader, None)
+                for row in reader:
+                    if not row:
+                        continue
+                    row_position = self.experiments_table.rowCount()
+                    self.experiments_table.insertRow(row_position)
+                    for col_index, col_config in enumerate(self.columns_config):
+                        cell_value = row[col_index] if col_index < len(row) else ""
+                        self.experiments_table.setItem(row_position, col_index, QTableWidgetItem(cell_value))
         except (OSError, IOError) as e:
             self.show_error(f"Error reading CSV file: {str(e)}")
+            return
         self.experiments_table.resizeRowsToContents()
 
     def load_yaml_on_startup(self, yaml_path):
@@ -393,7 +392,10 @@ class YamlForm(QWidget):
             self.experiments_table.setHorizontalHeaderLabels([col["column"] for col in self.columns_config])
             self.experiments_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
             self.experiments_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-            self.experiments_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+            header = self.experiments_table.horizontalHeader()
+            header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+            for col_index in range(len(self.columns_config)):
+                header.resizeSection(col_index, 300)
             self.experiments_table.cellDoubleClicked.connect(self.handle_cell_double_click)
 
     def save_yaml(self):
@@ -461,20 +463,25 @@ class YamlForm(QWidget):
         except (OSError, IOError) as e:
             self.show_error(f"Error saving CSV file: {str(e)}")
 
-    def table_cell_open_file(self,row,column):
+    def table_cell_open_file(self, row, column):
         """
-       Opens a file dialog to select a file or directory based on the column type
-       specified in the YAML configuration and updates the specified cell.
+        Opens a file dialog to select a file or directory based on the column type
+        specified in the YAML configuration and updates the specified cell.
 
-       :param row: The row index of the cell that was double-clicked
-       :param column: The column index of the cell that was double-clicked
-       :return: None
-       """
+        :param row: The row index of the cell that was double-clicked
+        :param column: The column index of the cell that was double-clicked
+        :return: None
+        """
         if not self.columns_config or column >= len(self.columns_config):
             return
         column_type = self.columns_config[column].get("type")
-        selected_path = self.open_file_dialog(column_type,self.experiments_table.item(row, column).text())
-        self.experiments_table.setItem(row, column, QTableWidgetItem(selected_path))
+        cell_item = self.experiments_table.item(row, column)
+        current_text = cell_item.text() if cell_item else ""
+        selected_path = self.open_file_dialog(column_type, current_text)
+        if not cell_item:
+            cell_item = QTableWidgetItem()
+            self.experiments_table.setItem(row, column, cell_item)
+        cell_item.setText(selected_path)
 
     def open_file_dialog(self, file_type: str, old_value: str):
         """
