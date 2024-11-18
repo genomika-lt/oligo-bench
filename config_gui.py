@@ -85,7 +85,7 @@ class YamlForm(QWidget):
         if getattr(sys, 'frozen', False):
             self.project_root = os.path.dirname(sys.executable)
         else:
-            self.project_root = os.path.abspath(os.path.join(os.path.dirname(__file__),".."))
+            self.project_root = os.path.abspath(os.path.join(os.path.dirname(__file__)))
 
         self.yaml_path = os.path.join(self.project_root, "config", "config.yaml")
         self.csv_path = os.path.join(self.project_root, "config", "experiments.csv")
@@ -199,22 +199,25 @@ class YamlForm(QWidget):
                 self,
                 'Save CSV File',
                 "Do you want to save the CSV file before running?",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                QMessageBox.StandardButton.No
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel,
+                QMessageBox.StandardButton.Cancel
             )
+
             if csv_reply == QMessageBox.StandardButton.Yes:
                 self.save_experiments_csv()
-
+            if csv_reply == QMessageBox.StandardButton.Cancel:
+                return
             yaml_reply = QMessageBox.question(
                 self,
                 'Save YAML File',
                 "Do you want to save the YAML file before running?",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                QMessageBox.StandardButton.No
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No| QMessageBox.StandardButton.Cancel,
+                QMessageBox.StandardButton.Cancel
             )
             if yaml_reply == QMessageBox.StandardButton.Yes:
                 self.save_yaml()
-
+            if yaml_reply == QMessageBox.StandardButton.Cancel:
+                return
             self.log_window.clear()
             self.run_stop_button.setText("Stop")
             self.run_stop_button.setStyleSheet("background-color: #9b3438; color: white;")
@@ -231,9 +234,8 @@ class YamlForm(QWidget):
         self.elapsed_time = 0
         self.stop_requested = False
 
-        path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'run.sh'))
-        path_to_snake_file = os.path.abspath(os.path.join(os.path.dirname(__file__), 'workflow','Snakefile'))
-        command = f"source ~/miniconda3/bin/activate && conda activate snakemake && snakemake -n"
+        path = os.path.join(self.project_root,'run.sh')
+        command = f"source ~/miniconda3/bin/activate && conda activate snakemake && bash {path}"
         self.worker = RunWorker(command)
         self.worker.output_signal.connect(self.handle_output)
         self.worker.error_signal.connect(self.handle_error)

@@ -59,7 +59,7 @@ jobs:
 
       - name: Build executable with Pyinstaller
         run: |
-          pyinstaller --onefile --add-data "styles/styles.qss:styles" --hidden-import PyQt6 config/config_gui.py
+          pyinstaller --onefile --add-data "styles/styles.qss:styles" --hidden-import PyQt6 config_gui.py
           chmod +x dist/config_gui
           mv dist/config_gui .
 
