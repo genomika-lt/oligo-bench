@@ -9,6 +9,7 @@ manage experiment paths through a table interface.
 """
 import csv
 import os
+import signal
 import subprocess
 import sys
 import select
@@ -47,7 +48,7 @@ class RunWorker(QThread):
             rlist, _, _ = select.select([self.process.stdout, self.process.stderr], [], [], 0.1)
 
             if self.stop_requested:
-                self.process.kill()
+                self._terminate_process()
                 self.finished_signal.emit()
                 return
 
@@ -63,6 +64,24 @@ class RunWorker(QThread):
             if self.process.poll() is not None:
                 self.finished_signal.emit()
                 break
+
+    def _terminate_process(self):
+        """
+        Ensure the child process and all its children are terminated.
+        """
+        if self.process:
+            self.process.terminate()
+            try:
+                self.process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self.process.kill()
+
+            if self.process.pid:
+                try:
+                    os.killpg(self.process.pid, signal.SIGTERM)
+                except ProcessLookupError:
+                    pass
+            self.process = None
 
 
 class YamlForm(QWidget):
@@ -113,7 +132,7 @@ class YamlForm(QWidget):
             w.setChecked(bool(v)) if v is not None else w.isChecked()),
             'combobox': (QComboBox, lambda w, v=None:
             w.setCurrentText(v) if v else w.currentText()),
-            'lineedit': (QLineEdit, lambda w, v=None:
+            'line': (QLineEdit, lambda w, v=None:
             w.setText(v) if v else w.text()),
             'path': (QLineEdit, lambda w, v=None:
             w.setText(v) if v else w.text())
@@ -177,9 +196,9 @@ class YamlForm(QWidget):
 
         right_layout.addLayout(table_buttons_layout)
 
-        splitter.addWidget(self.left_widget)
         splitter.addWidget(right_widget)
-        splitter.setSizes([self.width() // 3, self.width() * 2 // 3])
+        splitter.addWidget(self.left_widget)
+        splitter.setSizes([self.width() * 2 // 3, self.width() // 3])
 
         main_layout.addWidget(splitter)
 
@@ -653,7 +672,7 @@ class YamlForm(QWidget):
                             if widget_options:
                                 widget.addItems(widget_options)
                             widget.currentIndexChanged.connect(self.set_unsaved_changes)
-                        elif widget_type == 'lineedit':
+                        elif widget_type == 'line':
                             widget.textChanged.connect(self.set_unsaved_changes)
                         elif widget_type == 'path':
                             widget_button: QPushButton = QPushButton("Open File", self)

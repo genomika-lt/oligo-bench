@@ -6,10 +6,10 @@ basecall: True
 dorado_model: sup
 
 
-
+#basecalling parameters
 basecalling:
   basecall:
-    label: Enable basecall
+    label: Enable basecall #label near widget
     type: checkbox
     value: false
   dorado_model:
@@ -20,10 +20,21 @@ basecalling:
     - sup
     type: combobox
     value: fast
+  input_line:
+    label: Dorado model
+    type: line
+    value: fast
+  input_path:
+    label: Dorado model
+    type: path
+    file_type: folder #type of file that will be accessible via FileDialog
+    value: Select path
 
+
+#experiments table
 experiments:
 - column: Path to Sample
-  type: folder
+  type: folder #type of file that will be accessible via FileDialog
 - column: Path to Reference
   type: fa
 - column: forward_primer
