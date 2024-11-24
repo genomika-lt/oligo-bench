@@ -254,7 +254,16 @@ class YamlForm(QWidget):
         self.stop_requested = False
 
         path = os.path.join(self.project_root,'run.sh')
-        command = f"source ~/miniconda3/bin/activate && conda activate snakemake && bash {path}"
+        conda_bin_path = subprocess.check_output(["which", "conda"]).decode().strip()
+        conda_dir = os.path.dirname(conda_bin_path)
+        conda_init_path = os.path.join(conda_dir, "..", "etc", "profile.d", "conda.sh")
+        env_path=os.path.join(os.getcwd(),"env")
+        command = (
+            f"source {conda_init_path} && "
+            f"conda activate {env_path} && "
+            f"bash {path}"
+        )
+
         self.worker = RunWorker(command)
         self.worker.output_signal.connect(self.handle_output)
         self.worker.error_signal.connect(self.handle_error)
