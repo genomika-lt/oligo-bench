@@ -248,27 +248,49 @@ class YamlForm(QWidget):
     def start_run(self):
         """
         Runs the shell script (run.sh) and captures the output.
+        Handles errors and displays localized, specific error messages.
         """
         self.log_window.clear()
-        self.elapsed_time = 0
         self.stop_requested = False
 
-        path = os.path.join(self.project_root,'run.sh')
-        conda_bin_path = subprocess.check_output(["which", "conda"]).decode().strip()
-        conda_dir = os.path.dirname(conda_bin_path)
-        conda_init_path = os.path.join(conda_dir, "..", "etc", "profile.d", "conda.sh")
-        env_path=os.path.join(os.getcwd(),"env")
-        command = (
-            f"source {conda_init_path} && "
-            f"conda activate {env_path} && "
-            f"bash {path}"
-        )
+        try:
+            path = os.path.join(self.project_root, 'run.sh')
 
-        self.worker = RunWorker(command)
-        self.worker.output_signal.connect(self.handle_output)
-        self.worker.error_signal.connect(self.handle_error)
-        self.worker.finished_signal.connect(self.finish_run)
-        self.worker.start()
+            try:
+                conda_bin_path = subprocess.check_output(["which", "conda"]).decode().strip()
+            except subprocess.CalledProcessError:
+                raise FileNotFoundError("Conda is not installed or not found in the system path. Please install Conda.")
+
+            conda_dir = os.path.dirname(conda_bin_path)
+            conda_init_path = os.path.join(conda_dir, "..", "etc", "profile.d", "conda.sh")
+
+            if not os.path.exists(conda_init_path):
+                raise FileNotFoundError(
+                    f"Conda initialization script not found at {conda_init_path}. Please check your Conda installation.")
+
+            env_path = os.path.join(os.getcwd(), "env")
+            if not os.path.exists(env_path):
+                raise FileNotFoundError(
+                    f"Environment directory not found at {env_path}. Please ensure the environment is set up correctly.")
+
+            command = (
+                f"source {conda_init_path} && "
+                f"conda activate {env_path} && "
+                f"bash {path}"
+            )
+
+            self.worker = RunWorker(command)
+            self.worker.output_signal.connect(self.handle_output)
+            self.worker.error_signal.connect(self.handle_error)
+            self.worker.finished_signal.connect(self.finish_run)
+            self.worker.start()
+
+        except FileNotFoundError as e:
+            self.show_error(
+                f"Error: {str(e)}\nPlease ensure all necessary files and directories exist and are properly configured.")
+        except subprocess.CalledProcessError as e:
+            self.show_error(
+                f"Error: A command execution failed. Please check the command and ensure Conda is properly initialized.\nError details: {e.output.decode()}")
 
     def handle_output(self, output):
         """
@@ -475,10 +497,11 @@ class YamlForm(QWidget):
         """
         Saves the experiments data to a predefined CSV file, overwriting any existing file.
         """
+
+        if self.experiments_table.rowCount() == 0:
+            self.show_error("No experiments to save.")
+            return
         try:
-            if self.experiments_table.rowCount() == 0:
-                self.show_error("No experiments to save.")
-                return
             with open(self.csv_path, 'w', newline='', encoding='utf-8') as file:
                 writer = csv.writer(file)
                 headers = [col["column"] for col in self.columns_config]
@@ -489,9 +512,9 @@ class YamlForm(QWidget):
                         for col in range(self.experiments_table.columnCount())
                     ]
                     writer.writerow(row_data)
-            self.log_window.append("Experiments CSV file saved successfully.")
         except (OSError, IOError) as e:
             self.show_error(f"Error saving CSV file: {str(e)}")
+        self.log_window.append("Experiments CSV file saved successfully.")
 
     def table_cell_open_file(self, row, column):
         """

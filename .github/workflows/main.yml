@@ -57,15 +57,25 @@ jobs:
           pip install --upgrade pip
           pip install pyinstaller PyQt6
 
-      - name: Build executable with Pyinstaller
+      - name: Build GUI executable with Pyinstaller
         run: |
           pyinstaller --onefile --add-data "styles/styles.qss:styles" --hidden-import PyQt6 config_gui.py
           chmod +x dist/config_gui
           mv dist/config_gui .
 
-      - name: Zip the executable
+      - name: Zip GUI executable
         run: |
           zip config_gui.zip config_gui
+
+      - name: Build installer executable with Pyinstaller
+        run: |
+          pyinstaller --onefile --add-data "styles/styles.qss:styles" --hidden-import PyQt6 installer.py
+          chmod +x dist/installer
+          mv dist/installer .
+
+      - name: Zip installer executable
+        run: |
+          zip installer.zip installer
 
       - name: Generate Changelog
         id: generate_changelog
