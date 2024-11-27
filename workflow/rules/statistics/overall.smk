@@ -109,17 +109,17 @@ rule summary_table:
         "../../scripts/statistics/overall/summary_table/summary_table.py"
 
 
-rule mapping_table:
+rule filter_2_primers:
     input:
-        expand("results/mapping/{sample_id}.sam", sample_id=samples["sample_id"]),
+        "results/mapping/{sample_id}.sam",
     output:
-        "results/statistics/mapping_table.html",
+        "results/statistics/2_primers_reads_{sample_id}.sam",
     log:
-        "logs/mapping_table.log",
+        "logs/mapping/2_primers_reads_{sample_id}.log",
     conda:
         "../../envs/pysam.yaml"
     script:
-        "../../scripts/statistics/overall/mapping_table.py"
+        "../../scripts/statistics/overall/mapping_table/filter_2_primers.py"
 
 
 rule read_quality_histogram:
@@ -168,3 +168,56 @@ rule quality_per_base_position:
         "../../envs/plotly.yaml"
     script:
         "../../scripts/statistics/overall/quality_per_base_position.py"
+
+
+rule primers_number_histogram:
+    input:
+        expand("results/mapping/{sample_id}.sam", sample_id=samples["sample_id"]),
+    output:
+        "results/statistics/primers_number_histogram.html",
+    log:
+        "logs/primers_number_histogram.log",
+    conda:
+        "../../envs/pysam.yaml"
+    script:
+        "../../scripts/statistics/overall/primers_number_histogram.py"
+
+
+
+rule count_mapped_primers_reads_number:
+    input:
+        "results/mapping/2_primers_reads_{sample_id}.sam",
+    output:
+        "results/statistics/primers_number_histogram.html",
+    log:
+        "logs/primers_number_histogram.log",
+    conda:
+        "../../envs/pysam.yaml"
+    script:
+        "../../scripts/statistics/overall/mapping_table/filter_2_primers.py"
+
+
+rule count_mapped_primers_bases_number:
+    input:
+        "results/mapping/2_primers_reads_{sample_id}.sam",
+    output:
+        "results/statistics/primers_number_histogram.html",
+    log:
+        "logs/primers_number_histogram.log",
+    conda:
+        "../../envs/pysam.yaml"
+    script:
+        "../../scripts/statistics/overall/mapping_table/filter_2_primers.py"
+
+
+rule count_forward_mapped_reads_number:
+    input:
+        "results/mapping/2_primers_reads_{sample_id}.sam",
+    output:
+        "results/statistics/forward_mapped_reads_number.csv",
+    log:
+        "logs/mapping/forward_mapped_reads_number.log"
+    conda:
+        "../../envs/pysam.yaml"
+    script:
+        "../../scripts/statistics/overall/mapping_table/filter_2_primers.py"

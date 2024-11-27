@@ -50,8 +50,8 @@ def summary_table(csv_files, output_file):
                      'Total Bases',
                      'Passed Reads',
                      'Passed Bases',
-                     'Passed GC',
-                     'Experiment Duration']
+                     'Experiment Duration',
+                     'Passed GC']
 
     body_values = [total_reads_number.loc[:, 'Sample'],
                    total_reads_number.loc[:, 'Total Reads'].apply(integer_to_human_readable),
@@ -60,14 +60,15 @@ def summary_table(csv_files, output_file):
                    passed_reads_ratio.apply(ratio_to_percentage_string, args=(2,)),
                    passed_bases_number.loc[:, 'Passed Bases'].apply(integer_to_human_readable,
                                                                     args=(bases_alphabet,)),
-                   gc_content_ratio.apply(ratio_to_percentage_string, args=(2,)),
                    timestamps.loc[:, 'Duration'].apply(lambda x:
-                                                        f'{round_to_x_significant(x / 3600, 3)}H')]
+                                                        f'{round_to_x_significant(x / 3600, 3)}H'),
+                   gc_content_ratio.apply(ratio_to_percentage_string, args=(2,))]
 
     figure = go.Figure(data=[go.Table(header={'values': header_values},
-                                      cells={'values': body_values})])
-
-    figure.update_layout(height=100, margin={'r': 5, 'l': 5, 't': 5, 'b': 5})
+                                      cells={'values': body_values,
+                                             'height': 25})])
+    figure.update_layout(height=25 * total_reads_number.shape[0] + 50,
+                         margin={'r': 5, 'l': 5, 't': 5, 'b': 5})
 
     with open(output_file, 'w', encoding='utf-8') as g:
         g.write(figure.to_html(full_html=False, include_plotlyjs='cdn'))

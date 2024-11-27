@@ -8,7 +8,8 @@ rule finalise_report:
         "results/statistics/mapping_table.html",
         "results/statistics/read_quality_histogram.html",
         "results/statistics/passed_read_length_histogram.html",
-        "results/statistics/quality_per_base_position.html",
+        "results/statistics/primers_number_histogram.html",
+        # "results/statistics/quality_per_base_position.html",
         "results/statistics/pore_activity.html",
         "results/statistics/pore_scan.html",
     output:
