@@ -1,3 +1,2 @@
 path_to_sample,path_to_reference,forward_primer,reverse_primer
-test/ont-test-data/BUTTERCUP_11/20240305_1603_MN39294_AQX803_2157fa9f,test/resources/buttercup_11_reference.fa,CTACAACGCAGATTACAACCTCAGTG,GGTAACGCTGGCAAGGATGG
-test/ont-test-data/PHLOX_1/20240129_1448_MN39294_ARI562_606caa21,test/resources/phlox_1_reference.fa,CTACAACGCAGATTACAACCTCAGTG,GGTAACGCTGGCAAGGATGG
+/home/admin/data/upload/20241126_NOVA_AVR816/NOVA_1/20241126_1339_MN48025_AVR816_a6104451/,resources/nova_1.fa,TGCATCATCTCTACACATAGC,GACTCGCTACGACGATAC

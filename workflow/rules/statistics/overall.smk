@@ -113,7 +113,7 @@ rule filter_2_primers:
     input:
         "results/mapping/{sample_id}.sam",
     output:
-        "results/statistics/2_primers_reads_{sample_id}.sam",
+        "results/mapping/2_primers_reads_{sample_id}.sam",
     log:
         "logs/mapping/2_primers_reads_{sample_id}.log",
     conda:
@@ -183,41 +183,96 @@ rule primers_number_histogram:
         "../../scripts/statistics/overall/primers_number_histogram.py"
 
 
-
 rule count_mapped_primers_reads_number:
     input:
-        "results/mapping/2_primers_reads_{sample_id}.sam",
+        expand("results/mapping/2_primers_reads_{sample_id}.sam", sample_id=samples["sample_id"]),
     output:
-        "results/statistics/primers_number_histogram.html",
+        "results/statistics/total/mapped_primers_reads_number.csv",
     log:
-        "logs/primers_number_histogram.log",
+        "logs/count_mapped_primers_reads_number.log",
     conda:
         "../../envs/pysam.yaml"
     script:
-        "../../scripts/statistics/overall/mapping_table/filter_2_primers.py"
+        "../../scripts/statistics/overall/mapping_table/count_mapped_primers_reads_number.py"
 
 
 rule count_mapped_primers_bases_number:
     input:
-        "results/mapping/2_primers_reads_{sample_id}.sam",
+        expand("results/mapping/2_primers_reads_{sample_id}.sam", sample_id=samples["sample_id"]),
     output:
-        "results/statistics/primers_number_histogram.html",
+        "results/statistics/total/mapped_primers_bases_number.csv",
     log:
-        "logs/primers_number_histogram.log",
+        "logs/count_mapped_primers_bases_number.log",
     conda:
         "../../envs/pysam.yaml"
     script:
-        "../../scripts/statistics/overall/mapping_table/filter_2_primers.py"
+        "../../scripts/statistics/overall/mapping_table/count_mapped_primers_bases_number.py"
 
 
-rule count_forward_mapped_reads_number:
+rule count_forward_mapped_reads_percentage:
     input:
-        "results/mapping/2_primers_reads_{sample_id}.sam",
+        expand("results/mapping/2_primers_reads_{sample_id}.sam", sample_id=samples["sample_id"]),
     output:
-        "results/statistics/forward_mapped_reads_number.csv",
+        "results/statistics/total/forward_mapped_reads_number.csv",
     log:
-        "logs/mapping/forward_mapped_reads_number.log"
+        "logs/mapping/count_forward_mapped_reads_percentage.log"
     conda:
         "../../envs/pysam.yaml"
     script:
-        "../../scripts/statistics/overall/mapping_table/filter_2_primers.py"
+        "../../scripts/statistics/overall/mapping_table/count_forward_mapped_reads_percentage.py"
+
+
+rule mapping_table:
+    input:
+        forward_reads="results/statistics/total/forward_mapped_reads_number.csv",
+        mapped_reads="results/statistics/total/mapped_primers_reads_number.csv",
+        mapped_bases="results/statistics/total/mapped_primers_bases_number.csv",
+        total_bases="results/statistics/total/count_total_bases_number.csv",
+    output:
+        "results/statistics/mapping_table.html",
+    log:
+        "logs/mapping_table.log",
+    conda:
+        "../../envs/plotly.yaml"
+    script:
+        "../../scripts/statistics/overall/mapping_table/mapping_table.py"
+
+rule filter_aligned_reads:
+    input:
+        "results/aligned/{sample_id}.bam",
+    output:
+        "results/aligned/filtered_{sample_id}.bam",
+    log:
+        "logs/{sample_id}/filter_aligned_reads.log",
+    conda:
+        "../../envs/pysam.yaml"
+    shell:
+        "samtools view -h {input} --min-MQ 10 --excl-flags 260 >> {output}"
+
+
+rule payload_errors_number:
+    input:
+        expand("results/aligned/filtered_{sample_id}.bam", sample_id=samples["sample_id"]),
+        expand("results/mapping/primers_{sample_id}.fa", sample_id=samples["sample_id"]),
+    output:
+        "results/statistics/total/payload_errors_number.csv"
+    log:
+        "logs/payload_errors_number.log",
+    conda:
+        "../../envs/plotly.yaml"
+    script:
+        "../../scripts/statistics/overall/payload_table/payload_errors_number.py"
+
+
+
+rule payload_table:
+    input:
+        payload_errors="results/statistics/total/payload_errors_number.csv"
+    output:
+        "results/statistics/payload_table.html",
+    log:
+        "logs/payload_table.log",
+    conda:
+        "../../envs/plotly.yaml"
+    script:
+        "../../scripts/statistics/overall/payload_table/payload_table.py"

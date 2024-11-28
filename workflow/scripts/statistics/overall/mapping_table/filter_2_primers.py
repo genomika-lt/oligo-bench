@@ -35,7 +35,7 @@ def filter_2_primers(sam_file, output_file):
             are_reverse_and_forward = read1.reference_name != read2.reference_name
             are_mapped_correctly = read1.is_forward == read2.is_forward
 
-            if not read1.is_forward:
+            if read1.reference_name != 'Forward5':
                 read1, read2 = read2, read1
             is_number_of_errors_allowed = (read1.get_tag('NM') <= allowed_primer_errors
                           and read2.get_tag('NM') <= allowed_primer_errors)

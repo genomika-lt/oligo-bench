@@ -37,8 +37,23 @@ def passed_read_length_histogram(bam_files, output_file):
         y_max = max(y)
         y_normalized = [i / y_max for i in y]
 
-        figure.add_trace(go.Scatter(y=y_normalized,
-                                    x=x,
+        filter_index_left = 0
+        for i in range(len(x)):
+            if y_normalized[i] > 5e-4:
+                filter_index_left = i
+                break
+
+        filter_index_right = 0
+        for i in range(len(x))[::-1]:
+            if y_normalized[i] > 1e-2:
+                filter_index_right = i
+                break
+
+        x_filtered = x[filter_index_left:filter_index_right]
+        y_filtered = y_normalized[filter_index_left:filter_index_right]
+
+        figure.add_trace(go.Scatter(y=y_filtered,
+                                    x=x_filtered,
                                     name=path_to_sample.split('/')[-1][7:-4]))
     figure.update_xaxes(type="log")
 

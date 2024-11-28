@@ -8,7 +8,7 @@ samples = pd.read_csv(config["samples"]).convert_dtypes()
 char = "/"  # workaround for snakemake linter false positive
 
 samples.loc[:, "sample_id"] = [
-    line.split(char)[-2] for line in samples["path_to_sample"]
+    line.strip(char).split(char)[-2] for line in samples["path_to_sample"]
 ]
 
 
@@ -21,7 +21,6 @@ def get_pod5_directory(wildcards):
         samples["sample_id"] == wildcards.sample_id, "path_to_sample"
     ]
     pod5_directory = os.path.join(path_to_sample.values[0], "pod5")
-
     return pod5_directory
 
 
@@ -43,5 +42,4 @@ def get_reverse_primer(wildcards):
     reverse_primer = samples.loc[
         samples["sample_id"] == wildcards.sample_id, "reverse_primer"
     ].values[0]
-
     return reverse_primer
