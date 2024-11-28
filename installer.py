@@ -26,36 +26,24 @@ class DownloadThread(QThread):
     complete = pyqtSignal(bool)
     indeterminate = pyqtSignal()
 
-    def __init__(self, url, save_path, force_install=None, parent=None):
+    def __init__(self, url, save_path, parent=None):
         super().__init__(parent)
         self.url = url
         self.save_path = Path(save_path)
-        self.force_install = force_install
         self.cancelled = False
 
     def run(self):
         """Main function to run the download, unzip, and installation process."""
-        self.initialize_logging()
-        self.start_download_process()
-
-    def initialize_logging(self):
-        """Initializes the logging file."""
         with open(LOG_FILE, 'w'):
             logger.debug(f"Log file {LOG_FILE} initialized.")
         logger.info(f"Download started for URL: {self.url} to path: {self.save_path}")
 
-    def start_download_process(self):
-        """Handles the download and post-download process."""
         self.status.emit("Starting download...")
         self.save_path.mkdir(parents=True, exist_ok=True)
-        try:
-            self.download_file()
-            self.status.emit("Unzipping downloaded file...")
-            self.install_dependencies_and_cleanup()
-            self.complete.emit(True)
-        except Exception as e:
-            logger.error(f"Error occurred: {e}")
-            self.complete.emit(False)
+
+        self.download_file()
+        self.install_dependencies_and_cleanup()
+        self.complete.emit(True)
 
     def download_file(self):
         """Downloads the file from the given URL."""
@@ -69,26 +57,17 @@ class DownloadThread(QThread):
 
     def process_download(self, response):
         """Processes the downloaded data."""
-        total_length = self.get_content_length(response)
         zip_file_name = self.url.split("/")[-1]
         zip_file_path = self.save_path / zip_file_name
 
         with open(zip_file_path, 'wb') as f:
-            self.write_chunks(response, f, total_length, zip_file_path)
+            self.write_chunks(response, f, zip_file_path)
 
         self.status.emit("Downloading of zip file completed.")
         logger.info(f"Download completed for {self.url}.")
 
-    def get_content_length(self, response):
-        """Gets the content length from the response headers."""
-        total_length = response.headers.get('content-length')
-        if not total_length:
-            self.indeterminate.emit()
-            logger.info(f"Total content length not provided by the server for {self.url}.")
-            return None
-        return int(total_length)
 
-    def write_chunks(self, response, file_obj, total_length, zip_file_path):
+    def write_chunks(self, response, file_obj, zip_file_path):
         """Writes chunks of data to the file."""
         downloaded = 0
         self.last_logged_mb = 0
@@ -99,25 +78,21 @@ class DownloadThread(QThread):
                 return
             file_obj.write(chunk)
             downloaded += len(chunk)
-            self.update_progress(downloaded, total_length)
+            self.update_progress(downloaded)
 
-    def update_progress(self, downloaded, total_length):
+    def update_progress(self, downloaded):
         """Updates the progress and emits status signals."""
         downloaded_mb = downloaded / (1024 * 1024)
+        self.indeterminate.emit()
         if downloaded_mb - self.last_logged_mb >= 1:
             self.status.emit(f"Downloaded: {downloaded_mb:.2f} MB")
             logger.info(f"Downloaded: {downloaded_mb:.2f} MB")
             self.last_logged_mb = downloaded_mb
-        if total_length:
-            progress = int(100 * downloaded / total_length)
-            self.progress.emit(progress)
-            logger.debug(f"Download progress: {progress}%")
 
     def handle_download_cancellation(self, zip_file_path):
         """Handles download cancellation."""
         self.status.emit("Download canceled.")
         zip_file_path.unlink(missing_ok=True)
-        self.complete.emit(False)
         logger.info(f"Download for {self.url} canceled by user.")
 
     def handle_network_error(self, error):
@@ -129,7 +104,6 @@ class DownloadThread(QThread):
         """Unzips the downloaded file and dynamically detects the extracted folder."""
         zip_file_name = self.url.split("/")[-1]
         zip_file_path = self.save_path / zip_file_name
-        extracted_folder_path = ""
         try:
             with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
                 zip_ref.extractall(self.save_path)
@@ -138,7 +112,12 @@ class DownloadThread(QThread):
             extracted_folder_path = self.detect_extracted_folder(zip_ref)
             logger.info(f"Detected extracted folder: {extracted_folder_path}")
         except (zipfile.BadZipFile, OSError) as e:
-            self.handle_unzip_error(e, zip_file_path)
+            if isinstance(e, zipfile.BadZipFile):
+                error_message = "Failed to unzip: The file is corrupted or not a valid zip file."
+            else:
+                error_message = f"File system error while unzipping the file: {e}"
+            self.status.emit(error_message)
+            logger.error(f"Failed to unzip {zip_file_path}: {error_message}")
             raise
 
         return extracted_folder_path
@@ -164,22 +143,13 @@ class DownloadThread(QThread):
 
         return extracted_folder_path
 
-    def handle_unzip_error(self, error, zip_file_path):
-        """Handles errors during unzipping."""
-        if isinstance(error, zipfile.BadZipFile):
-            error_message = "Failed to unzip: The file is corrupted or not a valid zip file."
-        else:
-            error_message = f"File system error while unzipping the file: {error}"
-        self.status.emit(error_message)
-        logger.error(f"Failed to unzip {zip_file_path}: {error_message}")
 
     def install_dependencies_and_cleanup(self):
         """Installs dependencies and cleans up temporary files."""
         original_path = os.getcwd()
-        extracted_folder_path = None
         zip_file_name = self.url.split("/")[-1]
         zip_file_path = self.save_path / zip_file_name
-
+        self.status.emit("Unzipping downloaded file...")
         try:
             extracted_folder_path = self.unzip_file()
             if not extracted_folder_path:
@@ -212,7 +182,7 @@ class DownloadThread(QThread):
         Downloads and installs Conda Forge on the system, and creates a Conda environment in the current directory.
         """
         self.check_and_install_miniforge()
-        self.create_conda_environment(self.force_install)
+        self.create_conda_environment()
         logger.info("Environment created and dependencies installed successfully.")
         self.status.emit("Environment created and dependencies installed successfully.")
 
@@ -247,13 +217,10 @@ class DownloadThread(QThread):
             self.status.emit("Installing dependencies: installing miniforge...")
             self.install_miniforge()
 
-    def create_conda_environment(self, force_update=False):
+    def create_conda_environment(self):
         """
         Create a Conda environment in the current directory.
-
-        Parameters:
-            force_update (bool): If True, reinstall or update all dependencies.
-                                 If False, only install missing dependencies.
+        :return:
         """
         self.status.emit("Installing dependencies: creating Conda environment...")
         env_dir = os.path.join(os.getcwd(), "env")
@@ -277,7 +244,7 @@ class DownloadThread(QThread):
         pip_command = [
             "conda", "run", "--prefix", env_dir,
             "python", "-m", "pip", "install",
-            "--upgrade" if force_update else "--no-deps",
+            "--upgrade",
             "-r", pip_requirements_file
         ]
 
@@ -316,7 +283,6 @@ class InstallerApp(QMainWindow):
 
         self.download_path = None
         self.statusLabel = None
-        self.forceInstallCheckBox = None
         self.is_downloading = None
         self.downloadButton = None
         self.progressBar = QProgressBar()
@@ -344,7 +310,6 @@ class InstallerApp(QMainWindow):
             logger.warning(f"Style sheet {style_file} not found.")
 
     def initUI(self):
-        # Main layout
         main_layout = QVBoxLayout()
 
         # Navigation buttons
@@ -422,28 +387,14 @@ class InstallerApp(QMainWindow):
         layout.addLayout(pathLayout)
 
         # Space Required and Available Section
-        self.spaceRequiredLabel = QLabel(f"Space Required: {self.get_required_space()} MB")
+        self.spaceRequiredLabel = QLabel(f"Space Required: 5 GB")
         layout.addWidget(self.spaceRequiredLabel)
-
-        self.spaceAvailableLabel = QLabel(f"Space Available: {self.get_available_space()}")
-        layout.addWidget(self.spaceAvailableLabel)
 
         # Progress Bar (initially hidden)
         self.progressBar = QProgressBar()
         self.progressBar.setRange(0, 100)
         self.progressBar.setVisible(False)
         layout.addWidget(self.progressBar)
-
-        self.forceUpdateCheckBox = QCheckBox("Force update all dependencies")
-        self.forceUpdateCheckBox.setChecked(False)  # Default state is unchecked
-        layout.addWidget(self.forceUpdateCheckBox)
-
-        # Button Layout for Start Download button
-        buttonLayout = QHBoxLayout()
-        self.downloadButton = QPushButton("Start Download")
-        self.downloadButton.clicked.connect(self.toggle_download)
-        buttonLayout.addWidget(self.downloadButton)
-        layout.addLayout(buttonLayout)
 
         # Status Label
         self.statusLabel = QLabel("")
@@ -479,24 +430,26 @@ class InstallerApp(QMainWindow):
             self.back_button.setEnabled(True)
             self.back_button.setVisible(True)
         if current_index + 1 == self.stackedWidget.count() - 1:
-            self.next_button.setText("Finish")
+            self.next_button.setText("Download")
             self.next_button.setEnabled(True)
         elif current_index + 1 == self.stackedWidget.count():
             if self.isFinishedDownloading:
                 self.close()
             else:
-                QMessageBox.critical(self, "Error", "Downloading process was not finished")
-            return
+                self.toggle_download()
 
     def go_back(self):
         current_index = self.stackedWidget.currentIndex()
-        if current_index > 0:
-            self.stackedWidget.setCurrentIndex(current_index - 1)
-            self.next_button.setEnabled(True)
-            self.next_button.setText("Next")
-        if current_index - 1 == 0:
-            self.back_button.setEnabled(False)
-            self.back_button.setVisible(False)
+        if self.is_downloading:
+            QMessageBox.critical(self, "Error", "Downloading is in process...")
+        else:
+            if current_index > 0:
+                self.stackedWidget.setCurrentIndex(current_index - 1)
+                self.next_button.setEnabled(True)
+                self.next_button.setText("Next")
+            if current_index - 1 == 0:
+                self.back_button.setEnabled(False)
+                self.back_button.setVisible(False)
 
     def toggle_download(self):
         if self.is_downloading:
@@ -520,16 +473,15 @@ class InstallerApp(QMainWindow):
             return
 
         self.progressBar.setVisible(True)
-        force_update = self.forceUpdateCheckBox.isChecked()
 
-        self.downloadThread = DownloadThread("https://github.com/genomika-lt/oligo-bench/archive/refs/heads/main.zip", self.download_path,force_install=force_update)
+        self.downloadThread = DownloadThread("https://github.com/genomika-lt/oligo-bench/archive/refs/heads/main.zip", self.download_path)
         self.downloadThread.progress.connect(self.update_progress)
         self.downloadThread.status.connect(self.update_status)
         self.downloadThread.complete.connect(self.download_complete)
         self.downloadThread.indeterminate.connect(self.make_indeterminate)
 
         self.downloadThread.start()
-        self.downloadButton.setText("Cancel Download")
+        self.next_button.setText("Cancel Download")
         self.is_downloading = True
 
     def update_progress(self, progress):
@@ -553,7 +505,7 @@ class InstallerApp(QMainWindow):
         else:
             logger.error("Download process failed.")
             self.update_status("Download process failed.")
-        self.downloadButton.setText("Start Download")
+        self.next_button.setText("Start Download")
         self.progressBar.setVisible(False)
         self.is_downloading = False
         self.isFinishedDownloading = True
@@ -564,9 +516,38 @@ class InstallerApp(QMainWindow):
             self.downloadThread.cancel_download()
             self.update_status("Download process was cancelled.")
             logger.info("Canceling download...")
-            self.downloadButton.setText("Start Download")
+            self.next_button.setText("Download")
             self.progressBar.setVisible(False)
             self.is_downloading = False
+
+    def closeEvent(self, event):
+        """
+        Handles the window close event to manage unsaved
+        changes before exiting the application.
+
+        This method prompts the user to save any unsaved changes
+        when the user attempts to close the window.
+        It displays a confirmation dialog asking whether to save
+        the changes, and if the user chooses to do so,
+        it presents additional prompts to save the CSV and YAML
+        files if applicable.
+
+        :param event:
+        :return:
+        """
+        # pylint: disable=C0103
+
+        reply = QMessageBox.question(
+            self,
+            'Oligo-bench Setup',
+            "Are you sure you want to quit Oligo-bench setup?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+            ,QMessageBox.StandardButton.No
+        )
+        if reply == QMessageBox.StandardButton.Yes:
+            event.accept()
+        elif reply == QMessageBox.StandardButton.No:
+            event.ignore()
 
 def main():
     app = QApplication(sys.argv)

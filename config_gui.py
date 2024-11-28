@@ -214,6 +214,15 @@ class YamlForm(QWidget):
         if self.running:
             self.handle_stop()
         else:
+            if self.experiments_table.rowCount() == 0:
+                self.show_error("No cells in experiments table")
+                return
+            for row in range(self.experiments_table.rowCount()):
+                for col in range(self.experiments_table.columnCount()):
+                    item = self.experiments_table.item(row, col)
+                    if item is None or not item.text().strip():
+                        self.show_error("Some cells in experiments table are empty.")
+                        return
             csv_reply = QMessageBox.question(
                 self,
                 'Save CSV File',
@@ -557,16 +566,6 @@ class YamlForm(QWidget):
         else:
             return old_value
 
-    def widget_path_open_file(self, widget : QLineEdit, file_type:str):
-        """
-        Opens a file dialog to select a file or directory based on the type of file.
-        :param widget: Path widget
-        :param file_type: type of file
-        :return:
-        """
-        selected_path = self.open_file_dialog(file_type,widget.text())
-        widget.setText(selected_path)
-
     def set_unsaved_changes(self):
         """
         Setting unsaved changes to True
@@ -710,7 +709,8 @@ class YamlForm(QWidget):
                             widget_button: QPushButton = QPushButton("Open File", self)
                             widget_button.setObjectName(f"{widget_name}_{widget_type}_button")
                             widget_button.clicked.connect(
-                                lambda: self.widget_path_open_file(widget,widget_config.get('file_type')))
+                                lambda: widget.setText(
+                                    self.open_file_dialog(widget_config.get('file_type'), widget.text())))
                             widget.textChanged.connect(self.set_unsaved_changes)
 
                     except Exception as e:

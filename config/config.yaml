@@ -1,15 +1,7 @@
-samples: config/experiments.csv
-# BASECALLING
-# define parameters for a specific rule
-basecall: True
-# dorado model 'fast', 'hac' or 'sup'
-dorado_model: sup
-
-
-#basecalling parameters
+basecall: true
 basecalling:
   basecall:
-    label: Enable basecall #label near widget
+    label: Enable basecall
     type: checkbox
     value: false
   dorado_model:
@@ -25,19 +17,18 @@ basecalling:
     type: line
     value: fast
   input_path:
+    file_type: folder
     label: Dorado model
     type: path
-    file_type: folder #type of file that will be accessible via FileDialog
     value: Select path
-
-
-#experiments table
+dorado_model: sup
 experiments:
 - column: Path to Sample
-  type: folder #type of file that will be accessible via FileDialog
+  type: folder
 - column: Path to Reference
   type: fa
 - column: forward_primer
   type: plaintxt
 - column: reverse_primer
   type: plaintxt
+samples: config/experiments.csv
