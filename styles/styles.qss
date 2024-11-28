@@ -1,0 +1,181 @@
+/* General styling for the app */
+QWidget {
+    background-color: #f5f5f5;
+    font-family: "Segoe UI", sans-serif;
+    font-size: 11pt;
+}
+
+/* Labels */
+QLabel {
+    color: #333333;
+    font-weight: bold;
+    padding: 5px;
+}
+#log_window{
+   background-color: #201c24;
+   border: 1px solid #201c24;
+}
+#left_widget{
+    background-color: #302c34;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 10px;
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 10px;
+}
+#basecall_checkbox{
+
+    border-radius: 8px
+}
+#basecall_checkbox_name_label{
+    background-color: #302c34;
+    color:#b4b2af;
+}
+#basecall_checkbox_layout{
+    background-color: #302c34;
+}
+#dorado_model_combobox_name_label{
+    background-color: #302c34;
+    color:#b4b2af;
+}
+#dorado_model_combobox_layout{
+    background-color: #302c34;
+}
+QPushButton {
+    background-color: #49A078; /* Normal state */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    margin: 5px;
+}
+
+QPushButton:hover {
+    background-color: #3a8060; /* Slightly darker shade for hover state */
+}
+
+QPushButton:pressed {
+    background-color: #6db393; /* Even darker shade for pressed state */
+}
+
+
+/* Checkbox */
+QCheckBox {
+    padding: 4px;
+    background-color:white;
+}
+
+QCheckBox::indicator {
+    width: 20px;
+    height: 20px;
+}
+
+/* ComboBox */
+QComboBox {
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    background-color: white;
+    selection-background-color: #49A078;
+}
+
+QComboBox:hover {
+    border: 1px solid #999999;
+}
+
+/* TextEdit */
+QTextEdit {
+    background-color: #ffffff;
+    border: 1px solid #cccccc;
+    border-radius: 5px;
+    padding: 8px;
+}
+
+/* TableWidget */
+QTableWidget {
+    background-color: #ffffff;
+    border: 1px solid #f8f4f4;
+    border-radius: 5px;
+    gridline-color: #e0e0e0;
+}
+
+QHeaderView::section {
+    background-color: #49A078;
+    color: #1F2421;
+    padding: 3px;
+    font-weight: bold;
+}
+
+QTableWidget QTableCornerButton::section {
+    background-color: #49A078;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 0px;
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+}
+
+/* Adding cell borders with the desired color */
+QTableWidget::item {
+    border: none
+}
+
+QTableWidget::item:selected {
+    background-color: #49A078;  /* Optional: Change the background when selected */
+}
+
+/* ScrollBar */
+QScrollBar:vertical {
+    border: none;
+    background: white;
+    width: 10px;
+}
+
+QScrollBar::handle:vertical {
+    background-color: #3a8060;
+    min-height: 20px;
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
+    background: none;
+}
+
+QScrollBar:horizontal {
+    border: none;
+    background: white;
+    height: 15px;
+    margin: 0px 0px 0px 20px;
+}
+
+QScrollBar::handle:horizontal {
+    background-color: #3a8060;
+    border-radius: 5px;
+}
+
+QScrollBar::add-line:horizontal,
+QScrollBar::sub-line:horizontal {
+    background: none;
+}
+
+/* MessageBox */
+QMessageBox {
+    background-color: #ffffff;
+}
+
+QMessageBox QLabel {
+    color: #333333;
+    background-color: white;
+    font-size: 10pt;
+}
+
+QMessageBox QPushButton {
+    background-color: #49A078;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 5px;
+}
+
+QSplitter::handle {
+    background-color: #49A078;  /* Initial color of the handle */
+}
+QSplitter::handle:hover {
+    background-color: #3a8060;  /* Color when hovered */
+}
