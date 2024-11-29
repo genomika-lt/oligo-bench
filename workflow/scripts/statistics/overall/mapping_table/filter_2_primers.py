@@ -22,7 +22,7 @@ def filter_2_primers(sam_file, output_file):
     """
 
 
-    allowed_primer_errors = snakemake.config['allowed_primer_errors']
+    allowed_primer_errors = int(snakemake.config["basecalling"]['allowed_primer_errors']["value"])
 
     # pylint: disable=no-member
     read_file = pysam.AlignmentFile(sam_file, 'r', check_sq=False)

@@ -277,11 +277,7 @@ class YamlForm(QWidget):
                 raise FileNotFoundError(
                     f"Conda initialization script not found at {conda_init_path}. Please check your Conda installation.")
 
-            env_path = os.path.join(os.getcwd(), "env")
-            if not os.path.exists(env_path):
-                raise FileNotFoundError(
-                    f"Environment directory not found at {env_path}. Please ensure the environment is set up correctly.")
-
+            env_path = 'snakemake'
             command = (
                 f"source {conda_init_path} && "
                 f"conda activate {env_path} && "

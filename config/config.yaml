@@ -1,8 +1,8 @@
 basecalling:
-  basecall:
-    label: Enable basecall #label near widget
-    type: checkbox
-    value: false
+  allowed_primer_errors:
+    label: Allowed primers errors
+    type: line
+    value: '5'
   dorado_model:
     label: Dorado model
     options:
@@ -11,30 +11,14 @@ basecalling:
     - sup
     type: combobox
     value: fast
-  input_line:
-    label: Dorado model
-    type: line
-    value: fast
-  input_path:
-    label: Dorado model
-    type: path
-    file_type: folder #type of file that will be accessible via FileDialog
-    value: Select path
   minimum_quality:
     label: Minimum Quality
-    type: plaintext
-    value: 10
-mapping:
-  allowed_primer_errors:
-    label: Allowed primers errors
-    type: plaintext
-    value: 5
-
-#experiments table
+    type: line
+    value: '10'
 experiments:
-- column: Path to Sample
-  type: folder #type of file that will be accessible via FileDialog
-- column: Path to Reference
+- column: path_to_sample
+  type: folder
+- column: path_to_reference
   type: fa
 - column: forward_primer
   type: plaintxt

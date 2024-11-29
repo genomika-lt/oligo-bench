@@ -3,7 +3,7 @@ import os
 import pandas as pd
 
 
-samples = pd.read_csv(config["samples"]).convert_dtypes()
+samples = pd.read_csv("./config/experiments.csv").convert_dtypes()
 
 char = "/"  # workaround for snakemake linter false positive
 
