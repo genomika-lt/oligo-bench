@@ -8,6 +8,7 @@ to configure base calling options, select dorado models, and
 manage experiment paths through a table interface.
 """
 import csv
+import logging
 import os
 import signal
 import subprocess
@@ -22,21 +23,31 @@ from PyQt6.QtWidgets import (QApplication, QWidget, QVBoxLayout,
                              QTextEdit, QSplitter, QFileDialog, QLineEdit)
 from PyQt6.QtCore import QThread, pyqtSignal
 
+
 class RunWorker(QThread):
     output_signal = pyqtSignal(str)
     error_signal = pyqtSignal(str)
     finished_signal = pyqtSignal()
 
-    def __init__(self, command, parent=None,stop_requested=False):
+    def __init__(self, command, parent=None, stop_requested=False, log_file="execution.log"):
         super().__init__(parent)
         self.command = command
         self.process = None
         self.stop_requested = stop_requested
 
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.INFO)
+        handler = logging.FileHandler(log_file)
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        self.logger.addHandler(handler)
+
     def run(self):
         """
         Run the shell command and capture the output in the background.
         """
+        self.logger.info(f"Starting command: {self.command}")
+
         self.process = subprocess.Popen(
             ["bash", "-c", self.command],
             stdout=subprocess.PIPE,
@@ -48,6 +59,7 @@ class RunWorker(QThread):
             rlist, _, _ = select.select([self.process.stdout, self.process.stderr], [], [], 0.1)
 
             if self.stop_requested:
+                self.logger.info("Stop requested. Terminating process.")
                 self._terminate_process()
                 self.finished_signal.emit()
                 return
@@ -58,29 +70,45 @@ class RunWorker(QThread):
                     continue
                 elif stream == self.process.stdout:
                     self.output_signal.emit(output.strip())
+                    self.logger.info(f"STDOUT: {output.strip()}")
                 elif stream == self.process.stderr:
-                    self.error_signal.emit(output.strip())
+                    if self._is_real_error(output.strip()):
+                        self.error_signal.emit(output.strip())
+                        self.logger.error(f"STDERR: {output.strip()}")
+                    else:
+                        self.output_signal.emit(output.strip())
+                        self.logger.info(f"STDERR (informational): {output.strip()}")
 
             if self.process.poll() is not None:
+                self.logger.info(f"Process finished with return code {self.process.returncode}")
                 self.finished_signal.emit()
                 break
+
+    def _is_real_error(self, line):
+        """
+        Determine if a line from stderr represents a real error.
+        """
+        error_keywords = ["Error", "Failed", "Exception", "not found"]
+        return any(keyword in line for keyword in error_keywords)
 
     def _terminate_process(self):
         """
         Ensure the child process and all its children are terminated.
         """
         if self.process:
+            self.logger.info("Terminating process.")
             self.process.terminate()
             try:
                 self.process.wait(timeout=5)
             except subprocess.TimeoutExpired:
+                self.logger.error("Process timeout. Force killing the process.")
                 self.process.kill()
 
             if self.process.pid:
                 try:
                     os.killpg(self.process.pid, signal.SIGTERM)
                 except ProcessLookupError:
-                    pass
+                    self.logger.error(f"Failed to terminate process group: {self.process.pid}")
             self.process = None
 
 
@@ -223,29 +251,30 @@ class YamlForm(QWidget):
                     if item is None or not item.text().strip():
                         self.show_error("Some cells in experiments table are empty.")
                         return
-            csv_reply = QMessageBox.question(
-                self,
-                'Save CSV File',
-                "Do you want to save the CSV file before running?",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel,
-                QMessageBox.StandardButton.Cancel
-            )
+            if self.unsaved_changes:
+                csv_reply = QMessageBox.question(
+                    self,
+                    'Save CSV File',
+                    "Do you want to save the CSV file before running?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel,
+                    QMessageBox.StandardButton.Cancel
+                )
 
-            if csv_reply == QMessageBox.StandardButton.Yes:
-                self.save_experiments_csv()
-            if csv_reply == QMessageBox.StandardButton.Cancel:
-                return
-            yaml_reply = QMessageBox.question(
-                self,
-                'Save YAML File',
-                "Do you want to save the YAML file before running?",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No| QMessageBox.StandardButton.Cancel,
-                QMessageBox.StandardButton.Cancel
-            )
-            if yaml_reply == QMessageBox.StandardButton.Yes:
-                self.save_yaml()
-            if yaml_reply == QMessageBox.StandardButton.Cancel:
-                return
+                if csv_reply == QMessageBox.StandardButton.Yes:
+                    self.save_experiments_csv()
+                if csv_reply == QMessageBox.StandardButton.Cancel:
+                    return
+                yaml_reply = QMessageBox.question(
+                    self,
+                    'Save YAML File',
+                    "Do you want to save the YAML file before running?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No| QMessageBox.StandardButton.Cancel,
+                    QMessageBox.StandardButton.Cancel
+                )
+                if yaml_reply == QMessageBox.StandardButton.Yes:
+                    self.save_yaml()
+                if yaml_reply == QMessageBox.StandardButton.Cancel:
+                    return
             self.log_window.clear()
             self.run_stop_button.setText("Stop")
             self.run_stop_button.setStyleSheet("background-color: #9b3438; color: white;")
