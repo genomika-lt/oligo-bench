@@ -12,4 +12,4 @@ rule dorado_basecaller:
     conda:
         "../envs/pysam.yaml"
     shell:
-        "dorado basecaller {params.model} {input} > {output}"
+        "dorado basecaller {params.model} -r {input} >> {output}"

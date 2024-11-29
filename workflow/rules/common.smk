@@ -20,7 +20,7 @@ def get_pod5_directory(wildcards):
     path_to_sample = samples.loc[
         samples["sample_id"] == wildcards.sample_id, "path_to_sample"
     ]
-    pod5_directory = os.path.join(path_to_sample.values[0], "pod5")
+    pod5_directory = os.path.join(path_to_sample.values[0], "./")
     return pod5_directory
 
 
