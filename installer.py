@@ -217,12 +217,14 @@ class DownloadThread(QThread):
         """Check if Miniforge (conda) is installed, and install it if necessary."""
         try:
             self.status.emit("Installing dependencies: checking if miniforge is installed...")
-            subprocess.run(["conda", "--version"], check=True, stdout=subprocess.PIPE)
+            logger.info("CHECKING FOR CONDA")
+            subprocess.run(["which", "conda"], check=True, stdout=subprocess.PIPE)
             logger.info("Miniforge (conda) is already installed.")
         except subprocess.CalledProcessError:
             logger.warning("Miniforge (conda) is not installed. Installing Miniforge...")
             self.status.emit("Installing dependencies: installing miniforge...")
             self.install_miniforge()
+        logger.info("CONDA FINISHED")
 
     def create_conda_environment(self):
         """
@@ -355,8 +357,6 @@ class InstallerApp(QMainWindow):
         nav_layout.addWidget(self.next_button)
 
         self.stackedWidget.addWidget(self.create_title_page())
-        self.stackedWidget.addWidget(self.create_empty_page(2))
-        self.stackedWidget.addWidget(self.create_empty_page(3))
         self.stackedWidget.addWidget(self.create_final_page())
 
         main_layout.addWidget(self.stackedWidget)
@@ -554,7 +554,8 @@ class InstallerApp(QMainWindow):
         :return:
         """
         # pylint: disable=C0103
-
+        if self.isFinishedDownloading:
+            event.accept()
         reply = QMessageBox.question(
             self,
             'Oligo-bench Setup',
