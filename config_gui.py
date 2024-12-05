@@ -20,7 +20,7 @@ from PyQt6.QtWidgets import (QApplication, QWidget, QVBoxLayout,
                              QHBoxLayout, QLabel, QComboBox, QPushButton,
                              QCheckBox, QTableWidget, QTableWidgetItem,
                              QHeaderView, QAbstractItemView, QMessageBox,
-                             QTextEdit, QSplitter, QFileDialog, QLineEdit)
+                             QTextEdit, QSplitter, QFileDialog, QLineEdit, QSpinBox)
 from PyQt6.QtCore import QThread, pyqtSignal
 
 
@@ -133,7 +133,7 @@ class YamlForm(QWidget):
             self.project_root = os.path.dirname(sys.executable)
         else:
             self.project_root = os.path.abspath(os.path.join(os.path.dirname(__file__)))
-
+        print(self.project_root)
         self.yaml_path = os.path.join(self.project_root, "config", "config.yaml")
         self.csv_path = os.path.join(self.project_root, "config", "experiments.csv")
 
@@ -163,7 +163,9 @@ class YamlForm(QWidget):
             'line': (QLineEdit, lambda w, v=None:
             w.setText(v) if v else w.text()),
             'path': (QLineEdit, lambda w, v=None:
-            w.setText(v) if v else w.text())
+            w.setText(v) if v else w.text()),
+            'integer': (QSpinBox, lambda w, v=None:
+            w.setValue(v) if v else w.value()),
         }
 
         self.load_yaml_on_startup(self.yaml_path)
@@ -292,7 +294,7 @@ class YamlForm(QWidget):
         self.stop_requested = False
 
         try:
-            path = os.path.join(self.project_root, 'run.sh')
+            path = os.path.join(self.project_root, './run.sh')
 
             try:
                 conda_bin_path = subprocess.check_output(["which", "conda"]).decode().strip()
@@ -310,7 +312,7 @@ class YamlForm(QWidget):
             command = (
                 f"source {conda_init_path} && "
                 f"conda activate {env_path} && "
-                f"bash {path}"
+                f"{path}"
             )
 
             self.worker = RunWorker(command)
@@ -325,6 +327,16 @@ class YamlForm(QWidget):
         except subprocess.CalledProcessError as e:
             self.show_error(
                 f"Error: A command execution failed. Please check the command and ensure Conda is properly initialized.\nError details: {e.output.decode()}")
+
+    def update_project(self):
+        QMessageBox.warning(
+            self,
+            'Update Project',
+            "Do you really to save them?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+            | QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Cancel
+        )
 
     def handle_output(self, output):
         """
@@ -737,6 +749,10 @@ class YamlForm(QWidget):
                                 lambda: widget.setText(
                                     self.open_file_dialog(widget_config.get('file_type'), widget.text())))
                             widget.textChanged.connect(self.set_unsaved_changes)
+                        elif widget_type == 'integer':
+                            widget.setMinimum(widget_config.get('min_value'))
+                            widget.setMaximum(widget_config.get('max_value'))
+                            widget.valueChanged.connect(self.set_unsaved_changes)
 
                     except Exception as e:
                         self.show_error(f"Error creating widget {object_name}: {str(e)}")

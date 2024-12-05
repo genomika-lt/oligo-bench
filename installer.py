@@ -1,6 +1,4 @@
 import os
-import platform
-import shutil
 import subprocess
 import sys
 import logging
@@ -11,14 +9,18 @@ import requests
 from PyQt6.QtGui import QFont
 
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QProgressBar, QLabel, QFileDialog, \
-    QHBoxLayout, QMessageBox, QMainWindow, QStackedWidget, QLineEdit, QCheckBox
+    QHBoxLayout, QMessageBox, QMainWindow, QStackedWidget, QLineEdit
 from PyQt6.QtCore import QThread, pyqtSignal, Qt
 
-LOG_FILE = "download_log.txt"
-logging.basicConfig(filename=LOG_FILE, level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger()
-
+log_file="installation.log"
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+handler = logging.FileHandler(log_file)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+with open(log_file, 'w'):
+    logger.debug(f"Log file {log_file} initialized.")
 
 class DownloadThread(QThread):
     progress = pyqtSignal(int)
@@ -34,16 +36,18 @@ class DownloadThread(QThread):
 
     def run(self):
         """Main function to run the download, unzip, and installation process."""
-        with open(LOG_FILE, 'w'):
-            logger.debug(f"Log file {LOG_FILE} initialized.")
         logger.info(f"Download started for URL: {self.url} to path: {self.save_path}")
 
         self.status.emit("Starting download...")
         self.save_path.mkdir(parents=True, exist_ok=True)
 
         self.download_file()
+        if self.cancelled:
+            self.complete.emit(False)
+            return
         self.install_dependencies_and_cleanup()
-        self.complete.emit(True)
+        if not self.cancelled:
+            self.complete.emit(True)
 
     def download_file(self):
         """Downloads the file from the given URL."""
@@ -62,9 +66,9 @@ class DownloadThread(QThread):
 
         with open(zip_file_path, 'wb') as f:
             self.write_chunks(response, f, zip_file_path)
-
-        self.status.emit("Downloading of zip file completed.")
-        logger.info(f"Download completed for {self.url}.")
+        if not self.cancelled:
+            self.status.emit("Downloading of zip file completed.")
+            logger.info(f"Download completed for {self.url}.")
 
 
     def write_chunks(self, response, file_obj, zip_file_path):
@@ -181,10 +185,13 @@ class DownloadThread(QThread):
         """
         Downloads and installs Conda Forge on the system, and creates a Conda environment in the current directory.
         """
-        self.check_and_install_miniforge()
-        self.create_conda_environment()
-        logger.info("Environment created and dependencies installed successfully.")
-        self.status.emit("Environment created and dependencies installed successfully.")
+        if not self.cancelled:
+            self.check_and_install_miniforge()
+        if not self.cancelled:
+            self.create_conda_environment()
+            if not self.cancelled:
+                logger.info("Environment created and dependencies installed successfully.")
+                self.status.emit("Environment created and dependencies installed successfully.")
 
     def install_miniforge(self):
         """Download and install Miniforge if it is not already installed."""
@@ -219,24 +226,38 @@ class DownloadThread(QThread):
 
     def create_conda_environment(self):
         """
-        Create a Conda environment in the current directory.
+        Create a Conda environment in the current directory and log the process in real-time.
         :return:
         """
+
+        def log_subprocess_output(pipe, level):
+            """Log subprocess output in real-time."""
+            for line in iter(pipe.readline, b''):
+                logger.log(level, line.strip())
+            pipe.close()
+
         self.status.emit("Installing dependencies: creating Conda environment...")
-        env_dir = os.path.join(os.getcwd(), "env")
+        env_dir = os.path.join(os.getcwd(), "snakemake")
         command = [
             "conda", "create", "--prefix", env_dir,
             "-c", "conda-forge", "-c", "bioconda",
-            "minimap2", "snakemake", "last", "-y"
+            "minimap2", "snakemake", "last", "samtools", "-y"
         ]
+
         try:
             logger.info(f"Creating Conda environment at {env_dir}...")
-            subprocess.run(command, check=True)
-            self.status.emit("Installing dependencies: successfully created Conda environment.")
-            logger.info("Conda environment created successfully.")
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            log_subprocess_output(process.stdout, logging.INFO)
+            log_subprocess_output(process.stderr, logging.ERROR)
+            process.wait()
+            if process.returncode == 0:
+                self.status.emit("Installing dependencies: successfully created Conda environment.")
+                logger.info("Conda environment created successfully.")
+            else:
+                raise subprocess.CalledProcessError(process.returncode, command)
         except subprocess.CalledProcessError as e:
-            self.status.emit("Installing dependencies: error during creation of Conda environment.")
             logger.error(f"Error occurred while creating environment: {e}")
+            self.status.emit("Installing dependencies: error during creation of Conda environment.")
 
         self.status.emit("Installing dependencies: installing Python dependencies")
         pip_requirements_file = os.path.join(os.getcwd(), "requirements.txt")
@@ -251,27 +272,36 @@ class DownloadThread(QThread):
         if os.path.exists(pip_requirements_file):
             logger.info(f"Found requirements file: {pip_requirements_file}. Installing dependencies...")
             try:
-                subprocess.run(pip_command, check=True)
-                logger.info("Python dependencies installed successfully from requirements.txt.")
-                self.status.emit(
-                    "Installing dependencies: Python dependencies installed successfully from requirements.txt.")
+                process = subprocess.Popen(pip_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                log_subprocess_output(process.stdout, logging.INFO)
+                log_subprocess_output(process.stderr, logging.ERROR)
+                process.wait()
+                if process.returncode == 0:
+                    logger.info("Python dependencies installed successfully from requirements.txt.")
+                    self.status.emit(
+                        "Installing dependencies: Python dependencies installed successfully from requirements.txt.")
+                else:
+                    raise subprocess.CalledProcessError(process.returncode, pip_command)
             except subprocess.CalledProcessError as e:
-                self.status.emit("Installing dependencies: error during Python dependency installation.")
                 logger.error(f"Error occurred while installing Python dependencies: {e}")
+                self.status.emit("Installing dependencies: error during Python dependency installation.")
         else:
             logger.warning(
-                f"No requirements.txt file found at {pip_requirements_file}. Skipping Python dependency installation."
-            )
+                f"No requirements.txt file found at {pip_requirements_file}. Skipping Python dependency installation.")
 
         list_packages_command = [
             "conda", "list", "--prefix", env_dir
         ]
         try:
             logger.info("Listing installed packages in the environment:")
-            subprocess.run(list_packages_command, check=True)
+            process = subprocess.Popen(list_packages_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            log_subprocess_output(process.stdout, logging.INFO)
+            log_subprocess_output(process.stderr, logging.ERROR)
+            process.wait()
+            if process.returncode != 0:
+                raise subprocess.CalledProcessError(process.returncode, list_packages_command)
         except subprocess.CalledProcessError as e:
             logger.error(f"Error occurred while listing installed packages: {e}")
-
 
 class InstallerApp(QMainWindow):
     def __init__(self):
@@ -403,26 +433,6 @@ class InstallerApp(QMainWindow):
         page.setLayout(layout)
         return page
 
-    def get_required_space(self):
-        return 200
-
-    def get_available_space(self):
-        executable_path = sys.executable if hasattr(sys, 'executable') else os.path.realpath(__file__)
-        drive_or_root = os.path.splitdrive(executable_path)[0] if platform.system() == 'Windows' else '/'
-        if platform.system() == 'Windows':
-            total, used, free = shutil.disk_usage(drive_or_root)
-            available_space_gb = free / (1024 ** 3)
-        else:
-            statvfs = os.statvfs(drive_or_root)
-            available_space_bytes = statvfs.f_frsize * statvfs.f_bavail
-            available_space_gb = available_space_bytes / (1024 ** 3)
-
-        if available_space_gb >= 1:
-            return f"{round(available_space_gb, 2)} GB"
-        else:
-            available_space_mb = available_space_gb * 1024
-            return f"{round(available_space_mb, 2)} MB"
-
     def go_next(self):
         current_index = self.stackedWidget.currentIndex()
         if current_index < self.stackedWidget.count() - 1:
@@ -505,7 +515,15 @@ class InstallerApp(QMainWindow):
         else:
             logger.error("Download process failed.")
             self.update_status("Download process failed.")
-        self.next_button.setText("Start Download")
+
+        message = QMessageBox(self)
+        message.setIcon(QMessageBox.Icon.Information if success else QMessageBox.Icon.Critical)
+        message.setWindowTitle("Download Complete")
+        message.setText("The download has completed successfully!" if success else "The download has failed.")
+        message.setStandardButtons(QMessageBox.StandardButton.Ok)
+        message.exec()
+
+        self.next_button.setText("Finish")
         self.progressBar.setVisible(False)
         self.is_downloading = False
         self.isFinishedDownloading = True
