@@ -5,11 +5,12 @@ import pysam
 import plotly.express as px
 
 from pandas import DataFrame
+from pysam.bcftools import query
 
 from snakemake.script import snakemake
 
 # pylint: disable=import-error
-from scripts.utils import parse_sam_records, snakemake_file_logger, from_char_to_phred
+from scripts.utils import snakemake_file_logger, parse_sam_bam_file
 
 
 
@@ -27,24 +28,22 @@ def quality_per_base_position(bam_files, output_file):
     data_for_plotting = {}
 
     for path_to_sample in bam_files:
-        out = pysam.view('-o', 'out.sam', path_to_sample)
-        records = [line.split() for line in out.split('\n')[:-1]]
-        parsed_records = parse_sam_records(records)
-
-        qualities = [from_char_to_phred(record[10]) for record in parsed_records]
         sample_data = [0 for _ in range(100)]
 
-        for record in qualities:
+        read_counter = 0
+        for read in parse_sam_bam_file(path_to_sample):
+            read_counter += 1
+            percent_read_length = len(read.query_qualities)
+
             for percentage in range(100):
-                start = int(len(record) / 100 * percentage)
-                end = int(len(record) / 100 * (percentage + 1))
+                start = round(percent_read_length * percentage)
+                end = round(percent_read_length * (percentage + 1))
                 if start == end:
                     continue
-                sample_data[percentage] += sum(record[start:end]) / (end - start)
+                sample_data[percentage] += sum(read.query_qualities[start:end]) / (end - start)
 
-        data_for_plotting[path_to_sample.split('/')[-1][7:-4]] = [i / len(qualities)
+        data_for_plotting[path_to_sample.split('/')[-1][7:-4]] = [i / read_counter
                                                                   for i in sample_data]
-
 
     df = DataFrame(data_for_plotting)
     figure = px.line(df, x=df.index, y=df.columns)

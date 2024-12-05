@@ -31,12 +31,17 @@ def pore_scan(path_to_samples, output_file):
                 json_reports.append(os.path.join(path, file))
 
     samples_scans = []
+    number_of_pores = []
     for report in json_reports:
         with open(report, 'r', encoding='utf-8') as f:
             json_data = json.loads(f.read())
 
-        sample_pore_scans: list[dict] = json_data['acquisitions'][1]['acquisition_run_info'][
+        sample_pore_scans: list[dict] = json_data['acquisitions'][-1]['acquisition_run_info'][
             'bream_info']['mux_scan_results']
+        flow_cell_number_of_pores = (json_data['protocol_run_info']['flow_cell']['channel_count'] *
+                                     json_data['protocol_run_info']['flow_cell']['wells_per_channel'])
+
+        number_of_pores.append(flow_cell_number_of_pores)
         samples_scans.append(sample_pore_scans)
 
     max_number_of_scans = 0
@@ -48,6 +53,9 @@ def pore_scan(path_to_samples, output_file):
         pore_types.update(set(sample[0]['counts'].keys()))
 
     sample_names = [path.split('/')[-2] for path in path_to_samples]
+    mapped_number_of_pores = {}
+    for i in range(len(sample_names)):
+        mapped_number_of_pores[sample_names[i]] = number_of_pores[i]
 
     pore_scans = [{pore: {sample_names[sample]: (samples_scans[sample][scan]['counts'][pore]
                                             if len(samples_scans[sample]) > scan else 0)
@@ -68,7 +76,7 @@ def pore_scan(path_to_samples, output_file):
 
     actual_number_of_rows = math.ceil(len(pore_scans) / max_number_columns)
 
-    pore_types_metadata = json_data['acquisitions'][1]['acquisition_run_info']['bream_info'][
+    pore_types_metadata = json_data['acquisitions'][-1]['acquisition_run_info']['bream_info'][
         'mux_scan_metadata']['category_groups']
     pore_type_color = {pore_type['name']: pore_type['style']['colour']
                        for pore_type in pore_types_metadata}
@@ -92,7 +100,8 @@ def pore_scan(path_to_samples, output_file):
     for scan_index, scan_value in enumerate(pore_scans):
         for pore_type in pore_types_ordered:
             figure.add_trace(go.Bar(x=list(scan_value[pore_type].keys()),
-                                    y=list(scan_value[pore_type].values()),
+                                    y=[scan_value[pore_type][sample] / mapped_number_of_pores[sample]
+                                       for sample in scan_value[pore_type]],
                                     name=pore_type,
                                     legendgroup=pore_type,
                                     hovertext=f'{pore_type}',

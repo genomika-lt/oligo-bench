@@ -38,14 +38,19 @@ def pore_activity(path_to_samples, output_file):
     for csv_file, json_file in files:
         sample_name = csv_file.split('/')[-3]
 
-        with open(json_file, 'r') as f:
-            sample_rate = json.load(f)['acquisitions'][0]['acquisition_run_info']['config_summary']['sample_rate']
+        with (open(json_file, 'r', encoding='utf-8') as f):
+            json_data = json.load(f)
+            sample_rate = (json_data['acquisitions'][0]['acquisition_run_info']
+                                       ['config_summary']['sample_rate'])
+            number_of_wells = (json_data['protocol_run_info']['flow_cell']['channel_count'] *
+                               json_data['protocol_run_info']['flow_cell']['wells_per_channel'])
 
         data = pd.read_csv(csv_file, dtype={'Channel State': 'str',
                                           'Experiment Time (minutes)': 'int',
                                           'State Time (samples)': 'float'})
 
-        data.loc[:, 'activity'] = data.loc[:, 'State Time (samples)'] / sample_rate / 60
+        data.loc[:, 'activity'] = (data.loc[:, 'State Time (samples)'] / sample_rate / 60 /
+                                   number_of_wells)
 
         groups = data.groupby('Channel State')
         figure.add_trace(go.Scatter(x=groups.get_group('strand')['Experiment Time (minutes)'],

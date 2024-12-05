@@ -5,8 +5,7 @@ import plotly.graph_objects as go
 from snakemake.script import snakemake
 
 # pylint: disable=import-error
-from scripts.utils import snakemake_file_logger, parse_bam_file
-
+from scripts.utils import snakemake_file_logger, parse_sam_bam_file
 
 
 @snakemake_file_logger
@@ -24,11 +23,11 @@ def passed_read_length_histogram(bam_files, output_file):
     for path_to_sample in bam_files:
         data = {}
         number_of_reads = 0
-        for read in parse_bam_file(path_to_sample):
-            if len(read.qual) not in data:
-                data[len(read.qual)] = 1
+        for read in parse_sam_bam_file(path_to_sample):
+            if len(read.query_sequence) not in data:
+                data[len(read.query_sequence)] = 1
             else:
-                data[len(read.qual)] += 1
+                data[len(read.query_sequence)] += 1
             number_of_reads += 1
 
         x = list(data.keys())
@@ -38,8 +37,23 @@ def passed_read_length_histogram(bam_files, output_file):
         y_max = max(y)
         y_normalized = [i / y_max for i in y]
 
-        figure.add_trace(go.Scatter(y=y_normalized,
-                                    x=x,
+        filter_index_left = 0
+        for i in range(len(x)):
+            if y_normalized[i] > 5e-4:
+                filter_index_left = i
+                break
+
+        filter_index_right = 0
+        for i in range(len(x))[::-1]:
+            if y_normalized[i] > 1e-2:
+                filter_index_right = i
+                break
+
+        x_filtered = x[filter_index_left:filter_index_right]
+        y_filtered = y_normalized[filter_index_left:filter_index_right]
+
+        figure.add_trace(go.Scatter(y=y_filtered,
+                                    x=x_filtered,
                                     name=path_to_sample.split('/')[-1][7:-4]))
     figure.update_xaxes(type="log")
 
