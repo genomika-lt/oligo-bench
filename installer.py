@@ -555,17 +555,18 @@ class InstallerApp(QMainWindow):
         # pylint: disable=C0103
         if self.isFinishedDownloading:
             event.accept()
-        reply = QMessageBox.question(
-            self,
-            'Oligo-bench Setup',
-            "Are you sure you want to quit Oligo-bench setup?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-            ,QMessageBox.StandardButton.No
-        )
-        if reply == QMessageBox.StandardButton.Yes:
-            event.accept()
-        elif reply == QMessageBox.StandardButton.No:
-            event.ignore()
+        else:
+            reply = QMessageBox.question(
+                self,
+                'Oligo-bench Setup',
+                "Are you sure you want to quit Oligo-bench setup?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+                ,QMessageBox.StandardButton.No
+            )
+            if reply == QMessageBox.StandardButton.Yes:
+                event.accept()
+            elif reply == QMessageBox.StandardButton.No:
+                event.ignore()
 
 def main():
     app = QApplication(sys.argv)
