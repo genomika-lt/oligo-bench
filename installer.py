@@ -40,8 +40,9 @@ class DownloadThread(QThread):
 
         self.status.emit("Starting download...")
         self.save_path.mkdir(parents=True, exist_ok=True)
-
-        self.download_file()
+        zip_file_name = self.url.split("/")[-1]
+        zip_file_path = self.save_path / zip_file_name
+        self.download_file(self.url,zip_file_path)
         if self.cancelled:
             self.complete.emit(False)
             return
@@ -49,20 +50,18 @@ class DownloadThread(QThread):
         if not self.cancelled:
             self.complete.emit(True)
 
-    def download_file(self):
+    def download_file(self,url,zip_file_path):
         """Downloads the file from the given URL."""
         try:
-            with requests.get(self.url, stream=True) as response:
+            with requests.get(url, stream=True) as response:
                 response.raise_for_status()
-                logger.debug(f"Started downloading from {self.url}.")
-                self.process_download(response)
+                logger.debug(f"Started downloading from {url}.")
+                self.process_download(response,zip_file_path)
         except requests.exceptions.RequestException as e:
             self.handle_network_error(e)
 
-    def process_download(self, response):
+    def process_download(self, response,zip_file_path):
         """Processes the downloaded data."""
-        zip_file_name = self.url.split("/")[-1]
-        zip_file_path = self.save_path / zip_file_name
 
         with open(zip_file_path, 'wb') as f:
             self.write_chunks(response, f, zip_file_path)
@@ -201,7 +200,7 @@ class DownloadThread(QThread):
         self.status.emit("Installing dependencies: downloading miniforge installer file...")
         logger.info(f"Downloading Miniforge installer...")
         installer_path = os.path.join(os.getcwd(), installer_name)
-        urllib.request.urlretrieve(miniforge_url, installer_path)
+        self.download_file(miniforge_url,installer_path )
         logger.info(f"Miniforge installer downloaded: {installer_name}")
 
         logger.info("Running Miniforge installer...")
