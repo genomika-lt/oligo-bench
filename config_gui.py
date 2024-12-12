@@ -315,7 +315,7 @@ class YamlForm(QWidget):
         except subprocess.CalledProcessError:
             raise FileNotFoundError("Conda is not installed or not found in the system path. Please install Conda.")
 
-        env_path = os.path.join(self.project_root,'snakemake')
+        env_path = os.path.join(self.project_root,'oligo')
         command = f"conda run -p {env_path} bash {path}"
 
         self.worker = RunWorker(command)
@@ -360,71 +360,6 @@ class YamlForm(QWidget):
         temp_config_folder_path = os.path.join(parent_directory, "config_temp")
 
         "----> Finish implementation of update <----"
-        # logger.info(f"Downloading ZIP from {zip_url}")
-        # try:
-        #     response = requests.get(zip_url)
-        #     response.raise_for_status()
-        # except requests.exceptions.RequestException as e:
-        #     self.show_error(f"Failed to download ZIP: {e}")
-        #     logger.error(f"Failed to download ZIP: {e}")
-        #     self.handle_error(f"Failed to download ZIP: {e}")
-        #     return
-        #
-        # try:
-        #     with open(zip_path, "wb") as f:
-        #         f.write(response.content)
-        #     logger.info(f"Downloaded ZIP to {zip_path}")
-        # except OSError as e:
-        #     self.show_error(f"Failed to download ZIP: {e}")
-        #     logger.error(f"Failed to save ZIP file to {zip_path}: {e}")
-        #     self.handle_error(f"Failed to save ZIP file to {zip_path}: {e}")
-        #     return
-        #
-        # self.move_folder_to(snakemake_path, temp_snakemake_path)
-        # self.move_folder_to(config_folder_path, temp_config_folder_path)
-        #
-        # for root, dirs, files in os.walk(self.project_root, topdown=False):
-        #     for file in files:
-        #         file_path = os.path.join(root, file)
-        #         if file!= "main.zip" and file!= "execution.log":
-        #             os.remove(file_path)
-        #     for dir in dirs:
-        #         shutil.rmtree(os.path.join(root, dir))
-        #
-        # logger.info(f"Cleared all contents in the directory: {self.project_root}")
-        # self.handle_output(f"Cleared all contents in the directory: {self.project_root}")
-        #
-        # try:
-        #     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-        #         zip_ref.extractall(self.project_root)
-        #     logger.info(f"Extracted ZIP to {self.project_root}")
-        # except zipfile.BadZipFile as e:
-        #     self.show_error(f"Failed to extract ZIP file {zip_path}: {e}")
-        #     logger.error(f"Failed to extract ZIP file {zip_path}: {e}")
-        #     self.handle_error(f"Failed to extract ZIP file {zip_path}: {e}")
-        #     return
-        #
-        # os.remove(zip_path)
-        # logger.info(f"Removed ZIP file {zip_path}")
-        #
-        # shutil.move(os.path.join(temp_snakemake_path,"snakemake"), snakemake_path)
-        # logger.info(f"Restored 'snakemake' folder to {snakemake_path}")
-        # self.handle_output(f"Restored 'snakemake' folder to {snakemake_path}")
-        #
-        # shutil.move(os.path.join(temp_config_folder_path,"experiments.csv"),
-        #             os.path.join(config_folder_path))
-        # logger.info(f"Restored experiments file to {config_folder_path}")
-        # self.handle_output(f"Restored experiments file to {config_folder_path}")
-        #
-        # self.transfer_values(os.path.join(temp_config_folder_path,"config.yaml"),
-        #                      os.path.join(config_folder_path,"config.yaml"))
-        # logger.info(f"Restored values from config.yaml file to {config_folder_path}")
-        # self.handle_output(f"Restored values from config.yaml file to {config_folder_path}")
-        #
-        # shutil.rmtree(temp_config_folder_path)
-        # logger.info(f"Removed old config values file")
-        # self.handle_output(f"Removed old config values file")
-
         QMessageBox.information(
             self,
             "Update Complete",
