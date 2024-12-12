@@ -10,43 +10,49 @@ manage experiment paths through a table interface.
 import csv
 import logging
 import os
+import shutil
 import signal
 import subprocess
 import sys
 import select
+import zipfile
+
+import PyQt6.QtCore
+import requests
 import yaml
 from PyQt6.QtCore import Qt  # pylint: disable=E0611
 from PyQt6.QtWidgets import (QApplication, QWidget, QVBoxLayout,
                              QHBoxLayout, QLabel, QComboBox, QPushButton,
                              QCheckBox, QTableWidget, QTableWidgetItem,
                              QHeaderView, QAbstractItemView, QMessageBox,
-                             QTextEdit, QSplitter, QFileDialog, QLineEdit, QSpinBox)
+                             QTextEdit, QSplitter, QFileDialog, QLineEdit, QSpinBox, QTableView)
 from PyQt6.QtCore import QThread, pyqtSignal
+from PyQt6.uic.properties import QtCore
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+handler = logging.FileHandler("execution.log", mode='w')
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 class RunWorker(QThread):
     output_signal = pyqtSignal(str)
     error_signal = pyqtSignal(str)
     finished_signal = pyqtSignal()
 
-    def __init__(self, command, parent=None, stop_requested=False, log_file="execution.log"):
+    def __init__(self, command, parent=None, stop_requested=False):
         super().__init__(parent)
         self.command = command
         self.process = None
         self.stop_requested = stop_requested
 
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.INFO)
-        handler = logging.FileHandler(log_file)
-        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-        handler.setFormatter(formatter)
-        self.logger.addHandler(handler)
 
     def run(self):
         """
         Run the shell command and capture the output in the background.
         """
-        self.logger.info(f"Starting command: {self.command}")
+        logger.info(f"Starting command: {self.command}")
 
         self.process = subprocess.Popen(
             ["bash", "-c", self.command],
@@ -59,7 +65,7 @@ class RunWorker(QThread):
             rlist, _, _ = select.select([self.process.stdout, self.process.stderr], [], [], 0.1)
 
             if self.stop_requested:
-                self.logger.info("Stop requested. Terminating process.")
+                logger.info("Stop requested. Terminating process.")
                 self._terminate_process()
                 self.finished_signal.emit()
                 return
@@ -70,17 +76,17 @@ class RunWorker(QThread):
                     continue
                 elif stream == self.process.stdout:
                     self.output_signal.emit(output.strip())
-                    self.logger.info(f"STDOUT: {output.strip()}")
+                    logger.info(f"STDOUT: {output.strip()}")
                 elif stream == self.process.stderr:
                     if self._is_real_error(output.strip()):
                         self.error_signal.emit(output.strip())
-                        self.logger.error(f"STDERR: {output.strip()}")
+                        logger.error(f"STDERR: {output.strip()}")
                     else:
                         self.output_signal.emit(output.strip())
-                        self.logger.info(f"STDERR (informational): {output.strip()}")
+                        logger.info(f"STDERR (informational): {output.strip()}")
 
             if self.process.poll() is not None:
-                self.logger.info(f"Process finished with return code {self.process.returncode}")
+                logger.info(f"Process finished with return code {self.process.returncode}")
                 self.finished_signal.emit()
                 break
 
@@ -88,27 +94,27 @@ class RunWorker(QThread):
         """
         Determine if a line from stderr represents a real error.
         """
-        error_keywords = ["Error", "Failed", "Exception", "not found"]
-        return any(keyword in line for keyword in error_keywords)
+        error_keywords = ["error", "failed", "exception", "not found"]
+        return any(keyword.lower() in line.lower() for keyword in error_keywords)
 
     def _terminate_process(self):
         """
         Ensure the child process and all its children are terminated.
         """
         if self.process:
-            self.logger.info("Terminating process.")
+            logger.info("Terminating process.")
             self.process.terminate()
             try:
                 self.process.wait(timeout=5)
             except subprocess.TimeoutExpired:
-                self.logger.error("Process timeout. Force killing the process.")
+                logger.error("Process timeout. Force killing the process.")
                 self.process.kill()
 
             if self.process.pid:
                 try:
                     os.killpg(self.process.pid, signal.SIGTERM)
                 except ProcessLookupError:
-                    self.logger.error(f"Failed to terminate process group: {self.process.pid}")
+                    logger.error(f"Failed to terminate process group: {self.process.pid}")
             self.process = None
 
 
@@ -127,23 +133,18 @@ class YamlForm(QWidget):
         Initializes the main form and UI elements.
         """
         super().__init__()
-
-        self.worker = None
+        self.delete_row_button = None
+        self.add_row_button = None
         if getattr(sys, 'frozen', False):
             self.project_root = os.path.dirname(sys.executable)
         else:
             self.project_root = os.path.abspath(os.path.join(os.path.dirname(__file__)))
-        print(self.project_root)
         self.yaml_path = os.path.join(self.project_root, "config", "config.yaml")
         self.csv_path = os.path.join(self.project_root, "config", "experiments.csv")
-
-        if not self.check_permissions(self.yaml_path) or not self.check_permissions(self.csv_path):
-            return
 
         self.run_stop_button = None
         self.stop_requested = False
         self.log_window = None
-
 
         self.columns_config = []
         self.yaml_config = {}
@@ -167,13 +168,21 @@ class YamlForm(QWidget):
             'integer': (QSpinBox, lambda w, v=None:
             w.setValue(v) if v else w.value()),
         }
+        perm_yaml_path=self.check_permissions(self.yaml_path)
+        perm_csv_path = self.check_permissions(self.csv_path)
+        if not perm_yaml_path:
+            logger.error(f"{self.yaml_path} does not have required permissions.")
+            self.show_error(f"{self.yaml_path} does not have required permissions.")
+        if not perm_csv_path:
+            logger.error(f"{self.csv_path} does not have required permissions.")
+            self.show_error(f"{self.csv_path} does not have required permissions.")
+        if perm_yaml_path and perm_csv_path:
+            self.load_yaml_on_startup(self.yaml_path)
+            self.initUI()
+            self.load_csv_on_startup(self.csv_path)
 
-        self.load_yaml_on_startup(self.yaml_path)
-        self.initUI()
-        self.load_csv_on_startup(self.csv_path)
-
+        self.worker = None
         self.unset_unsaved_changes()
-
         self.showMaximized()
         self.running = False
 
@@ -192,6 +201,7 @@ class YamlForm(QWidget):
         # SECTION: Left side - Controls and Log Window
         # SECTION: Controls (Run button, Basecall checkbox, Dorado model combobox, Update button)
         update_button = QPushButton("Update", self)
+        update_button.clicked.connect(self.update_project_question)
         self.left_layout.addWidget(update_button)
         self.create_widget_in_layout()
         self.run_stop_button = QPushButton("Run", self)
@@ -210,19 +220,20 @@ class YamlForm(QWidget):
 
         right_layout.addWidget(QLabel("Experiments"))
         self.experiments_table = QTableWidget(self)
+        self.experiments_table.setFocusPolicy(PyQt6.QtCore.Qt.FocusPolicy.NoFocus)
         right_layout.addWidget(self.experiments_table)
         self.setup_table_columns()
 
         # Buttons for adding and deleting rows
         table_buttons_layout = QHBoxLayout()
 
-        add_row_button = QPushButton("Add", self)
-        add_row_button.clicked.connect(self.add_row)
-        table_buttons_layout.addWidget(add_row_button)
+        self.add_row_button = QPushButton("Add", self)
+        self.add_row_button.clicked.connect(self.add_row)
+        table_buttons_layout.addWidget(self.add_row_button)
 
-        delete_row_button = QPushButton("Delete", self)
-        delete_row_button.clicked.connect(self.delete_row)
-        table_buttons_layout.addWidget(delete_row_button)
+        self.delete_row_button = QPushButton("Delete", self)
+        self.delete_row_button.clicked.connect(self.delete_row)
+        table_buttons_layout.addWidget(self.delete_row_button)
 
         right_layout.addLayout(table_buttons_layout)
 
@@ -243,47 +254,47 @@ class YamlForm(QWidget):
         """
         if self.running:
             self.handle_stop()
-        else:
-            if self.experiments_table.rowCount() == 0:
-                self.show_error("No cells in experiments table")
-                return
-            for row in range(self.experiments_table.rowCount()):
-                for col in range(self.experiments_table.columnCount()):
-                    item = self.experiments_table.item(row, col)
-                    if item is None or not item.text().strip():
-                        self.show_error("Some cells in experiments table are empty.")
-                        return
-            if self.unsaved_changes:
-                csv_reply = QMessageBox.question(
-                    self,
-                    'Save CSV File',
-                    "Do you want to save the CSV file before running?",
-                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel,
-                    QMessageBox.StandardButton.Cancel
-                )
+            return
+        if self.experiments_table.rowCount() == 0:
+            self.show_error("No cells in experiments table")
+            return
+        for row in range(self.experiments_table.rowCount()):
+            for col in range(self.experiments_table.columnCount()):
+                item = self.experiments_table.item(row, col)
+                if item is None or not item.text().strip():
+                    self.show_error("Some cells in experiments table are empty.")
+                    return
+        if self.unsaved_changes:
+            csv_reply = QMessageBox.question(
+                self,
+                'Save CSV File',
+                "Do you want to save the CSV file before running?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel,
+                QMessageBox.StandardButton.Cancel
+            )
 
-                if csv_reply == QMessageBox.StandardButton.Yes:
-                    self.save_experiments_csv()
-                if csv_reply == QMessageBox.StandardButton.Cancel:
-                    return
-                yaml_reply = QMessageBox.question(
-                    self,
-                    'Save YAML File',
-                    "Do you want to save the YAML file before running?",
-                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No| QMessageBox.StandardButton.Cancel,
-                    QMessageBox.StandardButton.Cancel
-                )
-                if yaml_reply == QMessageBox.StandardButton.Yes:
-                    self.save_yaml()
-                if yaml_reply == QMessageBox.StandardButton.Cancel:
-                    return
-            self.log_window.clear()
-            self.run_stop_button.setText("Stop")
-            self.run_stop_button.setStyleSheet("background-color: #9b3438; color: white;")
-            self.unset_unsaved_changes()
-            self.running = True
-            self.stop_requested = False
-            self.start_run()
+            if csv_reply == QMessageBox.StandardButton.Yes:
+                self.save_experiments_csv()
+            if csv_reply == QMessageBox.StandardButton.Cancel:
+                return
+            yaml_reply = QMessageBox.question(
+                self,
+                'Save YAML File',
+                "Do you want to save the YAML file before running?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No| QMessageBox.StandardButton.Cancel,
+                QMessageBox.StandardButton.Cancel
+            )
+            if yaml_reply == QMessageBox.StandardButton.Yes:
+                self.save_yaml()
+            if yaml_reply == QMessageBox.StandardButton.Cancel:
+                return
+        self.log_window.clear()
+        self.run_stop_button.setText("Stop")
+        self.run_stop_button.setStyleSheet("background-color: #9b3438; color: white;")
+        self.unset_unsaved_changes()
+        self.running = True
+        self.stop_requested = False
+        self.start_run()
 
     def start_run(self):
         """
@@ -293,56 +304,238 @@ class YamlForm(QWidget):
         self.log_window.clear()
         self.stop_requested = False
 
+        path = os.path.join(self.project_root, './run.sh')
+        if not path:
+            self.show_error(f"File {path} does not exist")
+            logger.error(f"File {path} does not exist")
+            return
+
         try:
-            path = os.path.join(self.project_root, './run.sh')
+            subprocess.check_output(["which", "conda"]).decode().strip()
+        except subprocess.CalledProcessError:
+            raise FileNotFoundError("Conda is not installed or not found in the system path. Please install Conda.")
 
-            try:
-                conda_bin_path = subprocess.check_output(["which", "conda"]).decode().strip()
-            except subprocess.CalledProcessError:
-                raise FileNotFoundError("Conda is not installed or not found in the system path. Please install Conda.")
+        env_path = os.path.join(self.project_root,'snakemake')
+        command = f"conda run -p {env_path} bash {path}"
 
-            conda_dir = os.path.dirname(conda_bin_path)
-            conda_init_path = os.path.join(conda_dir, "..", "etc", "profile.d", "conda.sh")
+        self.worker = RunWorker(command)
+        self.worker.output_signal.connect(self.handle_output)
+        self.worker.error_signal.connect(self.handle_error)
+        self.worker.finished_signal.connect(self.finish_run)
+        self.worker.start()
 
-            if not os.path.exists(conda_init_path):
-                raise FileNotFoundError(
-                    f"Conda initialization script not found at {conda_init_path}. Please check your Conda installation.")
-
-            env_path = 'snakemake'
-            command = (
-                f"source {conda_init_path} && "
-                f"conda activate {env_path} && "
-                f"{path}"
-            )
-
-            self.worker = RunWorker(command)
-            self.worker.output_signal.connect(self.handle_output)
-            self.worker.error_signal.connect(self.handle_error)
-            self.worker.finished_signal.connect(self.finish_run)
-            self.worker.start()
-
-        except FileNotFoundError as e:
-            self.show_error(
-                f"Error: {str(e)}\nPlease ensure all necessary files and directories exist and are properly configured.")
-        except subprocess.CalledProcessError as e:
-            self.show_error(
-                f"Error: A command execution failed. Please check the command and ensure Conda is properly initialized.\nError details: {e.output.decode()}")
-
-    def update_project(self):
-        QMessageBox.warning(
+    def update_project_question(self):
+        reply = QMessageBox.warning(
             self,
             'Update Project',
-            "Do you really to save them?",
+            "Do you really to update project? Any execution process during installation will be stopped",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-            | QMessageBox.StandardButton.Cancel,
-            QMessageBox.StandardButton.Cancel
         )
+        if reply == QMessageBox.StandardButton.Yes:
+            self.run_stop_button.setEnabled(False)
+            self.add_row_button.setEnabled(False)
+            self.delete_row_button.setEnabled(False)
+            if self.running:
+                self.handle_stop()
+            self.update_project()
+
+        self.run_stop_button.setEnabled(True)
+        self.add_row_button.setEnabled(True)
+        self.delete_row_button.setEnabled(True)
+
+    def update_project(self):
+        """
+
+        :return:
+        """
+        self.handle_output("Starting updating process...")
+
+        zip_url = "https://github.com/genomika-lt/oligo-bench/archive/refs/heads/main.zip"
+        zip_path = os.path.join(self.project_root, "main.zip")
+
+        parent_directory = os.path.dirname(self.project_root)
+        snakemake_path = os.path.join(self.project_root, "snakemake")
+        config_folder_path = os.path.join(self.project_root, "config")
+        temp_snakemake_path = os.path.join(parent_directory, "snakemake_temp")
+        temp_config_folder_path = os.path.join(parent_directory, "config_temp")
+
+        "----> Finish implementation of update <----"
+        # logger.info(f"Downloading ZIP from {zip_url}")
+        # try:
+        #     response = requests.get(zip_url)
+        #     response.raise_for_status()
+        # except requests.exceptions.RequestException as e:
+        #     self.show_error(f"Failed to download ZIP: {e}")
+        #     logger.error(f"Failed to download ZIP: {e}")
+        #     self.handle_error(f"Failed to download ZIP: {e}")
+        #     return
+        #
+        # try:
+        #     with open(zip_path, "wb") as f:
+        #         f.write(response.content)
+        #     logger.info(f"Downloaded ZIP to {zip_path}")
+        # except OSError as e:
+        #     self.show_error(f"Failed to download ZIP: {e}")
+        #     logger.error(f"Failed to save ZIP file to {zip_path}: {e}")
+        #     self.handle_error(f"Failed to save ZIP file to {zip_path}: {e}")
+        #     return
+        #
+        # self.move_folder_to(snakemake_path, temp_snakemake_path)
+        # self.move_folder_to(config_folder_path, temp_config_folder_path)
+        #
+        # for root, dirs, files in os.walk(self.project_root, topdown=False):
+        #     for file in files:
+        #         file_path = os.path.join(root, file)
+        #         if file!= "main.zip" and file!= "execution.log":
+        #             os.remove(file_path)
+        #     for dir in dirs:
+        #         shutil.rmtree(os.path.join(root, dir))
+        #
+        # logger.info(f"Cleared all contents in the directory: {self.project_root}")
+        # self.handle_output(f"Cleared all contents in the directory: {self.project_root}")
+        #
+        # try:
+        #     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        #         zip_ref.extractall(self.project_root)
+        #     logger.info(f"Extracted ZIP to {self.project_root}")
+        # except zipfile.BadZipFile as e:
+        #     self.show_error(f"Failed to extract ZIP file {zip_path}: {e}")
+        #     logger.error(f"Failed to extract ZIP file {zip_path}: {e}")
+        #     self.handle_error(f"Failed to extract ZIP file {zip_path}: {e}")
+        #     return
+        #
+        # os.remove(zip_path)
+        # logger.info(f"Removed ZIP file {zip_path}")
+        #
+        # shutil.move(os.path.join(temp_snakemake_path,"snakemake"), snakemake_path)
+        # logger.info(f"Restored 'snakemake' folder to {snakemake_path}")
+        # self.handle_output(f"Restored 'snakemake' folder to {snakemake_path}")
+        #
+        # shutil.move(os.path.join(temp_config_folder_path,"experiments.csv"),
+        #             os.path.join(config_folder_path))
+        # logger.info(f"Restored experiments file to {config_folder_path}")
+        # self.handle_output(f"Restored experiments file to {config_folder_path}")
+        #
+        # self.transfer_values(os.path.join(temp_config_folder_path,"config.yaml"),
+        #                      os.path.join(config_folder_path,"config.yaml"))
+        # logger.info(f"Restored values from config.yaml file to {config_folder_path}")
+        # self.handle_output(f"Restored values from config.yaml file to {config_folder_path}")
+        #
+        # shutil.rmtree(temp_config_folder_path)
+        # logger.info(f"Removed old config values file")
+        # self.handle_output(f"Removed old config values file")
+
+        QMessageBox.information(
+            self,
+            "Update Complete",
+            "The project has been successfully updated. You should close and open app again to apply changes"
+        )
+        logger.info(f"Updating process finished successfully")
+        self.handle_output(f"Updating process finished successfully")
+
+    def move_folder_to(self, path:str, temp_path:str):
+        if not os.path.exists(path):
+            self.show_error(f"Folder not found in {path}")
+            logger.error(f"Folder not found in {path}")
+            self.handle_error(f"Folder not found in {path}")
+            return
+        if os.path.exists(temp_path):
+            shutil.rmtree(temp_path)
+        shutil.move(path, temp_path)
+        logger.info(f"Moved {path} folder to {temp_path}")
+        self.handle_output(f"Moved {path} folder to {temp_path}")
+
+    def transfer_values(self,source_file: str, target_file: str):
+        """
+        Transfers the `value` field of every widget in the `basecalling` section
+        from the source YAML file to the target YAML file.
+
+        Args:
+            source_file (str): Path to the source YAML file.
+            target_file (str): Path to the target YAML file.
+        """
+        try:
+            with open(source_file, 'r') as src:
+                try:
+                    source_data = yaml.safe_load(src)
+                except yaml.YAMLError as e:
+                    logger.error(f"Error parsing source file '{source_file}': {e}")
+                    self.show_error(f"Error parsing source file '{source_file}': {e}")
+                    self.handle_error(f"Error parsing source file '{source_file}': {e}")
+                    return
+        except FileNotFoundError:
+            logger.error(f"Source file '{source_file}' not found.")
+            self.show_error(f"Source file '{source_file}' not found.")
+            self.handle_error(f"Source file '{source_file}' not found.")
+            return
+        except IOError as e:
+            logger.error(f"Error reading source file '{source_file}': {e}")
+            self.show_error(f"Error reading source file '{source_file}': {e}")
+            self.handle_error(f"Error reading source file '{source_file}': {e}")
+            return
+
+        try:
+            with open(target_file, 'r') as tgt:
+                try:
+                    target_data = yaml.safe_load(tgt)
+                except yaml.YAMLError as e:
+                    logger.error(f"Error parsing target file '{target_file}': {e}")
+                    self.show_error(f"Error parsing target file '{target_file}': {e}")
+                    self.handle_error(f"Error parsing target file '{target_file}': {e}")
+                    return
+        except FileNotFoundError:
+            logger.error(f"Target file '{target_file}' not found.")
+            self.show_error(f"Target file '{target_file}' not found.")
+            self.handle_error(f"Target file '{target_file}' not found.")
+            return
+        except IOError as e:
+            logger.error(f"Error reading target file '{target_file}': {e}")
+            self.show_error(f"Error reading target file '{target_file}': {e}")
+            self.handle_error(f"Error reading target file '{target_file}': {e}")
+            return
+
+        try:
+            if 'basecalling' not in source_data or 'basecalling' not in target_data:
+                raise KeyError("Both source and target files must contain a 'basecalling' section.")
+        except KeyError as e:
+            logger.error(f"Validation error: {e}")
+            self.show_error(f"Validation error: {e}")
+            self.handle_error(f"Validation error: {e}")
+            return
+
+        try:
+            for key, widget in source_data['basecalling'].items():
+                if 'value' in widget and key in target_data['basecalling']:
+                    target_data['basecalling'][key]['value'] = widget['value']
+        except (AttributeError, TypeError) as e:
+            logger.error(f"Error processing 'basecalling' sections: {e}")
+            self.show_error(f"Error processing 'basecalling' sections: {e}")
+            self.handle_error(f"Error processing 'basecalling' sections: {e}")
+            return
+
+        try:
+            with open(target_file, 'w') as tgt:
+                try:
+                    yaml.safe_dump(target_data, tgt)
+                except yaml.YAMLError as e:
+                    logger.error(f"Error writing to target file '{target_file}': {e}")
+                    self.show_error(f"Error writing to target file '{target_file}': {e}")
+                    self.handle_error(f"Error writing to target file '{target_file}': {e}")
+                    return
+        except IOError as e:
+            logger.error(f"Error writing target file '{target_file}': {e}")
+            self.show_error(f"Error writing target file '{target_file}': {e}")
+            self.handle_error(f"Error writing target file '{target_file}': {e}")
+            return
+
+        logger.info(f"Successfully transferred values from '{source_file}' to '{target_file}'.")
+        self.handle_output(f"Successfully transferred values from '{source_file}' to '{target_file}'.")
 
     def handle_output(self, output):
         """
         Handles the output from the worker thread and updates the log window.
         """
-        self.log_window.append(f"<font color='#b4b2af'><pre>{output}</pre></font>")
+        self.log_window.append(f"<font color='#53872a'><pre>{output}</pre></font>")
 
     def handle_error(self, error_output):
         """
@@ -429,9 +622,13 @@ class YamlForm(QWidget):
 
         :return: None
         """
+        if getattr(sys, 'frozen', False):
+            css_path = os.path.join(sys._MEIPASS, "styles", "styles.qss")
+        else:
+            css_path = os.path.join(os.path.dirname(__file__), "styles",
+                                    "styles.qss")
         try:
-            with open(os.path.join(self.project_root,
-            "styles", "styles.qss"), "r", encoding="utf-8") as file:
+            with open(css_path, "r", encoding="utf-8") as file:
                 stylesheet = file.read()
                 self.setStyleSheet(stylesheet)
         except (FileNotFoundError, OSError) as e:
@@ -597,11 +794,12 @@ class YamlForm(QWidget):
             file_filter = f"{file_type.upper()} Files (*.{file_type.lower()})"
             selected_path, _ = QFileDialog.getOpenFileName(self, f"Select {file_type.upper()} File", "", file_filter)
 
-        if selected_path:
-            self.set_unsaved_changes()
-            return selected_path
-        else:
+        if not selected_path:
             return old_value
+
+        self.set_unsaved_changes()
+        return selected_path
+
 
     def set_unsaved_changes(self):
         """
@@ -696,23 +894,22 @@ class YamlForm(QWidget):
         """
         selected_indexes = self.experiments_table.selectedIndexes()
         selected_rows = set(index.row() for index in selected_indexes)
-        if selected_rows:
-            reply = QMessageBox.question(
-                self,
-                "Confirm Deletion",
-                "Are you sure you want to delete the selected rows?",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                QMessageBox.StandardButton.No
-            )
-            if reply == QMessageBox.StandardButton.Yes:
-                for row in sorted(selected_rows, reverse=True):
-                    self.experiments_table.removeRow(row)
-                self.experiments_table.clearSelection()
-                self.set_unsaved_changes()
-                self.experiments_table.setCurrentCell(-1, -1)
-                self.experiments_table.resizeRowsToContents()
-        else:
+        if not selected_rows:
             self.show_error("Please select a row to delete.")
+        reply = QMessageBox.question(
+            self,
+            "Confirm Deletion",
+            "Are you sure you want to delete the selected rows?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+        if reply == QMessageBox.StandardButton.Yes:
+            for row in sorted(selected_rows, reverse=True):
+                self.experiments_table.removeRow(row)
+            self.experiments_table.clearSelection()
+            self.set_unsaved_changes()
+            self.experiments_table.setCurrentCell(-1, -1)
+            self.experiments_table.resizeRowsToContents()
 
     def create_widget_in_layout(self):
         """
