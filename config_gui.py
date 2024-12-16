@@ -265,28 +265,17 @@ class YamlForm(QWidget):
                     self.show_error("Some cells in experiments table are empty.")
                     return
         if self.unsaved_changes:
-            csv_reply = QMessageBox.question(
+            reply = QMessageBox.question(
                 self,
-                'Save CSV File',
-                "Do you want to save the CSV file before running?",
+                'Save CSV and YAML files',
+                "Do you want to save the CSV and YAML files before running?",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel,
                 QMessageBox.StandardButton.Cancel
             )
-
-            if csv_reply == QMessageBox.StandardButton.Yes:
+            if reply == QMessageBox.StandardButton.Yes:
                 self.save_experiments_csv()
-            if csv_reply == QMessageBox.StandardButton.Cancel:
-                return
-            yaml_reply = QMessageBox.question(
-                self,
-                'Save YAML File',
-                "Do you want to save the YAML file before running?",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No| QMessageBox.StandardButton.Cancel,
-                QMessageBox.StandardButton.Cancel
-            )
-            if yaml_reply == QMessageBox.StandardButton.Yes:
                 self.save_yaml()
-            if yaml_reply == QMessageBox.StandardButton.Cancel:
+            if reply == QMessageBox.StandardButton.Cancel:
                 return
         self.log_window.clear()
         self.run_stop_button.setText("Stop")
@@ -776,25 +765,8 @@ class YamlForm(QWidget):
                 QMessageBox.StandardButton.Cancel
             )
             if reply == QMessageBox.StandardButton.Yes:
-                csv_reply = QMessageBox.question(
-                    self,
-                    'Save CSV File',
-                    "Do you want to save the CSV file?",
-                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                    QMessageBox.StandardButton.No
-                )
-                if csv_reply == QMessageBox.StandardButton.Yes:
-                    self.save_experiments_csv()
-                yaml_reply = QMessageBox.question(
-                    self,
-                    'Save YAML File',
-                    "Do you want to save the YAML file?",
-                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                    QMessageBox.StandardButton.No
-                )
-                if yaml_reply == QMessageBox.StandardButton.Yes:
-                    self.save_yaml()
-
+                self.save_experiments_csv()
+                self.save_yaml()
                 self.unset_unsaved_changes()
                 event.accept()
             elif reply == QMessageBox.StandardButton.No:
