@@ -15,7 +15,7 @@ rm ./Miniforge3-Linux-x86_64.sh
 ~/miniforge3/condabin/conda init --all
 
 echo "Installing packages"
-~/miniforge3/condabin/conda create -c conda-forge -c bioconda -p ./oligo snakemake minimap2 last samtools pandas snakefmt pysam plotly PyYAML requests -y
+~/miniforge3/condabin/conda create -c conda-forge -c bioconda -p oligo_bench/oligo snakemake minimap2 last samtools pandas snakefmt pysam plotly PyYAML requests -y
 echo "Downloading dorado"
 wget https://cdn.oxfordnanoportal.com/software/analysis/dorado-0.9.0-linux-x64.tar.gz
 echo "Unzipping dorado archive"
