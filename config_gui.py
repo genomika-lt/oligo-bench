@@ -512,7 +512,7 @@ class YamlForm(QWidget):
         """
         Handles the output from the worker thread and updates the log window.
         """
-        self.log_window.append(f"<font color='#53872a'><pre>{output}</pre></font>")
+        self.log_window.append(f"<font color='#49A078'><pre>{output}</pre></font>")
 
     def handle_error(self, error_output):
         """
