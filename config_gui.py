@@ -62,40 +62,33 @@ class RunWorker(QThread):
         )
 
         while True:
-            rlist, _, _ = select.select([self.process.stdout, self.process.stderr], [], [], 0.1)
-
             if self.stop_requested:
                 logger.info("Stop requested. Terminating process.")
                 self._terminate_process()
                 self.finished_signal.emit()
                 return
-
-            for stream in rlist:
-                output = stream.readline()
-                if output == '':
-                    continue
-                elif stream == self.process.stdout:
-                    self.output_signal.emit(output.strip())
-                    logger.info(f"STDOUT: {output.strip()}")
-                elif stream == self.process.stderr:
-                    if self._is_real_error(output.strip()):
-                        self.error_signal.emit(output.strip())
-                        logger.error(f"STDERR: {output.strip()}")
-                    else:
-                        self.output_signal.emit(output.strip())
-                        logger.info(f"STDERR (informational): {output.strip()}")
-
             if self.process.poll() is not None:
                 logger.info(f"Process finished with return code {self.process.returncode}")
                 self.finished_signal.emit()
                 break
+            stderr_output = self.process.stderr.readline()
+            if self._is_real_error(stderr_output.strip()):
+                self.error_signal.emit(stderr_output.strip())
+                logger.error(stderr_output.strip())
+            else:
+                self.output_signal.emit(stderr_output.strip())
+                logger.info(stderr_output.strip())
 
     def _is_real_error(self, line):
         """
         Determine if a line from stderr represents a real error.
         """
-        error_keywords = ["error", "failed", "exception", "not found"]
-        return any(keyword.lower() in line.lower() for keyword in error_keywords)
+        excluded_keywords = ["reason:", "input:", "log:","resources:","output:"]
+        line_lower = line.lower()
+        if "error:" in line_lower:
+            if not any(excluded in line_lower for excluded in excluded_keywords):
+                return True
+        return False
 
     def _terminate_process(self):
         """
@@ -305,7 +298,7 @@ class YamlForm(QWidget):
             raise FileNotFoundError("Conda is not installed or not found in the system path. Please install Conda.")
 
         env_path = os.path.join(self.project_root,'oligo')
-        command = f"conda run -p {env_path} bash {path}"
+        command = f"conda run --live-stream -p {env_path} bash {path}"
 
         self.worker = RunWorker(command)
         self.worker.output_signal.connect(self.handle_output)
