@@ -25,27 +25,190 @@ from PyQt6.QtWidgets import (QApplication, QWidget, QVBoxLayout,
                              QHBoxLayout, QLabel, QComboBox, QPushButton,
                              QCheckBox, QTableWidget, QTableWidgetItem,
                              QHeaderView, QAbstractItemView, QMessageBox,
-                             QTextEdit, QSplitter, QFileDialog, QLineEdit, QSpinBox, QTableView)
+                             QTextEdit, QSplitter, QFileDialog, QLineEdit, QSpinBox)
 from PyQt6.QtCore import QThread, pyqtSignal
-from PyQt6.uic.properties import QtCore
+
+log_dir = os.path.join(os.path.dirname(__file__), "logs")
+os.makedirs(log_dir, exist_ok=True)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-handler = logging.FileHandler("execution.log", mode='w')
+log_file_path = os.path.join(log_dir, "execution.log")
+handler = logging.FileHandler(log_file_path, mode='w')
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
+
+class UpdateWorker(QThread):
+    output_signal = pyqtSignal(str)
+    error_signal = pyqtSignal(str)
+    finished_signal = pyqtSignal()
+
+    def __init__(self,project_root,backup_path, parent=None):
+        super().__init__(parent)
+        self.project_root= project_root
+        self.backup_path = backup_path
+
+    def run(self):
+        """
+        Updates the project directory with the latest contents from a remote repository.
+
+        This function performs the following steps:
+
+        1. Moves the `config` and oligo environment folders to temporary locations outside the project directory.
+        2. Deletes all files and folders in the project directory except for the `logs` folder.
+        3. Downloads a zip archive from a specified URL and extracts its contents.
+        4. Moves the contents of the extracted `oligo-bench-main` folder to the project directory.
+        5. Restores the `oligo` folder from the temporary location back to the project directory.
+        6. Replaces the `experiments.csv` file in the `config` folder with the version from the temporary location.
+        7. Transfers configuration values from a temporary `config.yaml` file to the restored `config.yaml` file.
+        8. Cleans up temporary folders and ensures the project directory is updated.
+        :return:
+        """
+
+        zip_url = "https://github.com/genomika-lt/oligo-bench/archive/refs/heads/main.zip"
+        zip_path = os.path.join(self.project_root, "main.zip")
+
+        oligo_path = os.path.join(self.project_root, "oligo")
+        config_folder_path = os.path.join(self.project_root, "config")
+        temp_oligo_path = os.path.join(self.backup_path, "oligo")
+        temp_config_path = os.path.join(self.backup_path, "config")
+
+        self.output_signal.emit("Starting download process...")
+        logger.info("Starting download process...")
+
+        os.makedirs(self.backup_path, exist_ok=True)
+        for item in os.listdir(self.project_root):
+            item_path = os.path.join(self.project_root, item)
+            if os.path.basename(item_path) != "logs":
+                shutil.move(item_path, self.backup_path)
+        self.output_signal.emit(f"Moved project contents to rollback backup at {self.backup_path}")
+        logger.info(f"Moved project contents to rollback backup at {self.backup_path}")
+
+        try:
+            self.output_signal.emit(f"Downloading archive from {zip_url}")
+            logger.info(f"Downloading archive from {zip_url}")
+            response = requests.get(zip_url, stream=True)
+            response.raise_for_status()
+            with open(zip_path, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    f.write(chunk)
+        except requests.RequestException as e:
+            self.error_signal.emit(f"Failed to download the zip archive: {e}")
+            logger.error(f"Failed to download the zip archive: {e}")
+            raise RuntimeError(f"Failed to download the zip archive: {e}")
+        self.output_signal.emit(f"Downloaded archive to {zip_path}")
+        logger.info(f"Downloaded archive to {zip_path}")
+
+        try:
+            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                zip_ref.extractall(self.project_root)
+        except zipfile.BadZipFile as e:
+            self.error_signal.emit(f"Error unpacking zip file: {e}")
+            logger.error(f"Error unpacking zip file: {e}")
+            raise RuntimeError(f"Error unpacking zip file: {e}")
+        self.output_signal.emit("Extracted archive contents")
+        logger.info("Extracted archive contents")
+
+        os.remove(zip_path)
+        self.output_signal.emit(f"Removed zip file in {zip_path}")
+        logger.info(f"Removed zip file in {zip_path}")
+
+        extracted_folder = os.path.join(self.project_root, "oligo-bench-main")
+        for item in os.listdir(extracted_folder):
+            shutil.move(os.path.join(extracted_folder, item), self.project_root)
+        shutil.rmtree(extracted_folder)
+        self.output_signal.emit("Moved contents from downloaded zip to project root")
+        logger.info("Moved contents from downloaded zip to project root")
+
+        shutil.move(temp_oligo_path, oligo_path)
+        self.output_signal.emit("Moved oligo environment folder from temporary path to project root")
+        logger.info("Moved oligo environment folder from temporary path to project root")
+
+        experiments_csv_path = os.path.join(config_folder_path, "experiments.csv")
+        os.remove(experiments_csv_path)
+        self.output_signal.emit(f"Removed experiments default csv file in {experiments_csv_path}")
+        logger.info(f"Removed experiments default csv file in {experiments_csv_path}")
+
+        shutil.move(os.path.join(temp_config_path, "experiments.csv"), experiments_csv_path)
+        self.output_signal.emit("Replaced default experiments.csv file with saved data")
+        logger.info("Replaced default experiments.csv file with saved data")
+
+        temp_config_yaml = os.path.join(temp_config_path, "config.yaml")
+        self.transfer_values(temp_config_yaml, os.path.join(config_folder_path, "config.yaml"))
+
+        shutil.rmtree(self.backup_path)
+        self.output_signal.emit("Removed backup folder for rolling back changes")
+        logger.info("Removed backup folder for rolling back changes")
+
+        self.output_signal.emit("Project update completed successfully")
+        logger.info("Project update completed successfully")
+        self.finished_signal.emit()
+        
+        
+    def transfer_values(self,source_file: str, target_file: str):
+        """
+        Transfers the `value` field of every widget in the `basecalling` section
+        from the source YAML file to the target YAML file.
+
+        Args:
+            source_file (str): Path to the source YAML file.
+            target_file (str): Path to the target YAML file.
+        """
+        try:
+            with open(source_file, 'r') as src:
+                source_data = yaml.safe_load(src)
+        except (FileNotFoundError, IOError, yaml.YAMLError) as e:
+            self.error_signal.emit(f"Error reading source file '{source_file}': {e}")
+            logger.error(f"Error reading source file '{source_file}': {e}")
+            raise
+
+        try:
+            with open(target_file, 'r') as tgt:
+                target_data = yaml.safe_load(tgt)
+        except (FileNotFoundError, IOError, yaml.YAMLError) as e:
+            self.error_signal.emit(f"Error reading target file '{target_file}': {e}")
+            logger.error(f"Error reading target file '{target_file}': {e}")
+            raise
+
+        if 'basecalling' not in source_data or 'basecalling' not in target_data:
+            self.error_signal.emit("Validation error: 'basecalling' section missing")
+            logger.error("Validation error: 'basecalling' section missing")
+            raise KeyError("Both source and target files must contain a 'basecalling' section.")
+
+        try:
+            for key, widget in source_data['basecalling'].items():
+                if 'value' in widget and key in target_data['basecalling']:
+                    target_data['basecalling'][key]['value'] = widget['value']
+        except (AttributeError, TypeError) as e:
+            self.error_signal.emit(f"Error processing 'basecalling' sections: {e}")
+            logger.error(f"Error processing 'basecalling' sections: {e}")
+            raise
+
+        try:
+            with open(target_file, 'w') as tgt:
+                yaml.safe_dump(target_data, tgt)
+        except (IOError, yaml.YAMLError) as e:
+            self.error_signal.emit(f"Error writing to target file '{target_file}': {e}")
+            logger.error(f"Error writing to target file '{target_file}': {e}")
+            raise
+
+        self.output_signal.emit(f"Successfully transferred values from '{source_file}' to '{target_file}'.")
+        logger.info(f"Successfully transferred values from '{source_file}' to '{target_file}'.")
+
+            
 class RunWorker(QThread):
     output_signal = pyqtSignal(str)
     error_signal = pyqtSignal(str)
     finished_signal = pyqtSignal()
 
-    def __init__(self, command, parent=None, stop_requested=False):
+    def __init__(self, command,project_root, parent=None, stop_requested=False):
         super().__init__(parent)
         self.command = command
         self.process = None
         self.stop_requested = stop_requested
+        self.project_root= project_root
 
 
     def run(self):
@@ -62,40 +225,33 @@ class RunWorker(QThread):
         )
 
         while True:
-            rlist, _, _ = select.select([self.process.stdout, self.process.stderr], [], [], 0.1)
-
             if self.stop_requested:
                 logger.info("Stop requested. Terminating process.")
                 self._terminate_process()
                 self.finished_signal.emit()
                 return
-
-            for stream in rlist:
-                output = stream.readline()
-                if output == '':
-                    continue
-                elif stream == self.process.stdout:
-                    self.output_signal.emit(output.strip())
-                    logger.info(f"STDOUT: {output.strip()}")
-                elif stream == self.process.stderr:
-                    if self._is_real_error(output.strip()):
-                        self.error_signal.emit(output.strip())
-                        logger.error(f"STDERR: {output.strip()}")
-                    else:
-                        self.output_signal.emit(output.strip())
-                        logger.info(f"STDERR (informational): {output.strip()}")
-
             if self.process.poll() is not None:
                 logger.info(f"Process finished with return code {self.process.returncode}")
                 self.finished_signal.emit()
                 break
+            stderr_output = self.process.stderr.readline()
+            if self._is_real_error(stderr_output.strip()):
+                self.error_signal.emit(stderr_output.strip())
+                logger.error(stderr_output.strip())
+            else:
+                self.output_signal.emit(stderr_output.strip())
+                logger.info(stderr_output.strip())
 
     def _is_real_error(self, line):
         """
         Determine if a line from stderr represents a real error.
         """
-        error_keywords = ["error", "failed", "exception", "not found"]
-        return any(keyword.lower() in line.lower() for keyword in error_keywords)
+        excluded_keywords = ["reason:", "input:", "log:","resources:","output:"]
+        line_lower = line.lower()
+        if "error:" in line_lower:
+            if not any(excluded in line_lower for excluded in excluded_keywords):
+                return True
+        return False
 
     def _terminate_process(self):
         """
@@ -133,8 +289,6 @@ class YamlForm(QWidget):
         Initializes the main form and UI elements.
         """
         super().__init__()
-        self.delete_row_button = None
-        self.add_row_button = None
         if getattr(sys, 'frozen', False):
             self.project_root = os.path.dirname(sys.executable)
         else:
@@ -143,6 +297,9 @@ class YamlForm(QWidget):
         self.csv_path = os.path.join(self.project_root, "config", "experiments.csv")
 
         self.run_stop_button = None
+        self.update_button = None
+        self.delete_row_button = None
+        self.add_row_button = None
         self.stop_requested = False
         self.log_window = None
 
@@ -182,10 +339,10 @@ class YamlForm(QWidget):
             self.load_csv_on_startup(self.csv_path)
 
         self.worker = None
+        self.update_worker = None
         self.unset_unsaved_changes()
         self.showMaximized()
         self.running = False
-
 
 
     def initUI(self):
@@ -200,9 +357,9 @@ class YamlForm(QWidget):
         splitter.setHandleWidth(10)
         # SECTION: Left side - Controls and Log Window
         # SECTION: Controls (Run button, Basecall checkbox, Dorado model combobox, Update button)
-        update_button = QPushButton("Update", self)
-        update_button.clicked.connect(self.update_project_question)
-        self.left_layout.addWidget(update_button)
+        self.update_button = QPushButton("Update", self)
+        self.update_button.clicked.connect(self.update_project_question)
+        self.left_layout.addWidget(self.update_button)
         self.create_widget_in_layout()
         self.run_stop_button = QPushButton("Run", self)
         self.run_stop_button.clicked.connect(self.toggle_run_stop)
@@ -265,28 +422,17 @@ class YamlForm(QWidget):
                     self.show_error("Some cells in experiments table are empty.")
                     return
         if self.unsaved_changes:
-            csv_reply = QMessageBox.question(
+            reply = QMessageBox.question(
                 self,
-                'Save CSV File',
-                "Do you want to save the CSV file before running?",
+                'Save CSV and YAML files',
+                "Do you want to save the CSV and YAML files before running?",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel,
                 QMessageBox.StandardButton.Cancel
             )
-
-            if csv_reply == QMessageBox.StandardButton.Yes:
+            if reply == QMessageBox.StandardButton.Yes:
                 self.save_experiments_csv()
-            if csv_reply == QMessageBox.StandardButton.Cancel:
-                return
-            yaml_reply = QMessageBox.question(
-                self,
-                'Save YAML File',
-                "Do you want to save the YAML file before running?",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No| QMessageBox.StandardButton.Cancel,
-                QMessageBox.StandardButton.Cancel
-            )
-            if yaml_reply == QMessageBox.StandardButton.Yes:
                 self.save_yaml()
-            if yaml_reply == QMessageBox.StandardButton.Cancel:
+            if reply == QMessageBox.StandardButton.Cancel:
                 return
         self.log_window.clear()
         self.run_stop_button.setText("Stop")
@@ -316,9 +462,9 @@ class YamlForm(QWidget):
             raise FileNotFoundError("Conda is not installed or not found in the system path. Please install Conda.")
 
         env_path = os.path.join(self.project_root,'oligo')
-        command = f"conda run -p {env_path} bash {path}"
+        command = f"conda run --live-stream -p {env_path} bash {path}"
 
-        self.worker = RunWorker(command)
+        self.worker = RunWorker(command,self.project_root)
         self.worker.output_signal.connect(self.handle_output)
         self.worker.error_signal.connect(self.handle_error)
         self.worker.finished_signal.connect(self.finish_run)
@@ -335,136 +481,29 @@ class YamlForm(QWidget):
             self.run_stop_button.setEnabled(False)
             self.add_row_button.setEnabled(False)
             self.delete_row_button.setEnabled(False)
+            self.update_button.setEnabled(False)
             if self.running:
                 self.handle_stop()
-            self.update_project()
-
+            parent_directory = os.path.dirname(self.project_root)
+            backup_path = os.path.join(parent_directory, "oligo_backup")
+            try:
+                self.update_worker = UpdateWorker(self.project_root, backup_path)
+                self.update_worker.output_signal.connect(self.handle_output)
+                self.update_worker.error_signal.connect(self.handle_error)
+                self.update_worker.finished_signal.connect(self.finish_update)
+                self.update_worker.start()
+                self.running = True
+            except Exception as e:
+                self.handle_error(f"Error during project update: {e}. Rolling back changes.")
+                for item in os.listdir(backup_path):
+                    shutil.move(os.path.join(backup_path, item), self.project_root)
+                shutil.rmtree(backup_path)
+                self.handle_output("Rollback completed. Project restored to its original state.")
+                raise e
         self.run_stop_button.setEnabled(True)
         self.add_row_button.setEnabled(True)
         self.delete_row_button.setEnabled(True)
-
-    def update_project(self):
-        """
-
-        :return:
-        """
-        self.handle_output("Starting updating process...")
-
-        zip_url = "https://github.com/genomika-lt/oligo-bench/archive/refs/heads/main.zip"
-        zip_path = os.path.join(self.project_root, "main.zip")
-
-        parent_directory = os.path.dirname(self.project_root)
-        snakemake_path = os.path.join(self.project_root, "snakemake")
-        config_folder_path = os.path.join(self.project_root, "config")
-        temp_snakemake_path = os.path.join(parent_directory, "snakemake_temp")
-        temp_config_folder_path = os.path.join(parent_directory, "config_temp")
-
-        "----> Finish implementation of update <----"
-        QMessageBox.information(
-            self,
-            "Update Complete",
-            "The project has been successfully updated. You should close and open app again to apply changes"
-        )
-        logger.info(f"Updating process finished successfully")
-        self.handle_output(f"Updating process finished successfully")
-
-    def move_folder_to(self, path:str, temp_path:str):
-        if not os.path.exists(path):
-            self.show_error(f"Folder not found in {path}")
-            logger.error(f"Folder not found in {path}")
-            self.handle_error(f"Folder not found in {path}")
-            return
-        if os.path.exists(temp_path):
-            shutil.rmtree(temp_path)
-        shutil.move(path, temp_path)
-        logger.info(f"Moved {path} folder to {temp_path}")
-        self.handle_output(f"Moved {path} folder to {temp_path}")
-
-    def transfer_values(self,source_file: str, target_file: str):
-        """
-        Transfers the `value` field of every widget in the `basecalling` section
-        from the source YAML file to the target YAML file.
-
-        Args:
-            source_file (str): Path to the source YAML file.
-            target_file (str): Path to the target YAML file.
-        """
-        try:
-            with open(source_file, 'r') as src:
-                try:
-                    source_data = yaml.safe_load(src)
-                except yaml.YAMLError as e:
-                    logger.error(f"Error parsing source file '{source_file}': {e}")
-                    self.show_error(f"Error parsing source file '{source_file}': {e}")
-                    self.handle_error(f"Error parsing source file '{source_file}': {e}")
-                    return
-        except FileNotFoundError:
-            logger.error(f"Source file '{source_file}' not found.")
-            self.show_error(f"Source file '{source_file}' not found.")
-            self.handle_error(f"Source file '{source_file}' not found.")
-            return
-        except IOError as e:
-            logger.error(f"Error reading source file '{source_file}': {e}")
-            self.show_error(f"Error reading source file '{source_file}': {e}")
-            self.handle_error(f"Error reading source file '{source_file}': {e}")
-            return
-
-        try:
-            with open(target_file, 'r') as tgt:
-                try:
-                    target_data = yaml.safe_load(tgt)
-                except yaml.YAMLError as e:
-                    logger.error(f"Error parsing target file '{target_file}': {e}")
-                    self.show_error(f"Error parsing target file '{target_file}': {e}")
-                    self.handle_error(f"Error parsing target file '{target_file}': {e}")
-                    return
-        except FileNotFoundError:
-            logger.error(f"Target file '{target_file}' not found.")
-            self.show_error(f"Target file '{target_file}' not found.")
-            self.handle_error(f"Target file '{target_file}' not found.")
-            return
-        except IOError as e:
-            logger.error(f"Error reading target file '{target_file}': {e}")
-            self.show_error(f"Error reading target file '{target_file}': {e}")
-            self.handle_error(f"Error reading target file '{target_file}': {e}")
-            return
-
-        try:
-            if 'basecalling' not in source_data or 'basecalling' not in target_data:
-                raise KeyError("Both source and target files must contain a 'basecalling' section.")
-        except KeyError as e:
-            logger.error(f"Validation error: {e}")
-            self.show_error(f"Validation error: {e}")
-            self.handle_error(f"Validation error: {e}")
-            return
-
-        try:
-            for key, widget in source_data['basecalling'].items():
-                if 'value' in widget and key in target_data['basecalling']:
-                    target_data['basecalling'][key]['value'] = widget['value']
-        except (AttributeError, TypeError) as e:
-            logger.error(f"Error processing 'basecalling' sections: {e}")
-            self.show_error(f"Error processing 'basecalling' sections: {e}")
-            self.handle_error(f"Error processing 'basecalling' sections: {e}")
-            return
-
-        try:
-            with open(target_file, 'w') as tgt:
-                try:
-                    yaml.safe_dump(target_data, tgt)
-                except yaml.YAMLError as e:
-                    logger.error(f"Error writing to target file '{target_file}': {e}")
-                    self.show_error(f"Error writing to target file '{target_file}': {e}")
-                    self.handle_error(f"Error writing to target file '{target_file}': {e}")
-                    return
-        except IOError as e:
-            logger.error(f"Error writing target file '{target_file}': {e}")
-            self.show_error(f"Error writing target file '{target_file}': {e}")
-            self.handle_error(f"Error writing target file '{target_file}': {e}")
-            return
-
-        logger.info(f"Successfully transferred values from '{source_file}' to '{target_file}'.")
-        self.handle_output(f"Successfully transferred values from '{source_file}' to '{target_file}'.")
+        self.update_button.setEnabled(True)
 
     def handle_output(self, output):
         """
@@ -477,6 +516,7 @@ class YamlForm(QWidget):
         Handles the error output from the worker thread and updates the log window.
         """
         self.log_window.append(f"<font color='#9b3438'><pre>Error: {error_output}</pre></font>")
+        logger.info(error_output)
 
     def handle_stop(self):
         """
@@ -501,6 +541,16 @@ class YamlForm(QWidget):
         self.run_stop_button.setText("Run")
         self.run_stop_button.setStyleSheet("")
         self.log_window.append("<font color='yellow'>Run finished.</font>")
+
+    def finish_update(self):
+        """
+        Resets the state after the script finishes.
+        """
+        self.update_worker = None
+        self.running = False
+        self.run_stop_button.setText("Run")
+        self.run_stop_button.setStyleSheet("")
+        self.log_window.append("<font color='yellow'>Update finished.</font>")
 
     def handle_cell_double_click(self, row, column):
         """
@@ -776,25 +826,8 @@ class YamlForm(QWidget):
                 QMessageBox.StandardButton.Cancel
             )
             if reply == QMessageBox.StandardButton.Yes:
-                csv_reply = QMessageBox.question(
-                    self,
-                    'Save CSV File',
-                    "Do you want to save the CSV file?",
-                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                    QMessageBox.StandardButton.No
-                )
-                if csv_reply == QMessageBox.StandardButton.Yes:
-                    self.save_experiments_csv()
-                yaml_reply = QMessageBox.question(
-                    self,
-                    'Save YAML File',
-                    "Do you want to save the YAML file?",
-                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                    QMessageBox.StandardButton.No
-                )
-                if yaml_reply == QMessageBox.StandardButton.Yes:
-                    self.save_yaml()
-
+                self.save_experiments_csv()
+                self.save_yaml()
                 self.unset_unsaved_changes()
                 event.accept()
             elif reply == QMessageBox.StandardButton.No:
