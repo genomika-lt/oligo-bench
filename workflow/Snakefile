@@ -12,4 +12,4 @@ include: "rules/converters.smk"
 
 rule all:
     input:
-        "results/report.html",
+        f"{config["settings"]["save_path"]}/report.html",
