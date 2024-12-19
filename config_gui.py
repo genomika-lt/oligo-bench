@@ -14,8 +14,7 @@ import shutil
 import signal
 import subprocess
 import sys
-import select
-import zipfile
+
 
 import PyQt6.QtCore
 import requests
@@ -72,8 +71,10 @@ class UpdateWorker(QThread):
 
         oligo_path = os.path.join(self.project_root, "oligo")
         config_folder_path = os.path.join(self.project_root, "config")
+        dorado_path = os.path.join(self.project_root, "dorado")
         temp_oligo_path = os.path.join(self.backup_path, "oligo")
         temp_config_path = os.path.join(self.backup_path, "config")
+        temp_dorado_path = os.path.join(self.backup_path, "dorado")
 
         self.output_signal.emit("Starting download process...")
         logger.info("Starting download process...")
@@ -102,12 +103,11 @@ class UpdateWorker(QThread):
         logger.info(f"Downloaded archive to {zip_path}")
 
         try:
-            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                zip_ref.extractall(self.project_root)
-        except zipfile.BadZipFile as e:
+            os.system("unzip main.zip")
+        except Exception as e:
             self.error_signal.emit(f"Error unpacking zip file: {e}")
             logger.error(f"Error unpacking zip file: {e}")
-            raise RuntimeError(f"Error unpacking zip file: {e}")
+            raise e
         self.output_signal.emit("Extracted archive contents")
         logger.info("Extracted archive contents")
 
@@ -126,12 +126,16 @@ class UpdateWorker(QThread):
         self.output_signal.emit("Moved oligo environment folder from temporary path to project root")
         logger.info("Moved oligo environment folder from temporary path to project root")
 
+        shutil.move(temp_dorado_path, dorado_path)
+        self.output_signal.emit("Moved dorado folder from temporary path to project root")
+        logger.info("Moved dorado folder from temporary path to project root")
+
         experiments_csv_path = os.path.join(config_folder_path, "experiments.csv")
         os.remove(experiments_csv_path)
         self.output_signal.emit(f"Removed experiments default csv file in {experiments_csv_path}")
         logger.info(f"Removed experiments default csv file in {experiments_csv_path}")
 
-        shutil.move(os.path.join(temp_config_path, "experiments.csv"), experiments_csv_path)
+        shutil.copy(os.path.join(temp_config_path, "experiments.csv"), experiments_csv_path)
         self.output_signal.emit("Replaced default experiments.csv file with saved data")
         logger.info("Replaced default experiments.csv file with saved data")
 
@@ -484,8 +488,7 @@ class YamlForm(QWidget):
             self.update_button.setEnabled(False)
             if self.running:
                 self.handle_stop()
-            parent_directory = os.path.dirname(self.project_root)
-            backup_path = os.path.join(parent_directory, "oligo_backup")
+            backup_path = os.path.join("/tmp/oligo_bench_temp")
             try:
                 self.update_worker = UpdateWorker(self.project_root, backup_path)
                 self.update_worker.output_signal.connect(self.handle_output)
