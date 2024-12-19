@@ -20,5 +20,6 @@ echo "Downloading dorado"
 wget https://cdn.oxfordnanoportal.com/software/analysis/dorado-0.9.0-linux-x64.tar.gz
 echo "Unzipping dorado archive"
 tar -xvzf dorado-0.9.0-linux-x64.tar.gz
-mkdir dorado && mv ./dorado-0.9.0-linux-x64/* ./dorado/
+rm -rf dorado-0.9.0-linux-x64.tar.gz
+mv ./dorado-0.9.0-linux-x64 ./dorado
 sudo chmod a+rwx ./dorado/bin/dorado
