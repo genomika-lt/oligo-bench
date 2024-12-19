@@ -7,30 +7,55 @@
 A Snakemake-based tool for quality control of synthetic oligonucleotide sequencing data produced by ONT sequencers, developed for Ubuntu.
 
 ## Installation
+### For not bioinformaticians
+1. On the right side you should find Release window and open it by clicking "Releases"</br>
+![Release Window](./readme/ReleaseWindow.png)
 
-Snakemake is required to run this workflow. Installation of Snakemake can be found [here](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html). 
+2. Once you open window, at the very top you will see latest release version. Press on `installer.sh` to download it. *Download it into folder where you want to install our tool.* If you download script and install into "Downloads" folder, after cleaning "Downloads" you may cry a lot.</br>
+![Installer](./readme/Installer.png)
 
-In addition to Snakemake, this project includes a PyQt6 graphical user interface (GUI) application for generating YAML and CSV files needed for analyses. 
+3. With right click open properties of downloaded file.</br>
+![Properties](./readme/Properties.png)
 
-Ensure you have Python installed. You can download it from the [official Python website](https://www.python.org/downloads/) and remember to check "Add Python to PATH" during installation.
-PyQt6 can be installed via pip:
+4. Go to "Permissions" and make sure "Allow executing file as program" is pressed. You can close a window.</br>
+![AllowExecution](./readme/AllowExecution.png)
+
+5. With right of  click on the same file press "Run as program"</br>
+![RunAsProgram](./readme/RunAsProgram.png)
+
+6. Enter password from current user and Press Enter. <b>You will NOT see the entered symbols</b></br>
+![Password](./readme/Password.png)
+
+7. If installation is successful, you will see `oligo-bench` folder with all required content inside. Otherwise create Issue in tab "Issues" on GitHub.
+
+## For bioinformaticians
+1. Install miniconda, if you do not have it.
+2. Download and unzip project.
+3. Go inside project
 ```bash
-pip3 install PyQt6
+cd oligo-bench-main
+```
+4. Create conda environment
+```bash
+conda create -c conda-forge -c bioconda -p ./oligo snakemake minimap2 last samtools pandas snakefmt pysam plotly PyYAML requests -y
+```
+5. If you prefer to have possibility to run UI, install PyQt6
+```bash
+conda activate -p ./oligo
+pip install PyQt6
 ```
 
-### Running the Snakemake Workflow
-To run the Snakemake workflow, use the following command:
-After installation and activation of conda environment run
+## Running
+### For not bioinformaticians
+1. Open "oligo-bench" folder to see all the files.
+2. With right click on `UI.sh` press "Run as program"
+
+### For bioinformaticians
+1. Activate environment
 ```bash
-pip install -r requirements.txt
+conda activate -p ./oligo
 ```
-
-### Launching the GUI Application
-The GUI application, implemented in PyQt6, provides an interface for creating YAML and CSV files.
-
-To run the GUI application navigate to the folder `config` containing `config_gui.bin` and execute it.
-
-or this
+2. Run script
 ```bash
 ./run.sh
 ```
