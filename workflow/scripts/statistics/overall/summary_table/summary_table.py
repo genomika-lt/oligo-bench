@@ -53,7 +53,7 @@ def summary_table(csv_files, output_file):
                      'Experiment Duration',
                      'Passed GC']
 
-    body_values_percentage = [total_reads_number.loc[:, 'Sample'],
+    body_values = [total_reads_number.loc[:, 'Sample'],
                    total_reads_number.loc[:, 'Total Reads'].apply(integer_to_human_readable),
                    total_bases_number.loc[:, 'Total Bases'].apply(integer_to_human_readable,
                                                                   args=(bases_alphabet,)),
@@ -64,39 +64,12 @@ def summary_table(csv_files, output_file):
                                                         f'{round_to_x_significant(x / 3600, 3)}H'),
                    gc_content_ratio.apply(ratio_to_percentage_string, args=(2,))]
 
-    body_values = [total_reads_number.loc[:, 'Sample'],
-                   total_reads_number.loc[:, 'Total Reads'].apply(integer_to_human_readable),
-                   total_bases_number.loc[:, 'Total Bases'].apply(integer_to_human_readable,
-                                                                  args=(bases_alphabet,)),
-                   passed_reads_number.loc[:, 'Passed Reads'],
-                   passed_bases_number.loc[:, 'Passed Bases'].apply(integer_to_human_readable,
-                                                                    args=(bases_alphabet,)),
-                   timestamps.loc[:, 'Duration'].apply(lambda x:
-                                                       f'{round_to_x_significant(x / 3600, 3)}H'),
-                   gc_passed_bases_number.loc[:, 'GC Bases']]
-
     figure = go.Figure(data=[go.Table(header={'values': header_values},
                                       cells={'values': body_values,
                                              'height': 25})])
-    figure.update()
     figure.update_layout(height=25 * total_reads_number.shape[0] + 50,
                          margin={'r': 5, 'l': 5, 't': 5, 'b': 5})
-    figure.update_layout(
-        updatemenus=[
-            dict(
-                type="buttons",
-                direction="right",
-                active=0,
-                buttons=list([
-                    dict(label="Percentage",
-                         method="update",
-                         args=[{'cells': {'values': body_values_percentage}}]),
-                    dict(label="Quantity",
-                         method="update",
-                         args=[{'cells': {'values': body_values}}]),
-                ]),
-            )
-        ])
+
     with open(output_file, 'w', encoding='utf-8') as g:
         g.write(figure.to_html(full_html=False, include_plotlyjs='cdn'))
 
