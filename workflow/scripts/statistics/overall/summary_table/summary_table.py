@@ -78,7 +78,6 @@ def summary_table(csv_files, output_file):
     figure = go.Figure(data=[go.Table(header={'values': header_values},
                                       cells={'values': body_values,
                                              'height': 25})])
-    figure.update()
     figure.update_layout(height=25 * total_reads_number.shape[0] + 50,
                          margin={'r': 5, 'l': 5, 't': 5, 'b': 5})
     figure.update_layout(
