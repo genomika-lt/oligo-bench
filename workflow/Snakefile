@@ -2,7 +2,10 @@ configfile: "config/config.yaml"
 
 
 include: "rules/common.smk"
-include: "rules/dorado_basecaller.smk"
+if config["basecalling"]["dorado_model"]["value"] != "None":
+    include: "rules/dorado_basecaller.smk"
+else:
+    include: "rules/fastq_to_bam_converter.smk"
 include: "rules/filter_basecalled.smk"
 include: "rules/aligners/last.smk"
 include: "rules/aligners/minimap2.smk"
@@ -10,6 +13,8 @@ include: "rules/statistics/statistics.smk"
 include: "rules/converters.smk"
 
 
+
 rule all:
     input:
         f"{config["settings"]["save_path"]}/report.html",
+

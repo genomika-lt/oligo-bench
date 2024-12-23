@@ -8,11 +8,12 @@ basecalling:
   dorado_model:
     label: Dorado model
     options:
+    - None
     - fast
     - hac
     - sup
     type: combobox
-    value: fast
+    value: None
   minimum_quality:
     label: Minimum Quality
     max_value: 10
