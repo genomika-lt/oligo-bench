@@ -4,8 +4,8 @@ rule filter_basecalled:
     output:
         "results/basecalled/passed_{sample_id}.bam",
     log:
-        "logs/filter_basecalled_{sample_id}.log",
+        "logs/{sample_id}/filter_basecalled.log",
     conda:
-        "../envs/pysam.yaml"
+        "../../envs/pysam.yaml"
     script:
-        "../scripts/filter_reads_quality.py"
+        "../../scripts/filter_reads_quality.py"

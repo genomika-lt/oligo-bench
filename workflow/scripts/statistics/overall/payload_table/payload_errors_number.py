@@ -1,15 +1,13 @@
 """Creates mapping table summary"""
 
 
-import plotly.graph_objects as go
-import pysam
 from pandas import DataFrame
 from snakemake.script import snakemake
 
 # pylint: disable=import-error
 from scripts.utils import (parse_sam_bam_file,
-                                snakemake_file_logger,
-                                integer_to_human_readable)
+                           snakemake_file_logger,
+                           integer_to_human_readable)
 
 
 @snakemake_file_logger
