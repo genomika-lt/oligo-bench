@@ -44,6 +44,8 @@ def summary_table(csv_files, output_file):
                           / total_reads_number.loc[:, 'Total Reads'])
     gc_content_ratio = (gc_passed_bases_number.loc[:, 'GC Bases']
                          / passed_bases_number.loc[:, 'Passed Bases'])
+    passed_bases_ratio = (passed_bases_number.loc[:, 'Passed Bases']
+                          / total_bases_number.loc[:, 'Total Bases'])
 
     header_values = ['Sample ID',
                      'Total Reads',
@@ -54,29 +56,27 @@ def summary_table(csv_files, output_file):
                      'Passed GC']
 
     body_values_percentage = [total_reads_number.loc[:, 'Sample'],
-                   total_reads_number.loc[:, 'Total Reads'].apply(integer_to_human_readable),
-                   total_bases_number.loc[:, 'Total Bases'].apply(integer_to_human_readable,
-                                                                  args=(bases_alphabet,)),
+                   "100 %",
+                   "100 %",
                    passed_reads_ratio.apply(ratio_to_percentage_string, args=(2,)),
-                   passed_bases_number.loc[:, 'Passed Bases'].apply(integer_to_human_readable,
-                                                                    args=(bases_alphabet,)),
+                   passed_bases_ratio.apply(ratio_to_percentage_string, args=(2,)),
                    timestamps.loc[:, 'Duration'].apply(lambda x:
                                                         f'{round_to_x_significant(x / 3600, 3)}H'),
                    gc_content_ratio.apply(ratio_to_percentage_string, args=(2,))]
 
-    body_values = [total_reads_number.loc[:, 'Sample'],
+    body_values_number = [total_reads_number.loc[:, 'Sample'],
                    total_reads_number.loc[:, 'Total Reads'].apply(integer_to_human_readable),
                    total_bases_number.loc[:, 'Total Bases'].apply(integer_to_human_readable,
                                                                   args=(bases_alphabet,)),
-                   passed_reads_number.loc[:, 'Passed Reads'],
+                   passed_reads_number.loc[:, 'Passed Reads'].apply(integer_to_human_readable),
                    passed_bases_number.loc[:, 'Passed Bases'].apply(integer_to_human_readable,
                                                                     args=(bases_alphabet,)),
                    timestamps.loc[:, 'Duration'].apply(lambda x:
                                                        f'{round_to_x_significant(x / 3600, 3)}H'),
-                   gc_passed_bases_number.loc[:, 'GC Bases']]
+                   gc_passed_bases_number.loc[:, 'GC Bases'].apply(integer_to_human_readable)]
 
     figure = go.Figure(data=[go.Table(header={'values': header_values},
-                                      cells={'values': body_values,
+                                      cells={'values': body_values_number,
                                              'height': 25})])
     figure.update_layout(height=25 * total_reads_number.shape[0] + 50,
                          margin={'r': 5, 'l': 5, 't': 5, 'b': 5})
@@ -92,7 +92,7 @@ def summary_table(csv_files, output_file):
                          args=[{'cells': {'values': body_values_percentage}}]),
                     dict(label="Quantity",
                          method="update",
-                         args=[{'cells': {'values': body_values}}]),
+                         args=[{'cells': {'values': body_values_number}}]),
                 ]),
             )
         ])
