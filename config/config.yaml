@@ -29,4 +29,4 @@ experiments:
 - column: reverse_primer
   type: plaintxt
 settings:
-  save_path: testresults
+  save_path: results
