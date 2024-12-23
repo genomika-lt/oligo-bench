@@ -136,6 +136,9 @@ def round_to_x_significant(number: int|float, x: int = 2):
     """
 
 
+    if number == 0:
+        return 0
+
     return round(number, x - 1 - floor(log10(abs(number))))
 
 
