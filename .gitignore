@@ -8,11 +8,9 @@ logs/**
 oligo
 # Dorado
 .temp_dorado_model*
-dorado
 
 # PyCharm
 .idea/
 
-# Python/Conda
+# Python
 __pycache__/
-oligo
