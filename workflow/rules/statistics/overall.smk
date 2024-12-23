@@ -1,3 +1,5 @@
+from os import lseek
+
 rule count_total_reads_number:
     input:
         expand(
@@ -237,18 +239,6 @@ rule mapping_table:
     script:
         "../../scripts/statistics/overall/mapping_table/mapping_table.py"
 
-rule filter_aligned_reads:
-    input:
-        "results/aligned/{sample_id}.bam",
-    output:
-        "results/aligned/filtered_{sample_id}.bam",
-    log:
-        "logs/{sample_id}/filter_aligned_reads.log",
-    conda:
-        "../../envs/pysam.yaml"
-    shell:
-        "samtools view -h {input} --min-MQ 10 --excl-flags 260 >> {output}"
-
 
 rule payload_errors_number:
     input:
@@ -276,3 +266,23 @@ rule payload_table:
         "../../envs/plotly.yaml"
     script:
         "../../scripts/statistics/overall/payload_table/payload_table.py"
+
+
+rule coverage_plot:
+    input:
+        expand(
+            "results/aligned/passed_{sample_id}.bam",
+            sample_id=samples["sample_id"],
+        ),
+        expand(
+            "{reference_path}",
+            reference_path=samples["path_to_reference"],
+        ),
+    output:
+        "results/statistics/coverage_plot.html",
+    log:
+        "logs/statistics/coverage_plot.log"
+    conda:
+        "../../envs/plotly.yaml"
+    script:
+        "../../scripts/statistics/overall/coverage_plot.py"
