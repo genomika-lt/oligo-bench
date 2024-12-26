@@ -10,13 +10,13 @@ from scripts.utils import snakemake_file_logger
 
 
 def write_summary_to_file(file: TextIOWrapper) -> None:
-    params = snakemake.config['basecalling']
+    params = snakemake.config['parameters']
     file.write("<details>")
     file.write('<summary>Information</summary>')
     file.write("<p>QC Version: v1.2</p>")
     file.write("<p>Dorado: 0.9.0</p>")
     file.write(f"<p>Dorado model: {params['dorado_model']['value']}</p>")
-    file.write(f"<p>Minimum basecalling quality: {params['minimum_quality']['value']}</p>")
+    file.write(f"<p>Minimum basecalling quality: {params['minimum_basecalling_quality']['value']}</p>")
     file.write(f"<p>Allowed primer errors: {params['allowed_primer_errors']['value']}</p>")
     file.write("</details>\n")
 

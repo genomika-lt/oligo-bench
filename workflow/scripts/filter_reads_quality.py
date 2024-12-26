@@ -23,7 +23,7 @@ def filter_basecalled(bam_file, output_file):
     # pylint: disable=no-member
     filtered = pysam.AlignmentFile(output_file, "wb", template=data, check_sq=False)
     for read in data:
-        if sum(read.query_qualities) / len(read.query_qualities) > int(snakemake.config["basecalling"]["minimum_quality"]["value"]):
+        if sum(read.query_qualities) / len(read.query_qualities) > int(snakemake.config["parameters"]["minimum_basecalling_quality"]["value"]):
             filtered.write(read)
 
 

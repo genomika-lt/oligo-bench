@@ -1,4 +1,4 @@
-basecalling:
+parameters:
   allowed_primer_errors:
     label: Allowed primers errors
     max_value: 10
@@ -14,7 +14,7 @@ basecalling:
     - sup
     type: combobox
     value: None
-  minimum_quality:
+  minimum_basecalling_quality:
     label: Minimum Quality
     max_value: 10
     min_value: 0

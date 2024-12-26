@@ -153,7 +153,7 @@ class UpdateWorker(QThread):
         
     def transfer_values(self,source_file: str, target_file: str):
         """
-        Transfers the `value` field of every widget in the `basecalling` section
+        Transfers the `value` field of every widget in the `parameters` section
         from the source YAML file to the target YAML file.
 
         Args:
@@ -176,18 +176,18 @@ class UpdateWorker(QThread):
             logger.error(f"Error reading target file '{target_file}': {e}")
             raise
 
-        if 'basecalling' not in source_data or 'basecalling' not in target_data:
-            self.error_signal.emit("Validation error: 'basecalling' section missing")
-            logger.error("Validation error: 'basecalling' section missing")
-            raise KeyError("Both source and target files must contain a 'basecalling' section.")
+        if 'parameters' not in source_data or 'parameters' not in target_data:
+            self.error_signal.emit("Validation error: 'parameters' section missing")
+            logger.error("Validation error: 'parameters' section missing")
+            raise KeyError("Both source and target files must contain a 'parameters' section.")
 
         try:
-            for key, widget in source_data['basecalling'].items():
-                if 'value' in widget and key in target_data['basecalling']:
-                    target_data['basecalling'][key]['value'] = widget['value']
+            for key, widget in source_data['parameters'].items():
+                if 'value' in widget and key in target_data['parameters']:
+                    target_data['parameters'][key]['value'] = widget['value']
         except (AttributeError, TypeError) as e:
-            self.error_signal.emit(f"Error processing 'basecalling' sections: {e}")
-            logger.error(f"Error processing 'basecalling' sections: {e}")
+            self.error_signal.emit(f"Error processing 'parameters' sections: {e}")
+            logger.error(f"Error processing 'parameters' sections: {e}")
             raise
 
         try:
@@ -658,7 +658,7 @@ class YamlForm(QWidget):
             if os.path.exists(yaml_path):
                 with open(yaml_path, 'r', encoding='utf-8') as file:
                     config = yaml.safe_load(file)
-                self.yaml_config = config.get('basecalling', {})
+                self.yaml_config = config.get('parameters', {})
                 self.columns_config = config.get('experiments', [])
                 self.unset_unsaved_changes()
         except (OSError, IOError) as e:
@@ -696,18 +696,18 @@ class YamlForm(QWidget):
             self.show_error(f"Error reading YAML data: {str(e)}")
             return
 
-        if 'basecalling' not in current_config:
-            current_config['basecalling'] = {}
+        if 'parameters' not in current_config:
+            current_config['parameters'] = {}
 
         for widget_name, widget_data in self.yaml_config.items():
             widget_type = widget_data.get('type')
             object_name = f"{widget_name}_{widget_type}"
-            if widget_type in self.widget_classes and widget_name in current_config['basecalling']:
+            if widget_type in self.widget_classes and widget_name in current_config['parameters']:
                 widget_class, value_getter = self.widget_classes[widget_type]
                 try:
                     widget = self.findChild(widget_class, object_name)
                     if widget:
-                        current_config['basecalling'][widget_name]['value'] = value_getter(widget)
+                        current_config['parameters'][widget_name]['value'] = value_getter(widget)
                 except AttributeError as e:
                     self.show_error(f"Error accessing widget {object_name}: {str(e)}")
 

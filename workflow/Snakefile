@@ -3,7 +3,7 @@ configfile: "config/config.yaml"
 
 include: "rules/common.smk"
 
-if config["basecalling"]["dorado_model"]["value"] != "None":
+if config["parameters"]["dorado_model"]["value"] != "None":
     include: "rules/dorado_basecaller.smk"
 else:
     include: "rules/fastq_to_bam_converter.smk"
