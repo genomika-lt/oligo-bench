@@ -43,3 +43,37 @@ def get_reverse_primer(wildcards):
         samples["sample_id"] == wildcards.sample_id, "reverse_primer"
     ].values[0]
     return reverse_primer
+
+
+def get_fastq_files(wildcards):
+    path_to_sample = samples.loc[
+        samples["sample_id"] == wildcards.sample_id, "path_to_sample"
+    ]
+    path = path_to_sample.values[0]
+    subdirectories = ["fastq", "fastq_pass", "fastq_fail"]
+    fastq_files = []
+    for subdir in subdirectories:
+        fastq_directory = os.path.join(path, subdir)
+        if os.path.exists(fastq_directory) and os.path.isdir(fastq_directory):
+            for file in os.listdir(fastq_directory):
+                if file.endswith(".fastq"):
+                    fastq_files.append(os.path.join(fastq_directory,file))
+
+    return fastq_files
+
+
+def get_bam_files(wildcards):
+    path_to_sample = samples.loc[
+        samples["sample_id"] == wildcards.sample_id, "path_to_sample"
+    ]
+    path = path_to_sample.values[0]
+    subdirectories = ["bam", "bam_pass", "bam_fail"]
+    bam_files = []
+    for subdir in subdirectories:
+        bam_directory = os.path.join(path, subdir)
+        if os.path.exists(bam_directory) and os.path.isdir(bam_directory):
+            for file in os.listdir(bam_directory):
+                if file.endswith(".bam"):
+                    bam_files.append(os.path.join(bam_directory,file))
+
+    return bam_files
