@@ -6,7 +6,7 @@ rule dorado_basecaller:
     log:
         "logs/basecall_{sample_id}.log",
     params:
-        model=config["basecalling"]["dorado_model"]["value"],
+        model=config["parameters"]["dorado_model"]["value"],
     resources:
         gpus=1,
     conda:
