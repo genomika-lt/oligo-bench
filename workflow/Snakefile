@@ -6,7 +6,7 @@ include: "rules/common.smk"
 if config["parameters"]["dorado_model"]["value"] != "None":
     include: "rules/dorado_basecaller.smk"
 else:
-    include: "rules/fastq_to_bam_converter.smk"
+    include: "rules/bam_provider.smk"
 
 include: "rules/filters/filter_basecalled.smk"
 include: "rules/filters/filter_aligned.smk"
