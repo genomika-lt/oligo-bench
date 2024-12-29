@@ -43,11 +43,11 @@ class UpdateWorker(QThread):
     output_signal = pyqtSignal(str)
     error_signal = pyqtSignal(str)
     finished_signal = pyqtSignal()
-
     def __init__(self,project_root,backup_path, parent=None):
         super().__init__(parent)
         self.project_root= project_root
         self.backup_path = backup_path
+
 
     def run(self):
         """
@@ -206,7 +206,6 @@ class RunWorker(QThread):
     output_signal = pyqtSignal(str)
     error_signal = pyqtSignal(str)
     finished_signal = pyqtSignal()
-
     def __init__(self, command,project_root, parent=None, stop_requested=False):
         super().__init__(parent)
         self.command = command
@@ -246,6 +245,7 @@ class RunWorker(QThread):
                 self.output_signal.emit(stderr_output.strip())
                 logger.info(stderr_output.strip())
 
+
     def _is_real_error(self, line):
         """
         Determine if a line from stderr represents a real error.
@@ -256,6 +256,7 @@ class RunWorker(QThread):
             if not any(excluded in line_lower for excluded in excluded_keywords):
                 return True
         return False
+
 
     def _terminate_process(self):
         """
@@ -276,6 +277,35 @@ class RunWorker(QThread):
                 except ProcessLookupError:
                     logger.error(f"Failed to terminate process group: {self.process.pid}")
             self.process = None
+
+
+def load_stylesheet(widget):
+    """
+    Loads the stylesheet from an external file.
+
+    :return: None
+    """
+    if getattr(sys, 'frozen', False):
+        css_path = os.path.join(sys._MEIPASS, "styles", "styles.qss")
+    else:
+        css_path = os.path.join(os.path.dirname(__file__), "styles",
+                                "styles.qss")
+    try:
+        with open(css_path, "r", encoding="utf-8") as file:
+            stylesheet = file.read()
+            widget.setStyleSheet(stylesheet)
+    except (FileNotFoundError, OSError) as e:
+        show_error(f"Error loading stylesheet: {str(e)}")
+
+
+def show_error(widget, message):
+    """
+    Displays an error message in a popup window.
+    :param widget: QWidget(parent) of QMessageBox.
+    :param message: message to display
+    :return: None
+    """
+    QMessageBox.critical(widget, "Error", message)
 
 
 class YamlForm(QWidget):
@@ -333,10 +363,10 @@ class YamlForm(QWidget):
         perm_csv_path = self.check_permissions(self.csv_path)
         if not perm_yaml_path:
             logger.error(f"{self.yaml_path} does not have required permissions.")
-            self.show_error(f"{self.yaml_path} does not have required permissions.")
+            show_error(self,f"{self.yaml_path} does not have required permissions.")
         if not perm_csv_path:
             logger.error(f"{self.csv_path} does not have required permissions.")
-            self.show_error(f"{self.csv_path} does not have required permissions.")
+            show_error(self,f"{self.csv_path} does not have required permissions.")
         if perm_yaml_path and perm_csv_path:
             self.load_yaml_on_startup(self.yaml_path)
             self.initUI()
@@ -360,10 +390,10 @@ class YamlForm(QWidget):
         splitter = QSplitter(Qt.Orientation.Horizontal)
         splitter.setHandleWidth(10)
         # SECTION: Left side - Controls and Log Window
-        # SECTION: Controls (Run button, Basecall checkbox, Dorado model combobox, Update button)
-        self.update_button = QPushButton("Update", self)
-        self.update_button.clicked.connect(self.update_project_question)
-        self.left_layout.addWidget(self.update_button)
+        # SECTION: Controls (Run button, Basecall checkbox, Dorado model combobox, Settings button)
+        self.settings_button = QPushButton("Settings", self)
+        self.settings_button.clicked.connect(self.open_settings_window)
+        self.left_layout.addWidget(self.settings_button)
         self.create_widget_in_layout()
         self.run_stop_button = QPushButton("Run", self)
         self.run_stop_button.clicked.connect(self.toggle_run_stop)
@@ -406,7 +436,8 @@ class YamlForm(QWidget):
 
         self.setLayout(main_layout)
         self.setWindowTitle('Oligo-bench')
-        self.load_stylesheet()
+        load_stylesheet(self)
+
 
     def toggle_run_stop(self):
         """
@@ -417,13 +448,13 @@ class YamlForm(QWidget):
             self.handle_stop()
             return
         if self.experiments_table.rowCount() == 0:
-            self.show_error("No cells in experiments table")
+            show_error(self,"No cells in experiments table")
             return
         for row in range(self.experiments_table.rowCount()):
             for col in range(self.experiments_table.columnCount()):
                 item = self.experiments_table.item(row, col)
                 if item is None or not item.text().strip():
-                    self.show_error("Some cells in experiments table are empty.")
+                    show_error(self,"Some cells in experiments table are empty.")
                     return
         if self.unsaved_changes:
             reply = QMessageBox.question(
@@ -446,6 +477,7 @@ class YamlForm(QWidget):
         self.stop_requested = False
         self.start_run()
 
+
     def start_run(self):
         """
         Runs the shell script (run.sh) and captures the output.
@@ -456,7 +488,7 @@ class YamlForm(QWidget):
 
         path = os.path.join(self.project_root, './run.sh')
         if not path:
-            self.show_error(f"File {path} does not exist")
+            show_error(self,f"File {path} does not exist")
             logger.error(f"File {path} does not exist")
             return
 
@@ -474,39 +506,26 @@ class YamlForm(QWidget):
         self.worker.finished_signal.connect(self.finish_run)
         self.worker.start()
 
-    def update_project_question(self):
-        reply = QMessageBox.warning(
-            self,
-            'Update Project',
-            "Do you really to update project? Any execution process during installation will be stopped",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-        )
-        if reply == QMessageBox.StandardButton.Yes:
-            self.run_stop_button.setEnabled(False)
-            self.add_row_button.setEnabled(False)
-            self.delete_row_button.setEnabled(False)
-            self.update_button.setEnabled(False)
-            if self.running:
-                self.handle_stop()
-            backup_path = os.path.join("/tmp/oligo_bench_temp")
-            try:
-                self.update_worker = UpdateWorker(self.project_root, backup_path)
-                self.update_worker.output_signal.connect(self.handle_output)
-                self.update_worker.error_signal.connect(self.handle_error)
-                self.update_worker.finished_signal.connect(self.finish_update)
-                self.update_worker.start()
-                self.running = True
-            except Exception as e:
-                self.handle_error(f"Error during project update: {e}. Rolling back changes.")
-                for item in os.listdir(backup_path):
-                    shutil.move(os.path.join(backup_path, item), self.project_root)
-                shutil.rmtree(backup_path)
-                self.handle_output("Rollback completed. Project restored to its original state.")
-                raise e
+
+    def open_settings_window(self):
+        self.settings_window = SettingsWindow(self.project_root)
+
+        self.run_stop_button.setEnabled(False)
+        self.add_row_button.setEnabled(False)
+        self.delete_row_button.setEnabled(False)
+
+        if self.running:
+            self.handle_stop()
+
+        self.settings_window.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        self.settings_window.destroyed.connect(self.on_settings_window_closed)
+        self.settings_window.show()
+
+    def on_settings_window_closed(self):
         self.run_stop_button.setEnabled(True)
         self.add_row_button.setEnabled(True)
         self.delete_row_button.setEnabled(True)
-        self.update_button.setEnabled(True)
+
 
     def handle_output(self, output):
         """
@@ -514,12 +533,14 @@ class YamlForm(QWidget):
         """
         self.log_window.append(f"<font color='#49A078'><pre>{output}</pre></font>")
 
+
     def handle_error(self, error_output):
         """
         Handles the error output from the worker thread and updates the log window.
         """
         self.log_window.append(f"<font color='#9b3438'><pre>Error: {error_output}</pre></font>")
         logger.info(error_output)
+
 
     def handle_stop(self):
         """
@@ -545,15 +566,6 @@ class YamlForm(QWidget):
         self.run_stop_button.setStyleSheet("")
         self.log_window.append("<font color='yellow'>Run finished.</font>")
 
-    def finish_update(self):
-        """
-        Resets the state after the script finishes.
-        """
-        self.update_worker = None
-        self.running = False
-        self.run_stop_button.setText("Run")
-        self.run_stop_button.setStyleSheet("")
-        self.log_window.append("<font color='yellow'>Update finished.</font>")
 
     def handle_cell_double_click(self, row, column):
         """
@@ -580,7 +592,7 @@ class YamlForm(QWidget):
         :return: True if all permissions are granted, otherwise False
         """
         if not os.path.exists(path):
-            self.show_error(f"File not found: {path}")
+            show_error(self,f"File not found: {path}")
             return False
 
         permissions = {
@@ -598,29 +610,12 @@ class YamlForm(QWidget):
             permission_issues.append("execute")
 
         if permission_issues:
-            self.show_error(f"Permission denied: "
+            show_error(self,f"Permission denied: "
                             f"Unable to {' and '.join(permission_issues)} '{path}'.")
             return False
 
         return True
 
-    def load_stylesheet(self):
-        """
-        Loads the stylesheet from an external file.
-
-        :return: None
-        """
-        if getattr(sys, 'frozen', False):
-            css_path = os.path.join(sys._MEIPASS, "styles", "styles.qss")
-        else:
-            css_path = os.path.join(os.path.dirname(__file__), "styles",
-                                    "styles.qss")
-        try:
-            with open(css_path, "r", encoding="utf-8") as file:
-                stylesheet = file.read()
-                self.setStyleSheet(stylesheet)
-        except (FileNotFoundError, OSError) as e:
-            self.show_error(f"Error loading stylesheet: {str(e)}")
 
     def load_csv_on_startup(self, csv_path):
         """
@@ -630,7 +625,7 @@ class YamlForm(QWidget):
         """
         try:
             if not os.path.exists(csv_path):
-                self.show_error("CSV path does not exist.")
+                show_error(self,"CSV path does not exist.")
                 return
             with open(csv_path, 'r', newline='', encoding='utf-8') as file:
                 reader = csv.reader(file)
@@ -644,7 +639,7 @@ class YamlForm(QWidget):
                         cell_value = row[col_index] if col_index < len(row) else ""
                         self.experiments_table.setItem(row_position, col_index, QTableWidgetItem(cell_value))
         except (OSError, IOError) as e:
-            self.show_error(f"Error reading CSV file: {str(e)}")
+            show_error(self,f"Error reading CSV file: {str(e)}")
             return
         self.experiments_table.resizeRowsToContents()
 
@@ -662,9 +657,9 @@ class YamlForm(QWidget):
                 self.columns_config = config.get('experiments', [])
                 self.unset_unsaved_changes()
         except (OSError, IOError) as e:
-            self.show_error(f"Error reading YAML file: {str(e)}")
+            show_error(self,f"Error reading YAML file: {str(e)}")
         except yaml.YAMLError as e:
-            self.show_error(f"Error parsing YAML file: {str(e)}")
+            show_error(self,f"Error parsing YAML file: {str(e)}")
 
     def setup_table_columns(self):
         """
@@ -690,10 +685,10 @@ class YamlForm(QWidget):
             with open(self.yaml_path, 'r', encoding='utf-8') as file:
                 current_config = yaml.safe_load(file)
         except (OSError, IOError) as e:
-            self.show_error(f"Error opening YAML file: {str(e)}")
+            show_error(self,f"Error opening YAML file: {str(e)}")
             return
         except yaml.YAMLError as e:
-            self.show_error(f"Error reading YAML data: {str(e)}")
+            show_error(self,f"Error reading YAML data: {str(e)}")
             return
 
         if 'parameters' not in current_config:
@@ -709,16 +704,16 @@ class YamlForm(QWidget):
                     if widget:
                         current_config['parameters'][widget_name]['value'] = value_getter(widget)
                 except AttributeError as e:
-                    self.show_error(f"Error accessing widget {object_name}: {str(e)}")
+                    show_error(self,f"Error accessing widget {object_name}: {str(e)}")
 
         try:
             with open(self.yaml_path, 'w', encoding='utf-8') as file:
                 yaml.dump(current_config, file, default_flow_style=False)
         except (OSError, IOError) as e:
-            self.show_error(f"Error writing to YAML file: {str(e)}")
+            show_error(self,f"Error writing to YAML file: {str(e)}")
             return
         except yaml.YAMLError as e:
-            self.show_error(f"Error handling YAML data on save: {str(e)}")
+            show_error(self,f"Error handling YAML data on save: {str(e)}")
             return
 
         self.log_window.append("YAML file saved successfully.")
@@ -730,7 +725,7 @@ class YamlForm(QWidget):
         """
 
         if self.experiments_table.rowCount() == 0:
-            self.show_error("No experiments to save.")
+            show_error(self,"No experiments to save.")
             return
         try:
             with open(self.csv_path, 'w', newline='', encoding='utf-8') as file:
@@ -744,7 +739,7 @@ class YamlForm(QWidget):
                     ]
                     writer.writerow(row_data)
         except (OSError, IOError) as e:
-            self.show_error(f"Error saving CSV file: {str(e)}")
+            show_error(self,f"Error saving CSV file: {str(e)}")
         self.log_window.append("Experiments CSV file saved successfully.")
 
     def table_cell_open_file(self, row, column):
@@ -840,13 +835,6 @@ class YamlForm(QWidget):
         else:
             event.accept()
 
-    def show_error(self, message):
-        """
-        Displays an error message in a popup window.
-        :param message: message to display
-        :return: None
-        """
-        QMessageBox.critical(self, "Error", message)
 
     def add_row(self):
         """
@@ -866,7 +854,7 @@ class YamlForm(QWidget):
         selected_indexes = self.experiments_table.selectedIndexes()
         selected_rows = set(index.row() for index in selected_indexes)
         if not selected_rows:
-            self.show_error("Please select a row to delete.")
+            show_error(self,"Please select a row to delete.")
         reply = QMessageBox.question(
             self,
             "Confirm Deletion",
@@ -907,6 +895,7 @@ class YamlForm(QWidget):
                             widget_options = widget_config.get('options', [])
                             if widget_options:
                                 widget.addItems(widget_options)
+                            widget.setCurrentText(widget_value)
                             widget.currentIndexChanged.connect(self.set_unsaved_changes)
                         elif widget_type == 'line':
                             widget.textChanged.connect(self.set_unsaved_changes)
@@ -923,7 +912,7 @@ class YamlForm(QWidget):
                             widget.valueChanged.connect(self.set_unsaved_changes)
 
                     except Exception as e:
-                        self.show_error(f"Error creating widget {object_name}: {str(e)}")
+                        show_error(self,f"Error creating widget {object_name}: {str(e)}")
 
                 if widget:
                     try:
@@ -936,9 +925,138 @@ class YamlForm(QWidget):
                         name_label.setObjectName(f"{object_name}_name_label")
                         if widget_type == 'path':
                             widget_layout.addWidget(widget_button)
+                        temp_widget.setStyleSheet("  background-color: #302c34;color:#b4b2af;")
+                        widget.setStyleSheet("  background-color: white; color:#333333;")
                         self.left_layout.addWidget(temp_widget)
                     except Exception as e:
-                        self.show_error(f"Error adding widget {object_name} to layout: {str(e)}")
+                        show_error(self,f"Error adding widget {object_name} to layout: {str(e)}")
+
+
+class SettingsWindow(QWidget):
+    def __init__(self, project_root):
+        super().__init__()
+        self.setWindowTitle("Settings")
+        self.setGeometry(300, 300, 300, 200)
+        self.project_root = project_root
+        self.original_save_path = self.get_current_save_path()
+        self.update_worker = None
+        load_stylesheet(self)
+
+        layout = QVBoxLayout(self)
+
+        self.update_button = QPushButton("Update", self)
+        self.update_button.clicked.connect(self.update_qc)
+        layout.addWidget(self.update_button)
+
+        self.save_path_label = QLabel("Save Path:")
+        self.save_path_input = QLineEdit(self.original_save_path, self)
+        self.save_path_input.setReadOnly(True)
+        self.save_path_input.textChanged.connect(self.check_changes)
+        self.path_button = QPushButton("Choose path", self)
+        self.path_button.clicked.connect(self.open_dir)
+        layout.addWidget(self.path_button)
+        layout.addWidget(self.save_path_label)
+        layout.addWidget(self.save_path_input)
+
+        self.apply_button = QPushButton("Apply Changes", self)
+        self.apply_button.setEnabled(False)
+        self.apply_button.clicked.connect(self.apply_changes)
+        layout.addWidget(self.apply_button)
+
+        self.setLayout(layout)
+
+    def get_current_save_path(self):
+        """Retrieve the current save_path from the YAML file."""
+        yaml_path = os.path.join(self.project_root, "config", "config.yaml")
+        try:
+            with open(yaml_path, "r") as f:
+                settings = yaml.safe_load(f)
+                return settings["settings"]["save_path"]
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to load save path: {e}")
+
+    def check_changes(self):
+        """Enable or disable the Apply button based on changes to the save path."""
+        current_text = self.save_path_input.text()
+        self.apply_button.setEnabled(current_text != self.original_save_path)
+
+    def apply_changes(self):
+        yaml_path = os.path.join(self.project_root, "config", "config.yaml")
+        try:
+            with open(yaml_path, "r") as f:
+                settings = yaml.safe_load(f)
+
+            settings["settings"]["save_path"] = self.save_path_input.text()
+
+            with open(yaml_path, "w") as f:
+                yaml.safe_dump(settings, f)
+
+            QMessageBox.information(self, "Success", "Settings have been updated.")
+            self.original_save_path = self.save_path_input.text()
+            self.apply_button.setEnabled(False)
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to update settings: {e}")
+
+
+    def update_qc(self):
+        reply = QMessageBox.warning(
+            self,
+            'Update Project',
+            "Do you really to update project? Any execution process during installation will be stopped",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        if reply == QMessageBox.StandardButton.Yes:
+            self.update_button.setEnabled(False)
+            self.apply_button.setEnabled(False)
+            backup_path = os.path.join("/tmp/oligo_bench_temp")
+            try:
+                self.update_worker = UpdateWorker(self.project_root, backup_path)
+                self.update_worker.output_signal.connect(self.handle_output)
+                self.update_worker.error_signal.connect(self.handle_error)
+                self.update_worker.finished_signal.connect(self.finish_update)
+                self.update_worker.start()
+            except Exception as e:
+                self.handle_error(f"Error during project update: {e}. Rolling back changes.")
+                for item in os.listdir(backup_path):
+                    shutil.move(os.path.join(backup_path, item), self.project_root)
+                shutil.rmtree(backup_path)
+                self.handle_output("Rollback completed. Project restored to its original state.")
+                raise e
+        self.update_button.setEnabled(True)
+        self.apply_button.setEnabled(True)
+
+    def open_dir(self):
+        """
+        Opens a file dialog to select a directory and sets result to save_path in YAML file
+        :return: None
+        """
+        current_text = self.save_path_input.text()
+        selected_path = self.open_file_dialog(current_text)
+        self.save_path_input.setText(selected_path)
+
+    def open_file_dialog(self, old_value: str):
+        """
+        Opens a file dialog to select a directory.
+        If the selected path is empty, it returns the old value instead.
+
+        :param old_value: str (the previous path to fall back to if nothing is selected)
+        :return: selected_path: str
+        """
+        selected_path = QFileDialog.getExistingDirectory(self, "Select Folder", "")
+        if not selected_path:
+            return old_value
+        return selected_path
+
+    def handle_output(self, message):
+        QMessageBox.information(self, "Output", message)
+
+    def handle_error(self, message):
+        QMessageBox.critical(self, "Error", message)
+
+    def finish_update(self):
+        QMessageBox.information(self, "Update", "Project update completed successfully.")
+        self.update_worker = None
+        self.update_button.setEnabled(True)
 
 
 if __name__ == '__main__':
