@@ -40,7 +40,6 @@ logger.addHandler(handler)
 
 
 class UpdateWorker(QThread):
-    output_signal = pyqtSignal(str)
     error_signal = pyqtSignal(str)
     finished_signal = pyqtSignal()
     def __init__(self,project_root,backup_path, parent=None):
@@ -76,7 +75,6 @@ class UpdateWorker(QThread):
         temp_config_path = os.path.join(self.backup_path, "config")
         temp_dorado_path = os.path.join(self.backup_path, "dorado")
 
-        self.output_signal.emit("Starting download process...")
         logger.info("Starting download process...")
 
         if os.path.exists(self.backup_path):
@@ -87,11 +85,9 @@ class UpdateWorker(QThread):
             item_path = os.path.join(self.project_root, item)
             if os.path.basename(item_path) != "logs":
                 shutil.move(item_path, self.backup_path)
-        self.output_signal.emit(f"Moved project contents to rollback backup at {self.backup_path}")
         logger.info(f"Moved project contents to rollback backup at {self.backup_path}")
 
         try:
-            self.output_signal.emit(f"Downloading archive from {zip_url}")
             logger.info(f"Downloading archive from {zip_url}")
             response = requests.get(zip_url, stream=True)
             response.raise_for_status()
@@ -102,7 +98,6 @@ class UpdateWorker(QThread):
             self.error_signal.emit(f"Failed to download the zip archive: {e}")
             logger.error(f"Failed to download the zip archive: {e}")
             raise RuntimeError(f"Failed to download the zip archive: {e}")
-        self.output_signal.emit(f"Downloaded archive to {zip_path}")
         logger.info(f"Downloaded archive to {zip_path}")
 
         try:
@@ -111,45 +106,36 @@ class UpdateWorker(QThread):
             self.error_signal.emit(f"Error unpacking zip file: {e}")
             logger.error(f"Error unpacking zip file: {e}")
             raise e
-        self.output_signal.emit("Extracted archive contents")
         logger.info("Extracted archive contents")
 
         os.remove(zip_path)
-        self.output_signal.emit(f"Removed zip file in {zip_path}")
         logger.info(f"Removed zip file in {zip_path}")
 
         extracted_folder = os.path.join(self.project_root, "oligo-bench-main")
         for item in os.listdir(extracted_folder):
             shutil.move(os.path.join(extracted_folder, item), self.project_root)
         shutil.rmtree(extracted_folder)
-        self.output_signal.emit("Moved contents from downloaded zip to project root")
         logger.info("Moved contents from downloaded zip to project root")
 
         shutil.move(temp_oligo_path, oligo_path)
-        self.output_signal.emit("Moved oligo environment folder from temporary path to project root")
         logger.info("Moved oligo environment folder from temporary path to project root")
 
         shutil.move(temp_dorado_path, dorado_path)
-        self.output_signal.emit("Moved dorado folder from temporary path to project root")
         logger.info("Moved dorado folder from temporary path to project root")
 
         experiments_csv_path = os.path.join(config_folder_path, "experiments.csv")
         os.remove(experiments_csv_path)
-        self.output_signal.emit(f"Removed experiments default csv file in {experiments_csv_path}")
         logger.info(f"Removed experiments default csv file in {experiments_csv_path}")
 
         shutil.copy(os.path.join(temp_config_path, "experiments.csv"), experiments_csv_path)
-        self.output_signal.emit("Replaced default experiments.csv file with saved data")
         logger.info("Replaced default experiments.csv file with saved data")
 
         temp_config_yaml = os.path.join(temp_config_path, "config.yaml")
         self.transfer_values(temp_config_yaml, os.path.join(config_folder_path, "config.yaml"))
 
         shutil.rmtree(self.backup_path)
-        self.output_signal.emit("Removed backup folder for rolling back changes")
         logger.info("Removed backup folder for rolling back changes")
 
-        self.output_signal.emit("Project update completed successfully")
         logger.info("Project update completed successfully")
         self.finished_signal.emit()
         
@@ -201,7 +187,6 @@ class UpdateWorker(QThread):
             logger.error(f"Error writing to target file '{target_file}': {e}")
             raise
 
-        self.output_signal.emit(f"Successfully transferred values from '{source_file}' to '{target_file}'.")
         logger.info(f"Successfully transferred values from '{source_file}' to '{target_file}'.")
 
             
@@ -1035,7 +1020,6 @@ class SettingsWindow(QWidget):
                 for item in os.listdir(backup_path):
                     shutil.move(os.path.join(backup_path, item), self.project_root)
                 shutil.rmtree(backup_path)
-                self.handle_output("Rollback completed. Project restored to its original state.")
                 raise e
         self.update_button.setEnabled(True)
         self.apply_button.setEnabled(True)
