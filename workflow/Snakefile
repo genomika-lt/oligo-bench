@@ -20,3 +20,5 @@ include: "rules/converters.smk"
 rule all:
     input:
         f"{config["settings"]["save_path"]}/report.html",
+    shell:
+        f"open {config["settings"]["save_path"]}/report.html"
