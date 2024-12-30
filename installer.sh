@@ -13,6 +13,7 @@ sudo chmod a+rwx Miniforge3-Linux-x86_64.sh
 ./Miniforge3-Linux-x86_64.sh -b
 rm ./Miniforge3-Linux-x86_64.sh
 ~/miniforge3/condabin/conda init --all
+~/miniforge3/condabin/conda config --set channel_priority strict
 
 echo "Installing packages"
 ~/miniforge3/condabin/conda create -c conda-forge -c bioconda -p oligo_bench/oligo snakemake minimap2 last samtools pandas snakefmt pysam plotly PyYAML requests -y

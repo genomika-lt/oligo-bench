@@ -22,17 +22,7 @@ QLabel {
     border-bottom-left-radius: 0px;
     border-bottom-right-radius: 10px;
 }
-#basecall_checkbox{
 
-    border-radius: 8px
-}
-#basecall_checkbox_name_label{
-    background-color: #302c34;
-    color:#b4b2af;
-}
-#basecall_checkbox_layout{
-    background-color: #302c34;
-}
 #dorado_model_combobox_name_label{
     background-color: #302c34;
     color:#b4b2af;
@@ -40,6 +30,10 @@ QLabel {
 #dorado_model_combobox_layout{
     background-color: #302c34;
 }
+QSpinBox{
+    background-color:white;
+}
+
 QPushButton {
     background-color: #49A078; /* Normal state */
     color: white;

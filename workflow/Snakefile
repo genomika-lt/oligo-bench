@@ -2,8 +2,15 @@ configfile: "config/config.yaml"
 
 
 include: "rules/common.smk"
-include: "rules/dorado_basecaller.smk"
-include: "rules/filter_basecalled.smk"
+
+if config["parameters"]["dorado_model"]["value"] != "None":
+    include: "rules/dorado_basecaller.smk"
+else:
+    include: "rules/bam_provider.smk"
+
+include: "rules/filters/filter_basecalled.smk"
+include: "rules/filters/filter_aligned.smk"
+
 include: "rules/aligners/last.smk"
 include: "rules/aligners/minimap2.smk"
 include: "rules/statistics/statistics.smk"

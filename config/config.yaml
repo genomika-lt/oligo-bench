@@ -1,24 +1,3 @@
-basecalling:
-  allowed_primer_errors:
-    label: Allowed primers errors
-    max_value: 10
-    min_value: 0
-    type: integer
-    value: 5
-  dorado_model:
-    label: Dorado model
-    options:
-    - fast
-    - hac
-    - sup
-    type: combobox
-    value: fast
-  minimum_quality:
-    label: Minimum Quality
-    max_value: 10
-    min_value: 0
-    type: integer
-    value: 10
 experiments:
 - column: path_to_sample
   type: folder
@@ -28,5 +7,27 @@ experiments:
   type: plaintxt
 - column: reverse_primer
   type: plaintxt
+parameters:
+  allowed_primer_errors:
+    label: Allowed primers errors
+    max_value: 10
+    min_value: 0
+    type: integer
+    value: 5
+  dorado_model:
+    label: Dorado model
+    options:
+    - None
+    - fast
+    - hac
+    - sup
+    type: combobox
+    value: fast
+  minimum_basecalling_quality:
+    label: Minimum Quality
+    max_value: 10
+    min_value: 0
+    type: integer
+    value: 10
 settings:
-  save_path: testresults
+  save_path: results
