@@ -80,7 +80,7 @@ class UpdateWorker(QThread):
         logger.info("Starting download process...")
 
         if os.path.exists(self.backup_path):
-            os.remove(self.backup_path)
+            shutil.rmtree(self.backup_path)
 
         os.makedirs(self.backup_path, exist_ok=True)
         for item in os.listdir(self.project_root):
@@ -1027,7 +1027,6 @@ class SettingsWindow(QWidget):
             backup_path = os.path.join("/tmp/oligo_bench_temp")
             try:
                 self.update_worker = UpdateWorker(self.project_root, backup_path)
-                self.update_worker.output_signal.connect(self.handle_output)
                 self.update_worker.error_signal.connect(self.handle_error)
                 self.update_worker.finished_signal.connect(self.finish_update)
                 self.update_worker.start()
@@ -1062,9 +1061,6 @@ class SettingsWindow(QWidget):
         if not selected_path:
             return old_value
         return selected_path
-
-    def handle_output(self, message):
-        QMessageBox.information(self, "Output", message)
 
     def handle_error(self, message):
         QMessageBox.critical(self, "Error", message)
