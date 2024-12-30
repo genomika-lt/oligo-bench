@@ -1,8 +1,9 @@
+name: plotly
 channel_priority: strict
 channels:
   - conda-forge
   - bioconda
 dependencies:
-  - plotly = 5.23.0
+  - plotly = 5.24.1
   - pysam = 0.22.1
-  - pandas = 2.2.2
+  - pandas = 2.2.3

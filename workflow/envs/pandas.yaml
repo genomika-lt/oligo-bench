@@ -1,6 +1,7 @@
+name: pandas
 channel_priority: strict
 channels:
   - conda-forge
-  - nodefaults
+  - bioconda
 dependencies:
-  - pandas = 2.2.2
+  - pandas = 2.2.3

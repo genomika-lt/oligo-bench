@@ -1,3 +1,12 @@
+experiments:
+- column: path_to_sample
+  type: folder
+- column: path_to_reference
+  type: fa
+- column: forward_primer
+  type: plaintxt
+- column: reverse_primer
+  type: plaintxt
 parameters:
   allowed_primer_errors:
     label: Allowed primers errors
@@ -13,21 +22,12 @@ parameters:
     - hac
     - sup
     type: combobox
-    value: None
+    value: fast
   minimum_basecalling_quality:
     label: Minimum Quality
     max_value: 10
     min_value: 0
     type: integer
     value: 10
-experiments:
-- column: path_to_sample
-  type: folder
-- column: path_to_reference
-  type: fa
-- column: forward_primer
-  type: plaintxt
-- column: reverse_primer
-  type: plaintxt
 settings:
   save_path: results

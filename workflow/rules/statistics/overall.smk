@@ -1,4 +1,3 @@
-from os import lseek
 
 rule count_total_reads_number:
     input:
@@ -242,7 +241,7 @@ rule mapping_table:
 
 rule payload_errors_number:
     input:
-        expand("results/aligned/filtered_{sample_id}.bam", sample_id=samples["sample_id"]),
+        expand("results/aligned/passed_{sample_id}.bam", sample_id=samples["sample_id"]),
         expand("results/mapping/primers_{sample_id}.fa", sample_id=samples["sample_id"]),
     output:
         "results/statistics/total/payload_errors_number.csv"
