@@ -6,8 +6,10 @@ logs/**
 
 # Conda
 oligo
+
 # Dorado
 .temp_dorado_model*
+dorado
 
 # PyCharm
 .idea/
