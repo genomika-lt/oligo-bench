@@ -79,6 +79,9 @@ class UpdateWorker(QThread):
         self.output_signal.emit("Starting download process...")
         logger.info("Starting download process...")
 
+        if os.path.exists(self.backup_path):
+            os.remove(self.backup_path)
+
         os.makedirs(self.backup_path, exist_ok=True)
         for item in os.listdir(self.project_root):
             item_path = os.path.join(self.project_root, item)
