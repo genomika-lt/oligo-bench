@@ -936,7 +936,7 @@ class SettingsWindow(QWidget):
     def __init__(self, project_root):
         super().__init__()
         self.setWindowTitle("Settings")
-        self.setGeometry(300, 300, 300, 200)
+        self.setGeometry(400, 400, 500, 300)
         self.project_root = project_root
         self.original_save_path = self.get_current_save_path()
         self.update_worker = None
@@ -944,9 +944,17 @@ class SettingsWindow(QWidget):
 
         layout = QVBoxLayout(self)
 
+        self.version_label = QLabel("Version: 1.2")
+
         self.update_button = QPushButton("Update", self)
         self.update_button.clicked.connect(self.update_qc)
-        layout.addWidget(self.update_button)
+
+        update_widget = QWidget()
+        update_layout = QHBoxLayout(update_widget)
+        update_layout.addWidget(self.version_label)
+        update_layout.addWidget(self.update_button)
+
+        layout.addWidget(update_widget)
 
         self.save_path_label = QLabel("Save Path:")
         self.save_path_input = QLineEdit(self.original_save_path, self)
@@ -954,15 +962,20 @@ class SettingsWindow(QWidget):
         self.save_path_input.textChanged.connect(self.check_changes)
         self.path_button = QPushButton("Choose path", self)
         self.path_button.clicked.connect(self.open_dir)
-        layout.addWidget(self.path_button)
-        layout.addWidget(self.save_path_label)
-        layout.addWidget(self.save_path_input)
 
         self.apply_button = QPushButton("Apply Changes", self)
         self.apply_button.setEnabled(False)
         self.apply_button.clicked.connect(self.apply_changes)
-        layout.addWidget(self.apply_button)
 
+        temp_widget = QWidget()
+        path_layout = QHBoxLayout(temp_widget)
+        path_layout.addWidget(self.save_path_label)
+        path_layout.addWidget(self.save_path_input)
+        path_layout.addWidget(self.path_button)
+
+        layout.addWidget(temp_widget)
+
+        layout.addWidget(self.apply_button)
         self.setLayout(layout)
 
     def get_current_save_path(self):
