@@ -14,6 +14,7 @@ rule finalise_report:
         # "results/statistics/quality_per_base_position.html",
         "results/statistics/pore_activity.html",
         "results/statistics/pore_scan.html",
+        "results/statistics/cumulative_number_bases.html",
     output:
         f"{config["settings"]["save_path"]}/report.html",
     log:

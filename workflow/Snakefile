@@ -11,6 +11,8 @@ else:
 include: "rules/filters/filter_basecalled.smk"
 include: "rules/filters/filter_aligned.smk"
 
+include: "rules/sorters/sorter_passed.smk"
+
 include: "rules/aligners/last.smk"
 include: "rules/aligners/minimap2.smk"
 include: "rules/statistics/statistics.smk"
