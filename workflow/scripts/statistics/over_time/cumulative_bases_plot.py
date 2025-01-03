@@ -86,7 +86,7 @@ def cumulative_bases_plot(path_to_samples, sorted_bam_file, output_file):
         x=time_points,
         y=theoretical_values,
         mode='lines',
-        name=f'{flow_cell_type.upper()} ({flow_cell_data[flow_cell_type]["gb"]} Gb) t.n.b',
+        name=f'{flow_cell_type.upper()} ({flow_cell_data[flow_cell_type]["gb"]}) t.n.b',
         line={"color": 'red', "dash": 'dot'}
     ))
 
@@ -108,10 +108,10 @@ def cumulative_bases_plot(path_to_samples, sorted_bam_file, output_file):
 
     fig.update_layout(
         title="Cumulative number of bases",
-        xaxis_title="Time(sec)",
+        xaxis_title="Time",
         yaxis_title="Number of Bases (Gb)",
         xaxis={"tickformat": '%H:%M', "title_standoff": 25},
-        yaxis={"title_standoff": 25, "type": 'log', "tickformat": '.2e'},
+        yaxis={"title_standoff": 25, "type": 'log'},
         margin={"l": 50, "r": 50, "t": 50, "b": 50}
     )
 
