@@ -17,6 +17,7 @@ include: "rules/aligners/last.smk"
 include: "rules/aligners/minimap2.smk"
 include: "rules/statistics/statistics.smk"
 include: "rules/converters.smk"
+include: "rules/fasta_provider.smk"
 
 
 rule all:
