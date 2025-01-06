@@ -1,2 +1,2 @@
 path_to_sample,path_to_reference,forward_primer,reverse_primer
-test/ont-test-data/PHLOX_1/20240129_1448_MN39294_ARI562_606caa21/,resources/ref.fa,CTACAACGCAGATTACAACCTCAGTG,GGTAACGCTGGCAAGGATGG
+test/ont-test-data/PHLOX_1/20240129_1448_MN39294_ARI562_606caa21/,resources/ref.txt,CTACAACGCAGATTACAACCTCAGTG,GGTAACGCTGGCAAGGATGG

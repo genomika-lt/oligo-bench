@@ -83,3 +83,19 @@ rule read_length_over_time_as_line:
         "../../envs/plotly.yaml"
     script:
         "../../scripts/statistics/over_time/read_length_over_time_as_line.py"
+
+rule cumulative_number_bases:
+    input:
+        path_to_samples = samples["path_to_sample"],
+        bam_file = expand(
+            "results/sorted/sorted_{sample_id}.bam",
+            sample_id=samples["sample_id"],
+        ),
+    output:
+        "results/statistics/cumulative_number_bases.html",
+    log:
+        "logs/cumulative_bases_plot.log",
+    conda:
+        "../../envs/plotly.yaml"
+    script:
+        "../../scripts/statistics/over_time/cumulative_bases_plot.py"
