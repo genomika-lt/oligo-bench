@@ -56,8 +56,12 @@ def get_fastq_files(wildcards):
         fastq_directory = os.path.join(path, subdir)
         if os.path.exists(fastq_directory) and os.path.isdir(fastq_directory):
             for file in os.listdir(fastq_directory):
-                if file.endswith(".fastq"):
+                if file.endswith(".fastq.gz") or file.endswith(".fastq"):
                     fastq_files.append(os.path.join(fastq_directory,file))
+
+    for file in os.listdir(path):
+        if file.endswith(".fastq.gz") or file.endswith(".fastq"):
+            fastq_files.append(os.path.join(path,file))
 
     return fastq_files
 
@@ -75,5 +79,9 @@ def get_bam_files(wildcards):
             for file in os.listdir(bam_directory):
                 if file.endswith(".bam"):
                     bam_files.append(os.path.join(bam_directory,file))
+
+    for file in os.listdir(path):
+        if file.endswith(".bam"):
+            bam_files.append(os.path.join(path,file))
 
     return bam_files
