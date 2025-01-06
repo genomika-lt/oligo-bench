@@ -1,6 +1,6 @@
 rule minimap2:
     input:
-        target=get_reference,
+        target="results/reference/{sample_id}.fa",
         query="results/basecalled/passed_{sample_id}.bam",
     output:
         "results/aligned/{sample_id}.bam",

@@ -2,7 +2,7 @@ experiments:
 - column: path_to_sample
   type: folder
 - column: path_to_reference
-  type: fa
+  type: txt
 - column: forward_primer
   type: plaintxt
 - column: reverse_primer
