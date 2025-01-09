@@ -20,11 +20,12 @@ import PyQt6.QtCore
 import requests
 import yaml
 from PyQt6.QtCore import Qt  # pylint: disable=E0611
+from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import (QApplication, QWidget, QVBoxLayout,
                              QHBoxLayout, QLabel, QComboBox, QPushButton,
                              QCheckBox, QTableWidget, QTableWidgetItem,
                              QHeaderView, QAbstractItemView, QMessageBox,
-                             QTextEdit, QSplitter, QFileDialog, QLineEdit, QSpinBox)
+                             QTextEdit, QSplitter, QFileDialog, QLineEdit, QSpinBox, QMenu)
 from PyQt6.QtCore import QThread, pyqtSignal
 
 log_dir = os.path.join(os.path.dirname(__file__), "logs")
@@ -326,6 +327,7 @@ class YamlForm(QWidget):
         self.log_window = None
 
         self.columns_config = []
+        self.current_columns_type= {}
         self.yaml_config = {}
         self.experiments_table = None
 
@@ -426,6 +428,9 @@ class YamlForm(QWidget):
         self.setWindowTitle('Oligo-bench')
         load_stylesheet(self)
 
+        self.experiments_table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.experiments_table.customContextMenuRequested.connect(self.handle_right_click)
+
 
     def toggle_run_stop(self):
         """
@@ -514,6 +519,33 @@ class YamlForm(QWidget):
         self.add_row_button.setEnabled(True)
         self.delete_row_button.setEnabled(True)
 
+    def handle_right_click(self, pos):
+        """
+        Handle right-click event to show context menu.
+        :param pos: Position of the mouse when right-clicked.
+        """
+        column = self.experiments_table.columnAt(pos.x())
+        switch_column_type = self.columns_config[column].get("switch_type")
+
+        if switch_column_type:
+            current_type = self.current_columns_type[column]
+            original_type = self.columns_config[column].get("type")
+            reverse_type = switch_column_type if current_type == original_type else original_type
+
+            context_menu = QMenu(self.experiments_table)
+            edit_action = QAction(f"Change type to: {reverse_type}", self.experiments_table)
+            edit_action.triggered.connect(lambda: self.set_column_type(column, reverse_type))
+            context_menu.addAction(edit_action)
+
+            context_menu.exec(self.experiments_table.mapToGlobal(pos))
+
+    def set_column_type(self, column, new_type):
+        """
+        Update the type of the specified column.
+        :param column: The column index.
+        :param new_type: The new type to set.
+        """
+        self.current_columns_type[column] = new_type
 
     def handle_output(self, output):
         """
@@ -561,7 +593,7 @@ class YamlForm(QWidget):
         :param row: Row of the cell
         :param column: Column of the cell
         """
-        column_type = self.columns_config[column].get("type")
+        column_type = self.current_columns_type[column]
         if column_type == "plaintxt":
             item = self.experiments_table.item(row, column)
             if not item:
@@ -643,6 +675,9 @@ class YamlForm(QWidget):
                     config = yaml.safe_load(file)
                 self.yaml_config = config.get('parameters', {})
                 self.columns_config = config.get('experiments', [])
+                self.columns_config = config.get('experiments', [])
+                for index, column_info in enumerate(self.columns_config):
+                    self.current_columns_type[index] =  column_info.get("type")
                 self.unset_unsaved_changes()
         except (OSError, IOError) as e:
             show_error(self,f"Error reading YAML file: {str(e)}")
