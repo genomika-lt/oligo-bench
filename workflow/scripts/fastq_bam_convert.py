@@ -2,6 +2,9 @@
 
 import numpy as np
 import pysam
+import gzip
+import shutil
+
 from snakemake.script import snakemake
 
 # pylint: disable=import-error
@@ -67,6 +70,7 @@ def convert_fastq_to_bam(fastq_files: list[str], bam_file: str):
 
                     bam.write(read)
 
+
 @snakemake_file_logger
 def provide_bam(fastq_files: list[str],
                     bam_files: list[str],
@@ -74,9 +78,29 @@ def provide_bam(fastq_files: list[str],
     if bam_files:
         return merge_bam_files(bam_files, bam_file)
     if fastq_files:
+        fastq_files = unzip_fastq_files(fastq_files)
         return convert_fastq_to_bam(fastq_files, bam_file)
     sample_id = bam_file.split("/")[-1].split(".")[0]
     raise FileNotFoundError(f"No FASTQ or BAM files found in {sample_id}")
+
+
+def unzip_fastq_files(fastq_files: list[str]) -> list[str]:
+    """
+    Ensures all FASTQ files are uncompressed. If a file is .gz, unzip it.
+    :param fastq_files: list of FASTQ files
+    :return: list of uncompressed FASTQ files
+    """
+    unzipped_files = []
+    for file in fastq_files:
+        if file.endswith(".gz"):
+            unzipped_file = file[:-3]
+            with gzip.open(file, 'rb') as f_in:
+                with open(unzipped_file, 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+            unzipped_files.append(unzipped_file)
+        else:
+            unzipped_files.append(file)
+    return unzipped_files
 
 
 def merge_bam_files(bam_files: list[str], bam_file: str):
