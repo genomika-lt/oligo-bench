@@ -1,6 +1,9 @@
 rule minimap2:
     input:
-        target="results/reference/{sample_id}.fa",
+        target=expand(
+            "results/reference/{ref_name}.fa",
+            ref_name=samples["ref_name"],
+        ),
         query="results/basecalled/passed_{sample_id}.bam",
     output:
         "results/aligned/{sample_id}.bam",

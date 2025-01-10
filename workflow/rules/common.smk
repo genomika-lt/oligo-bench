@@ -11,9 +11,13 @@ samples.loc[:, "sample_id"] = [
     line.strip(char).split(char)[-2] for line in samples["path_to_sample"]
 ]
 
+samples.loc[:, "ref_name"] = [
+    os.path.splitext(os.path.basename(line.strip(char)))[0] for line in samples["path_to_reference"]
+]
 
 wildcard_constraints:
     sample_id="|".join(samples.loc[:, "sample_id"]),
+    ref_name = "|".join(samples.loc[:, "ref_name"])
 
 
 def get_pod5_directory(wildcards):
@@ -27,6 +31,13 @@ def get_pod5_directory(wildcards):
 def get_reference(wildcards):
     path_to_reference = samples.loc[
         samples["sample_id"] == wildcards.sample_id, "path_to_reference"
+    ].values[0]
+    return path_to_reference
+
+
+def get_reference_name(wildcards):
+    path_to_reference = samples.loc[
+        samples["ref_name"] == wildcards.ref_name, "path_to_reference"
     ].values[0]
     return path_to_reference
 
