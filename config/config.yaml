@@ -29,6 +29,6 @@ parameters:
     max_value: 10
     min_value: 0
     type: integer
-    value: 10
+    value: 9
 settings:
   save_path: results
