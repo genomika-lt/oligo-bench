@@ -274,8 +274,8 @@ rule coverage_plot:
             sample_id=samples["sample_id"],
         ),
         expand(
-            "results/reference/{sample_id}.fa",
-            sample_id=samples["sample_id"],
+            "results/reference/{ref_name}.fa",
+            ref_name=samples["ref_name"],
         ),
     output:
         "results/statistics/coverage_plot.html",

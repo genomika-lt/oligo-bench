@@ -24,8 +24,7 @@ def read_quality_histogram(bam_files, output_file):
         data = {}
         number_of_reads = 0
         for read in parse_sam_bam_file(path_to_sample):
-            quality_string = read.query_qualities
-            mean_quality = sum(quality_string) // len(quality_string)
+            mean_quality = round(read.get_tag("qs"))
 
             if mean_quality not in data:
                 data[mean_quality] = 1

@@ -3,6 +3,7 @@ experiments:
   type: folder
 - column: path_to_reference
   type: txt
+  switch_type: plaintxt
 - column: forward_primer
   type: plaintxt
 - column: reverse_primer
@@ -28,6 +29,6 @@ parameters:
     max_value: 10
     min_value: 0
     type: integer
-    value: 10
+    value: 9
 settings:
   save_path: results

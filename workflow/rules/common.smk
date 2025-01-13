@@ -11,9 +11,13 @@ samples.loc[:, "sample_id"] = [
     line.strip(char).split(char)[-2] for line in samples["path_to_sample"]
 ]
 
+samples.loc[:, "ref_name"] = [
+    os.path.splitext(os.path.basename(line.strip(char)))[0] for line in samples["path_to_reference"]
+]
 
 wildcard_constraints:
     sample_id="|".join(samples.loc[:, "sample_id"]),
+    ref_name = "|".join(samples.loc[:, "ref_name"])
 
 
 def get_pod5_directory(wildcards):
@@ -27,6 +31,13 @@ def get_pod5_directory(wildcards):
 def get_reference(wildcards):
     path_to_reference = samples.loc[
         samples["sample_id"] == wildcards.sample_id, "path_to_reference"
+    ].values[0]
+    return path_to_reference
+
+
+def get_reference_name(wildcards):
+    path_to_reference = samples.loc[
+        samples["ref_name"] == wildcards.ref_name, "path_to_reference"
     ].values[0]
     return path_to_reference
 
@@ -56,8 +67,12 @@ def get_fastq_files(wildcards):
         fastq_directory = os.path.join(path, subdir)
         if os.path.exists(fastq_directory) and os.path.isdir(fastq_directory):
             for file in os.listdir(fastq_directory):
-                if file.endswith(".fastq"):
+                if file.endswith(".fastq.gz") or file.endswith(".fastq"):
                     fastq_files.append(os.path.join(fastq_directory,file))
+
+    for file in os.listdir(path):
+        if file.endswith(".fastq.gz") or file.endswith(".fastq"):
+            fastq_files.append(os.path.join(path,file))
 
     return fastq_files
 
@@ -75,5 +90,9 @@ def get_bam_files(wildcards):
             for file in os.listdir(bam_directory):
                 if file.endswith(".bam"):
                     bam_files.append(os.path.join(bam_directory,file))
+
+    for file in os.listdir(path):
+        if file.endswith(".bam"):
+            bam_files.append(os.path.join(path,file))
 
     return bam_files
