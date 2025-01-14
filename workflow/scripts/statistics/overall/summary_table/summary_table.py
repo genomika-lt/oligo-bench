@@ -56,8 +56,8 @@ def summary_table(csv_files, output_file):
                      'Passed GC']
 
     body_values_percentage = [total_reads_number.loc[:, 'Sample'],
-                   "100 %",
-                   "100 %",
+                   ["100 %"] * len(total_reads_number),
+                   ["100 %"] * len(total_reads_number),
                    passed_reads_ratio.apply(ratio_to_percentage_string, args=(2,)),
                    passed_bases_ratio.apply(ratio_to_percentage_string, args=(2,)),
                    timestamps.loc[:, 'Duration'].apply(lambda x:
@@ -85,7 +85,7 @@ def summary_table(csv_files, output_file):
             dict(
                 type="buttons",
                 direction="right",
-                active=0,
+                active=1,
                 buttons=list([
                     dict(label="Percentage",
                          method="update",
