@@ -33,29 +33,53 @@ def mapping_table(csv_files, output_file):
     bases_alphabet = ('b', 'Kb', 'Mb', 'Gb', 'Tb', 'Pb')
 
     forward_reads_ratio = pd.read_csv(csv_files['forward_reads'])
+    passed_reads_number = pd.read_csv(csv_files['passed_reads'])
     mapped_reads = pd.read_csv(csv_files['mapped_reads'])
     mapped_bases = pd.read_csv(csv_files['mapped_bases'])
     total_bases = pd.read_csv(csv_files['total_bases'])
 
     mapped_bases_percent = mapped_bases.loc[:, 'Mapped Bases'] / total_bases.loc[:, 'Total Bases']
+    passed_reads_mapped_reads_ratio = (mapped_reads.loc[:, 'Mapped Reads']
+                          /  passed_reads_number.loc[:, 'Passed Reads'])
+
     header_values = ['Sample ID',
                      'Mapped Reads',
                      'Mapped Bases',
-                     'Mapped Bases',
                      'Forward Reads']
 
-    body_values = [forward_reads_ratio.loc[:, 'Sample'],
+    body_values_number = [forward_reads_ratio.loc[:, 'Sample'],
                    mapped_reads.loc[:, 'Mapped Reads'].apply(integer_to_human_readable),
                    mapped_bases.loc[:, 'Mapped Bases'].apply(integer_to_human_readable,
                                                              args=(bases_alphabet,)),
-                   mapped_bases_percent.apply(ratio_to_percentage_string, args=(2,)),
                    forward_reads_ratio.loc[:, 'Forward Reads'].apply(ratio_to_percentage_string, args=(2,))]
 
+    body_values_percentage = [forward_reads_ratio.loc[:, 'Sample'],
+                    passed_reads_mapped_reads_ratio.apply(ratio_to_percentage_string, args=(2,)),
+                    mapped_bases_percent.apply(ratio_to_percentage_string, args=(2,)),
+                    forward_reads_ratio.loc[:, 'Forward Reads'].apply(ratio_to_percentage_string, args=(2,))]
+
     figure = go.Figure(data=[go.Table(header={'values': header_values},
-                                      cells={'values': body_values,
+                                      cells={'values': body_values_number,
                                              'height': 25})])
     figure.update_layout(height=25 * forward_reads_ratio.shape[0] + 50,
                          margin={'r': 5, 'l': 5, 't': 5, 'b': 5})
+
+    figure.update_layout(
+        updatemenus=[
+            dict(
+                type="buttons",
+                direction="right",
+                active=1,
+                buttons=list([
+                    dict(label="Percentage",
+                         method="update",
+                         args=[{'cells': {'values': body_values_percentage}}]),
+                    dict(label="Quantity",
+                         method="update",
+                         args=[{'cells': {'values': body_values_number}}]),
+                ]),
+            )
+        ])
 
     with open(output_file, 'w', encoding='utf-8') as g:
         g.write(figure.to_html(full_html=False, include_plotlyjs='cdn'))

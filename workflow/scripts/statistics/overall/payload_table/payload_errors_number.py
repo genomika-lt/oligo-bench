@@ -30,7 +30,7 @@ def payload_errors_number(sam_bam_files, output_file):
             total_reads += 1
             total_error += read.get_tag('NM') / len(read.query_qualities)
 
-        sample = file.split('/')[-1].split('.')[0][9:]
+        sample = file.split('/')[-1].split('.')[0].split('_', 1)[-1]
         data['Sample'].append(sample)
         data['Payload Errors'].append(total_error / total_reads)
 

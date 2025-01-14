@@ -229,6 +229,7 @@ rule mapping_table:
         mapped_reads="results/statistics/total/mapped_primers_reads_number.csv",
         mapped_bases="results/statistics/total/mapped_primers_bases_number.csv",
         total_bases="results/statistics/total/count_total_bases_number.csv",
+        passed_reads="results/statistics/total/count_passed_reads_number.csv",
     output:
         "results/statistics/mapping_table.html",
     log:
