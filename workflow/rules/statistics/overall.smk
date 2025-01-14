@@ -79,6 +79,22 @@ rule count_passed_bases_number:
         "../../scripts/statistics/overall/summary_table/count_passed_bases_number.py"
 
 
+rule count_aligned_bases_number:
+    input:
+        expand(
+            "results/aligned/passed_{sample_id}.bam",
+            sample_id=samples["sample_id"],
+        ),
+    output:
+        "results/statistics/total/count_aligned_bases_number.csv",
+    log:
+        "logs/statistics/overall/count_aligned_bases_number.log",
+    conda:
+        "../../envs/pysam.yaml"
+    script:
+        "../../scripts/statistics/overall/summary_table/count_aligned_bases_number.py"
+
+
 rule count_gc_passed_bases_number:
     input:
         expand(
@@ -246,7 +262,6 @@ rule mapping_table:
         mapped_bases="results/statistics/total/mapped_primers_bases_number.csv",
         total_bases="results/statistics/total/count_total_bases_number.csv",
         total_reads="results/statistics/total/count_total_reads_number.csv",
-        aligned_reads="results/statistics/total/count_aligned_reads_number.csv",
     output:
         "results/statistics/mapping_table.html",
     log:
@@ -276,6 +291,9 @@ rule payload_table:
     input:
         payload_errors="results/statistics/total/payload_errors_number.csv",
         total_reads="results/statistics/total/count_total_reads_number.csv",
+        total_bases="results/statistics/total/count_total_bases_number.csv",
+        aligned_reads="results/statistics/total/count_aligned_reads_number.csv",
+        aligned_bases="results/statistics/total/count_aligned_bases_number.csv",
     output:
         "results/statistics/payload_table.html",
     log:

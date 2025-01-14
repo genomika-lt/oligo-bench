@@ -34,17 +34,30 @@ def payload_table(csv_files, output_file):
 
     payload_errors = pd.read_csv(csv_files['payload_errors'])
     total_reads = pd.read_csv(csv_files['total_reads'])
+    total_bases = pd.read_csv(csv_files['total_bases'])
+    aligned_reads = pd.read_csv(csv_files['aligned_reads'])
+    aligned_bases = pd.read_csv(csv_files['aligned_bases'])
+
 
     payload_errors_ratio = payload_errors.loc[:, 'Payload Errors'] /  total_reads.loc[:, 'Total Reads']
+    aligned_reads_percent = aligned_reads.loc[:, 'Aligned Reads'] / total_reads.loc[:, 'Total Reads']
+    aligned_bases_percent = aligned_bases.loc[:, 'Aligned Bases'] / total_bases.loc[:, 'Total Bases']
 
     header_values = ['Sample ID',
-                     'Payload Errors']
+                     'Payload Errors',
+                     'Aligned Reads',
+                     'Aligned Bases',]
 
     body_values_number = [payload_errors.loc[:, 'Sample'],
-                          payload_errors.loc[:, 'Payload Errors'].apply(integer_to_human_readable)]
+                          payload_errors.loc[:, 'Payload Errors'].apply(integer_to_human_readable),
+                          aligned_reads.loc[:, 'Aligned Reads'].apply(integer_to_human_readable),
+                          aligned_bases.loc[:, 'Aligned Bases'].apply(integer_to_human_readable,
+                                                             args=(bases_alphabet,))]
 
     body_values_percentage = [payload_errors.loc[:, 'Sample'],
-                          payload_errors_ratio.apply(ratio_to_percentage_string, args=(3,)),]
+                              payload_errors_ratio.apply(ratio_to_percentage_string, args=(3,)),
+                              aligned_reads_percent.apply(ratio_to_percentage_string, args=(3,)),
+                              aligned_bases_percent.apply(ratio_to_percentage_string, args=(3,))]
 
     figure = go.Figure(data=[go.Table(header={'values': header_values},
                                       cells={'values': body_values_number,
