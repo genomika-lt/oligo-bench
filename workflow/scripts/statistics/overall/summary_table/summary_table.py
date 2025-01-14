@@ -85,7 +85,7 @@ def summary_table(csv_files, output_file):
             dict(
                 type="buttons",
                 direction="right",
-                active=0,
+                active=1,
                 buttons=list([
                     dict(label="Percentage",
                          method="update",

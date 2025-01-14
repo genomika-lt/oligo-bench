@@ -33,29 +33,33 @@ def mapping_table(csv_files, output_file):
     bases_alphabet = ('b', 'Kb', 'Mb', 'Gb', 'Tb', 'Pb')
 
     forward_reads_ratio = pd.read_csv(csv_files['forward_reads'])
-    passed_reads_number = pd.read_csv(csv_files['passed_reads'])
+    total_reads = pd.read_csv(csv_files['total_reads'])
     mapped_reads = pd.read_csv(csv_files['mapped_reads'])
-    mapped_bases = pd.read_csv(csv_files['mapped_bases'])
+    aligned_reads = pd.read_csv(csv_files['aligned_reads'])
     total_bases = pd.read_csv(csv_files['total_bases'])
+    mapped_bases = pd.read_csv(csv_files['mapped_bases'])
 
     mapped_bases_percent = mapped_bases.loc[:, 'Mapped Bases'] / total_bases.loc[:, 'Total Bases']
-    passed_reads_mapped_reads_ratio = (mapped_reads.loc[:, 'Mapped Reads']
-                          /  passed_reads_number.loc[:, 'Passed Reads'])
+    mapped_reads_percent = mapped_reads.loc[:, 'Mapped Reads'] /  total_reads.loc[:, 'Total Reads']
+    aligned_reads_percent = aligned_reads.loc[:, 'Aligned Reads'] / total_reads.loc[:, 'Total Reads']
 
     header_values = ['Sample ID',
                      'Mapped Reads',
                      'Mapped Bases',
+                     'Aligned Reads',
                      'Forward Reads']
 
     body_values_number = [forward_reads_ratio.loc[:, 'Sample'],
                    mapped_reads.loc[:, 'Mapped Reads'].apply(integer_to_human_readable),
                    mapped_bases.loc[:, 'Mapped Bases'].apply(integer_to_human_readable,
                                                              args=(bases_alphabet,)),
+                   aligned_reads.loc[:, 'Aligned Reads'].apply(integer_to_human_readable),
                    forward_reads_ratio.loc[:, 'Forward Reads'].apply(ratio_to_percentage_string, args=(2,))]
 
     body_values_percentage = [forward_reads_ratio.loc[:, 'Sample'],
-                    passed_reads_mapped_reads_ratio.apply(ratio_to_percentage_string, args=(2,)),
-                    mapped_bases_percent.apply(ratio_to_percentage_string, args=(2,)),
+                    mapped_reads_percent.apply(ratio_to_percentage_string, args=(3,)),
+                    mapped_bases_percent.apply(ratio_to_percentage_string, args=(3,)),
+                    aligned_reads_percent.apply(ratio_to_percentage_string, args=(3,)),
                     forward_reads_ratio.loc[:, 'Forward Reads'].apply(ratio_to_percentage_string, args=(2,))]
 
     figure = go.Figure(data=[go.Table(header={'values': header_values},

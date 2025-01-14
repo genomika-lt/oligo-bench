@@ -25,14 +25,12 @@ def payload_errors_number(sam_bam_files, output_file):
 
     for file in sam_bam_files[:len(sam_bam_files) // 2]:
         total_error = 0
-        total_reads = 0
         for read in parse_sam_bam_file(file):
-            total_reads += 1
             total_error += read.get_tag('NM') / len(read.query_qualities)
 
         sample = file.split('/')[-1].split('.')[0].split('_', 1)[-1]
         data['Sample'].append(sample)
-        data['Payload Errors'].append(total_error / total_reads)
+        data['Payload Errors'].append(int(total_error))
 
     data_frame = DataFrame(data)
     data_frame.to_csv(output_file, index=False)
